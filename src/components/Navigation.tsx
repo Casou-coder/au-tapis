@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, ChevronRight, User, Menu, X } from 'lucide-react';
+
+const MotionLink = motion.create(Link);
 import { useAuth } from '@/contexts/AuthContext';
 
 const navGroups = [
@@ -57,9 +59,11 @@ export default function Navigation() {
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-0.5">
             {allLinks.map(link => (
-              <Link
+              <MotionLink
                 key={link.href}
                 href={link.href}
+                whileTap={{ scale: 0.93 }}
+                transition={{ duration: 0.1 }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   pathname.startsWith(link.href)
                     ? `${link.color} bg-white/10`
@@ -67,7 +71,7 @@ export default function Navigation() {
                 }`}
               >
                 {link.label}
-              </Link>
+              </MotionLink>
             ))}
           </div>
 
@@ -79,9 +83,11 @@ export default function Navigation() {
             </Link>
 
             {user ? (
-              <Link
+              <MotionLink
                 href="/profil"
                 onClick={() => setMenuOpen(false)}
+                whileTap={{ scale: 0.93 }}
+                transition={{ duration: 0.1 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   pathname.startsWith('/profil')
                     ? 'text-yellow-400 bg-white/10'
@@ -90,15 +96,17 @@ export default function Navigation() {
               >
                 <User size={14} />
                 <span className="hidden sm:inline">Profil</span>
-              </Link>
+              </MotionLink>
             ) : (
-              <Link
+              <MotionLink
                 href="/login"
                 onClick={() => setMenuOpen(false)}
+                whileTap={{ scale: 0.93 }}
+                transition={{ duration: 0.1 }}
                 className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 text-sm font-medium transition-all"
               >
                 Connexion
-              </Link>
+              </MotionLink>
             )}
 
             {/* Mobile hamburger */}
@@ -141,17 +149,19 @@ export default function Navigation() {
                       {group.links.map(link => {
                         const active = pathname.startsWith(link.href);
                         return (
-                          <Link
+                          <MotionLink
                             key={link.href}
                             href={link.href}
                             onClick={() => setMenuOpen(false)}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.1 }}
                             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                               active ? 'bg-white/10' : 'hover:bg-white/5'
                             }`}
                           >
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} />
                             <span className={active ? link.color : 'text-gray-300'}>{link.label}</span>
-                          </Link>
+                          </MotionLink>
                         );
                       })}
                     </div>

@@ -117,7 +117,9 @@ export default function DefisPage() {
                 key={c.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
+                whileTap={unlocked ? { scale: 0.97 } : {}}
+                whileHover={unlocked ? { y: -2 } : {}}
+                transition={{ delay: i * 0.03, duration: 0.15 }}
                 className="rounded-xl p-4 relative"
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${done ? meta.color + '30' : 'rgba(255,255,255,0.08)'}` }}
               >

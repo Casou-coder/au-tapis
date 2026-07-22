@@ -2,6 +2,8 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
+
+const MotionLink = motion.create(Link);
 import { Lock, ChevronRight, Star, Zap, Trophy, Target, BookOpen, Play } from 'lucide-react';
 import { LEVELS } from '@/lib/poker-data';
 import { useProgress } from '@/hooks/useProgress';
@@ -109,19 +111,23 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link
+            <MotionLink
               href="/debutant"
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.12 }}
               className="group flex items-center justify-center gap-2 bg-gradient-to-r from-green-700 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-bold px-8 py-4 rounded-xl transition-all glow-green"
             >
               Commencer gratuitement
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <a
+            </MotionLink>
+            <motion.a
               href="#levels"
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.12 }}
               className="flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-xl transition-all hover:bg-white/5"
             >
               Voir les niveaux
-            </a>
+            </motion.a>
           </motion.div>
         </motion.div>
 
@@ -232,9 +238,10 @@ export default function HomePage() {
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -3, borderColor: 'rgba(255,255,255,0.25)' }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
+                transition={{ delay: i * 0.08, duration: 0.2 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-6 transition-colors"
               >
                 <div className="text-3xl mb-3 text-center">{item.icon}</div>
                 <h3 className="font-bold text-white mb-2 text-center">{item.title}</h3>
@@ -261,13 +268,15 @@ export default function HomePage() {
           <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
             Rejoignez des milliers de joueurs qui ont maîtrisé le poker grâce à nos cours.
           </p>
-          <Link
+          <MotionLink
             href="/debutant"
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.12 }}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-700 to-yellow-500 hover:from-yellow-600 hover:to-yellow-400 text-white font-bold px-10 py-5 rounded-xl text-lg transition-all pulse-gold"
           >
             Démarrer le niveau Débutant
             <ChevronRight size={22} />
-          </Link>
+          </MotionLink>
         </motion.div>
       </section>
 
@@ -291,10 +300,13 @@ export default function HomePage() {
 
 function LevelCard({ level, unlocked, index }: { level: typeof LEVELS[0]; unlocked: boolean; index: number }) {
   return (
-    <Link
+    <MotionLink
       href={unlocked ? `/${level.id}` : '#levels'}
+      whileHover={unlocked ? { y: -4 } : {}}
+      whileTap={unlocked ? { scale: 0.97 } : {}}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       className={`block relative rounded-2xl border overflow-hidden transition-all duration-300 group ${
-        unlocked ? 'hover:scale-[1.02] hover:shadow-2xl cursor-pointer' : 'cursor-not-allowed opacity-70'
+        unlocked ? 'hover:shadow-2xl cursor-pointer' : 'cursor-not-allowed opacity-70'
       }`}
       style={{ borderColor: unlocked ? level.color + '50' : '#333' }}
     >
@@ -341,6 +353,6 @@ function LevelCard({ level, unlocked, index }: { level: typeof LEVELS[0]; unlock
           )}
         </div>
       </div>
-    </Link>
+    </MotionLink>
   );
 }
