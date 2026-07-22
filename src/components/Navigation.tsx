@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useId } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, ChevronRight, User, Menu, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MotionLink = motion.create(Link);
-import { useAuth } from '@/contexts/AuthContext';
 
 const navGroups = [
   {
@@ -36,6 +36,20 @@ export default function Navigation() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+
+  // Close menu on Escape key
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [menuOpen]);
+
+  // Close menu on pathname change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   return (
     <>
@@ -43,12 +57,13 @@ export default function Navigation() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
+        aria-label="Navigation principale"
         className="fixed top-0 left-0 right-0 z-50 bg-black/85 backdrop-blur-md border-b border-white/10"
       >
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" onClick={() => setMenuOpen(false)}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-sm font-bold">
+          <Link href="/" className="flex items-center gap-2 group" aria-label="Au Tapis — Accueil">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-sm font-bold" aria-hidden="true">
               ♠
             </div>
             <span className="font-bold text-white group-hover:text-yellow-400 transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
@@ -57,50 +72,57 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-0.5">
-            {allLinks.map(link => (
-              <MotionLink
-                key={link.href}
-                href={link.href}
-                whileTap={{ scale: 0.93 }}
-                transition={{ duration: 0.1 }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  pathname.startsWith(link.href)
-                    ? `${link.color} bg-white/10`
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {link.label}
-              </MotionLink>
-            ))}
+          <div className="hidden lg:flex items-center gap-0.5" role="list">
+            {allLinks.map(link => {
+              const isActive = pathname.startsWith(link.href);
+              return (
+                <MotionLink
+                  key={link.href}
+                  href={link.href}
+                  role="listitem"
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ duration: 0.1 }}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    isActive
+                      ? `${link.color} bg-white/10`
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {link.label}
+                </MotionLink>
+              );
+            })}
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Desktop: Home + Auth */}
-            <Link href="/" className="hidden sm:flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm">
-              <Home size={16} />
+            <Link
+              href="/"
+              className="hidden sm:flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm"
+              aria-label="Accueil"
+            >
+              <Home size={16} aria-hidden="true" />
             </Link>
 
             {user ? (
               <MotionLink
                 href="/profil"
-                onClick={() => setMenuOpen(false)}
                 whileTap={{ scale: 0.93 }}
                 transition={{ duration: 0.1 }}
+                aria-current={pathname.startsWith('/profil') ? 'page' : undefined}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   pathname.startsWith('/profil')
                     ? 'text-yellow-400 bg-white/10'
                     : 'text-gray-400 hover:text-yellow-400 hover:bg-white/5'
                 }`}
               >
-                <User size={14} />
+                <User size={14} aria-hidden="true" />
                 <span className="hidden sm:inline">Profil</span>
               </MotionLink>
             ) : (
               <MotionLink
                 href="/login"
-                onClick={() => setMenuOpen(false)}
                 whileTap={{ scale: 0.93 }}
                 transition={{ duration: 0.1 }}
                 className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 text-sm font-medium transition-all"
@@ -112,9 +134,12 @@ export default function Navigation() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMenuOpen(o => !o)}
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
             >
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -131,35 +156,42 @@ export default function Navigation() {
               exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
               className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+              aria-hidden="true"
             />
             <motion.div
+              id={menuId}
               key="drawer"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
+              role="dialog"
+              aria-label="Menu de navigation"
               className="fixed top-16 left-0 right-0 z-40 lg:hidden border-b border-white/10"
               style={{ background: 'rgba(6, 13, 8, 0.98)' }}
             >
-              <div className="max-w-xl mx-auto px-4 py-5 space-y-6">
+              <nav aria-label="Menu mobile" className="max-w-xl mx-auto px-4 py-5 space-y-6">
                 {navGroups.map(group => (
                   <div key={group.label}>
-                    <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-3">{group.label}</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-3" aria-hidden="true">
+                      {group.label}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2" role="list">
                       {group.links.map(link => {
                         const active = pathname.startsWith(link.href);
                         return (
                           <MotionLink
                             key={link.href}
                             href={link.href}
-                            onClick={() => setMenuOpen(false)}
+                            role="listitem"
                             whileTap={{ scale: 0.95 }}
                             transition={{ duration: 0.1 }}
+                            aria-current={active ? 'page' : undefined}
                             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                               active ? 'bg-white/10' : 'hover:bg-white/5'
                             }`}
                           >
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} />
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} aria-hidden="true" />
                             <span className={active ? link.color : 'text-gray-300'}>{link.label}</span>
                           </MotionLink>
                         );
@@ -169,20 +201,20 @@ export default function Navigation() {
                 ))}
 
                 <div className="border-t border-white/10 pt-4 flex items-center gap-3">
-                  <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
-                    <Home size={15} /> Accueil
+                  <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors" aria-label="Accueil">
+                    <Home size={15} aria-hidden="true" /> Accueil
                   </Link>
                   {user ? (
-                    <Link href="/profil" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-gray-400 hover:text-yellow-400 text-sm transition-colors ml-auto">
-                      <User size={15} /> Profil
+                    <Link href="/profil" aria-current={pathname.startsWith('/profil') ? 'page' : undefined} className="flex items-center gap-2 text-gray-400 hover:text-yellow-400 text-sm transition-colors ml-auto">
+                      <User size={15} aria-hidden="true" /> Profil
                     </Link>
                   ) : (
-                    <Link href="/login" onClick={() => setMenuOpen(false)} className="ml-auto px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-medium">
+                    <Link href="/login" className="ml-auto px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-medium">
                       Connexion
                     </Link>
                   )}
                 </div>
-              </div>
+              </nav>
             </motion.div>
           </>
         )}
@@ -193,18 +225,18 @@ export default function Navigation() {
 
 export function Breadcrumb({ items }: { items: { label: string; href?: string }[] }) {
   return (
-    <div className="flex items-center gap-1 text-sm text-gray-500 mb-6">
+    <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500 mb-6">
       <Link href="/" className="hover:text-gray-300 transition-colors">Accueil</Link>
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-1">
-          <ChevronRight size={14} />
+          <ChevronRight size={14} aria-hidden="true" />
           {item.href ? (
             <Link href={item.href} className="hover:text-gray-300 transition-colors">{item.label}</Link>
           ) : (
-            <span className="text-gray-300">{item.label}</span>
+            <span className="text-gray-300" aria-current="page">{item.label}</span>
           )}
         </span>
       ))}
-    </div>
+    </nav>
   );
 }

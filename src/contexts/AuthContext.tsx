@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (!supabaseEnabled) return;
+    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     await supabase.auth.signOut();
   }, []);
@@ -37,19 +37,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!supabaseEnabled) return;
 
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let cancelled = false;
+    // Failsafe: stop loading after 5s regardless (Supabase down or slow)
+    const timeout = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 5000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
+    async function init() {
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
 
-    return () => subscription.unsubscribe();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        clearTimeout(timeout);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+      } catch {
+        if (!cancelled) {
+          clearTimeout(timeout);
+          setLoading(false);
+        }
+      }
+    }
+
+    const cleanupPromise = init();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      cleanupPromise.then(unsub => unsub?.());
+    };
   }, []);
 
   return (

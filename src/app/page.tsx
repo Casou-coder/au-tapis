@@ -58,9 +58,9 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <main className="min-h-screen bg-[#060d08] overflow-hidden">
+    <main id="main-content" className="min-h-screen bg-[#060d08] overflow-hidden">
       {/* HERO */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+      <section ref={heroRef} aria-label="Introduction" className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(26,74,46,0.4)_0%,transparent_70%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(201,168,76,0.08)_0%,transparent_50%)]" />
         {floatingCards.map((c, i) => <FloatingCard key={i} {...c} />)}
@@ -143,7 +143,7 @@ export default function HomePage() {
       </section>
 
       {/* STATS */}
-      <section className="py-16 border-y border-white/5 bg-black/30">
+      <section aria-label="Statistiques" className="py-16 border-y border-white/5 bg-black/30">
         <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
           {statsData.map((stat, i) => (
             <motion.div

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, Trophy, ChevronRight, Brain } from 'lucide-react';
 import type { Challenge } from '@/lib/challenges-data';
@@ -73,6 +73,17 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const levelMeta = LEVEL_LABELS[challenge.level];
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Escape to close + focus close button on mount
+  useEffect(() => {
+    closeRef.current?.focus();
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   function handleAnswer(idx: number) {
     if (confirmed) return;
@@ -102,13 +113,16 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="challenge-title"
         className="relative w-full max-w-lg z-10 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: '#0d1f0d', border: '1px solid rgba(255,255,255,0.1)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 font-bold text-sm">Défi du Jour</span>
+            <span id="challenge-title" className="text-yellow-400 font-bold text-sm">Défi du Jour</span>
             {streak > 0 && (
               <div className="flex items-center gap-1 bg-orange-500/20 border border-orange-500/30 rounded-full px-2 py-0.5">
                 <Flame size={12} className="text-orange-400" />
@@ -121,8 +135,13 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
               {levelMeta.label}
             </span>
             <span className="text-xs text-gray-500">{TYPE_LABELS[challenge.type]}</span>
-            <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors ml-1">
-              <X size={18} />
+            <button
+              ref={closeRef}
+              onClick={onClose}
+              aria-label="Fermer le défi"
+              className="text-gray-500 hover:text-white transition-colors ml-1"
+            >
+              <X size={18} aria-hidden="true" />
             </button>
           </div>
         </div>

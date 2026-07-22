@@ -27,7 +27,6 @@ function saveLocal(data: ProgressData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-// "debutant-regles" → { level_id: "debutant", module_id: "regles" }
 function parseModuleKey(key: string) {
   const idx = key.indexOf('-');
   return idx === -1
@@ -35,8 +34,8 @@ function parseModuleKey(key: string) {
     : { level_id: key.slice(0, idx), module_id: key.slice(idx + 1) };
 }
 
-function getSupabase() {
-  const { createClient } = require('@/lib/supabase/client');
+async function getSupabase() {
+  const { createClient } = await import('@/lib/supabase/client');
   return createClient();
 }
 
@@ -50,30 +49,40 @@ export function useProgress() {
       return;
     }
 
+    let cancelled = false;
+
     async function fetchFromSupabase() {
-      const supabase = getSupabase();
-      const [{ data: modules }, { data: levels }, { data: quizzes }] = await Promise.all([
-        supabase.from('user_progress').select('level_id, module_id').eq('user_id', user!.id),
-        supabase.from('user_completed_levels').select('level_id').eq('user_id', user!.id),
-        supabase.from('user_quiz_scores').select('quiz_id, score').eq('user_id', user!.id),
-      ]);
+      try {
+        const supabase = await getSupabase();
+        const [{ data: modules }, { data: levels }, { data: quizzes }] = await Promise.all([
+          supabase.from('user_progress').select('level_id, module_id').eq('user_id', user!.id),
+          supabase.from('user_completed_levels').select('level_id').eq('user_id', user!.id),
+          supabase.from('user_quiz_scores').select('quiz_id, score').eq('user_id', user!.id),
+        ]);
 
-      const completedModules: Record<string, boolean> = {};
-      modules?.forEach((m: { level_id: string; module_id: string }) => {
-        completedModules[`${m.level_id}-${m.module_id}`] = true;
-      });
+        if (cancelled) return;
 
-      const completedLevels: Record<string, boolean> = {};
-      levels?.forEach((l: { level_id: string }) => { completedLevels[l.level_id] = true; });
+        const completedModules: Record<string, boolean> = {};
+        modules?.forEach((m: { level_id: string; module_id: string }) => {
+          completedModules[`${m.level_id}-${m.module_id}`] = true;
+        });
 
-      const quizScores: Record<string, number> = {};
-      quizzes?.forEach((q: { quiz_id: string; score: number }) => { quizScores[q.quiz_id] = q.score; });
+        const completedLevels: Record<string, boolean> = {};
+        levels?.forEach((l: { level_id: string }) => { completedLevels[l.level_id] = true; });
 
-      setProgress({ completedModules, completedLevels, quizScores });
+        const quizScores: Record<string, number> = {};
+        quizzes?.forEach((q: { quiz_id: string; score: number }) => { quizScores[q.quiz_id] = q.score; });
+
+        setProgress({ completedModules, completedLevels, quizScores });
+      } catch {
+        // Fall back to localStorage on Supabase error
+        if (!cancelled) setProgress(loadLocal());
+      }
     }
 
     fetchFromSupabase();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const completeModule = useCallback(async (moduleKey: string) => {
     if (progress.completedModules[moduleKey]) return;
@@ -85,9 +94,11 @@ export function useProgress() {
     setProgress(next);
 
     if (user && supabaseEnabled) {
-      const supabase = getSupabase();
-      const { level_id, module_id } = parseModuleKey(moduleKey);
-      await supabase.from('user_progress').upsert({ user_id: user.id, level_id, module_id });
+      try {
+        const supabase = await getSupabase();
+        const { level_id, module_id } = parseModuleKey(moduleKey);
+        await supabase.from('user_progress').upsert({ user_id: user.id, level_id, module_id });
+      } catch { saveLocal(next); }
     } else {
       saveLocal(next);
     }
@@ -103,8 +114,10 @@ export function useProgress() {
     setProgress(next);
 
     if (user && supabaseEnabled) {
-      const supabase = getSupabase();
-      await supabase.from('user_completed_levels').upsert({ user_id: user.id, level_id: levelId });
+      try {
+        const supabase = await getSupabase();
+        await supabase.from('user_completed_levels').upsert({ user_id: user.id, level_id: levelId });
+      } catch { saveLocal(next); }
     } else {
       saveLocal(next);
     }
@@ -115,8 +128,10 @@ export function useProgress() {
     setProgress(next);
 
     if (user && supabaseEnabled) {
-      const supabase = getSupabase();
-      await supabase.from('user_quiz_scores').upsert({ user_id: user.id, quiz_id: quizId, score });
+      try {
+        const supabase = await getSupabase();
+        await supabase.from('user_quiz_scores').upsert({ user_id: user.id, quiz_id: quizId, score });
+      } catch { saveLocal(next); }
     } else {
       saveLocal(next);
     }
@@ -125,23 +140,25 @@ export function useProgress() {
   const isLevelUnlocked = useCallback((levelId: string) => {
     if (levelId === 'professionnel') return progress.completedLevels['expert'] === true;
     return true;
-  }, [progress]);
+  }, [progress.completedLevels]);
 
   const getLevelProgress = useCallback((levelId: string, totalModules: number) => {
     const completed = Object.keys(progress.completedModules)
       .filter(k => k.startsWith(`${levelId}-`) && progress.completedModules[k])
       .length;
     return { completed, total: totalModules, percentage: Math.round((completed / totalModules) * 100) };
-  }, [progress]);
+  }, [progress.completedModules]);
 
   const resetProgress = useCallback(async () => {
     if (user && supabaseEnabled) {
-      const supabase = getSupabase();
-      await Promise.all([
-        supabase.from('user_progress').delete().eq('user_id', user.id),
-        supabase.from('user_completed_levels').delete().eq('user_id', user.id),
-        supabase.from('user_quiz_scores').delete().eq('user_id', user.id),
-      ]);
+      try {
+        const supabase = await getSupabase();
+        await Promise.all([
+          supabase.from('user_progress').delete().eq('user_id', user.id),
+          supabase.from('user_completed_levels').delete().eq('user_id', user.id),
+          supabase.from('user_quiz_scores').delete().eq('user_id', user.id),
+        ]);
+      } catch {}
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProgress } from './useProgress';
 import { Challenge, selectDailyChallenge, getUserLevel } from '@/lib/challenges-data';
@@ -33,7 +33,7 @@ function computeStreak(history: DayRecord[]): number {
   if (!done.length) return 0;
   let streak = 0;
   const today = getToday();
-  let cursor = new Date(today);
+  const cursor = new Date(today);
   for (const dateStr of done) {
     const expected = cursor.toISOString().split('T')[0];
     if (dateStr === expected) {
@@ -53,12 +53,20 @@ export function useDailyChallenge() {
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Stable ref for completedLevels to avoid re-running on reference change
+  const completedLevelsRef = useRef(progress.completedLevels);
+  const completedLevelsStr = JSON.stringify(progress.completedLevels);
+
+  useEffect(() => {
+    completedLevelsRef.current = progress.completedLevels;
+  });
+
   useEffect(() => {
     const today = getToday();
     const history = loadHistory();
     const todayRecord = history.find(h => h.date === today);
     const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
-    const level = getUserLevel(progress.completedLevels);
+    const level = getUserLevel(completedLevelsRef.current);
     const userId = user?.id ?? 'anonymous';
 
     const picked = selectDailyChallenge(level, completedIds, userId, today);
@@ -70,7 +78,8 @@ export function useDailyChallenge() {
       setWasCorrect(todayRecord.correct);
     }
     setLoading(false);
-  }, [user, progress.completedLevels]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, completedLevelsStr]);
 
   const completeChallenge = useCallback((correct: boolean) => {
     if (!challenge) return;

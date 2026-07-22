@@ -56,6 +56,7 @@ export const metadata: Metadata = {
   alternates: { canonical: BASE_URL },
 };
 
+// JSON-LD placed in body (Next.js App Router recommended pattern)
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'EducationalOrganization',
@@ -89,7 +90,7 @@ const faqLd = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'Comment apprendre le poker Texas Hold\'em en français ?',
+      name: "Comment apprendre le poker Texas Hold'em en français ?",
       acceptedAnswer: {
         '@type': 'Answer',
         text: "Au Tapis propose 5 niveaux progressifs pour apprendre le poker gratuitement : débutant, intermédiaire, avancé, expert et professionnel. Chaque niveau contient des modules interactifs, des quiz et des mains à rejouer.",
@@ -97,7 +98,7 @@ const faqLd = {
     },
     {
       '@type': 'Question',
-      name: 'C\'est quoi les pot odds au poker ?',
+      name: "C'est quoi les pot odds au poker ?",
       acceptedAnswer: {
         '@type': 'Answer',
         text: "Les pot odds sont le ratio entre la mise à payer et le pot total. Si le pot vaut 100€ et la mise est de 50€, les pot odds sont de 3:1 (33%). Si votre equity dépasse ce ratio, l'appel est rentable à long terme.",
@@ -105,7 +106,7 @@ const faqLd = {
     },
     {
       '@type': 'Question',
-      name: 'Qu\'est-ce que le GTO au poker ?',
+      name: "Qu'est-ce que le GTO au poker ?",
       acceptedAnswer: {
         '@type': 'Answer',
         text: "Le GTO (Game Theory Optimal) est une stratégie d'équilibre mathématique qui rend votre jeu inexploitable. Au lieu de maximiser l'exploitation d'un adversaire spécifique, le GTO vise à trouver une stratégie qui ne peut pas être battue sur le long terme.",
@@ -113,7 +114,7 @@ const faqLd = {
     },
     {
       '@type': 'Question',
-      name: 'Peut-on apprendre le poker sans jouer de l\'argent réel ?',
+      name: "Peut-on apprendre le poker sans jouer de l'argent réel ?",
       acceptedAnswer: {
         '@type': 'Answer',
         text: "Oui, Au Tapis est 100% gratuit et sans argent réel. Vous apprenez la théorie, les mathématiques et les stratégies du poker sans aucun risque financier. L'objectif est la maîtrise du jeu, pas les gains.",
@@ -125,14 +126,28 @@ const faqLd = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
-      <head>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
-      </head>
       <body className="min-h-screen bg-[#0a0f0a] text-[#e8f5e9] antialiased">
+        {/* Skip to main content — accessibilité clavier */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-yellow-500 focus:text-black focus:rounded-lg focus:font-bold focus:text-sm"
+        >
+          Aller au contenu principal
+        </a>
+
         <AuthProvider>
           {children}
         </AuthProvider>
+
+        {/* JSON-LD structured data — pattern recommandé Next.js App Router */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        />
       </body>
     </html>
   );
