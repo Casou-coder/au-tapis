@@ -12,7 +12,8 @@ const levelLinks = [
   { href: '/avance', label: 'Avancé', color: 'text-purple-400' },
   { href: '/expert', label: 'Expert', color: 'text-yellow-400' },
   { href: '/professionnel', label: 'Pro', color: 'text-red-400' },
-  { href: '/calculateur', label: '🧮 Calc', color: 'text-gray-300' },
+  { href: '/defis', label: '🎯 Défis', color: 'text-orange-400' },
+  { href: '/outils', label: '🔧 Outils', color: 'text-gray-300' },
 ];
 
 export default function Navigation() {

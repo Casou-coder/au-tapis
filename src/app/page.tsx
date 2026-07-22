@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { Lock, ChevronRight, Star, Zap, Trophy, Target, BookOpen, Play } from 'lucide-react';
 import { LEVELS } from '@/lib/poker-data';
 import { useProgress } from '@/hooks/useProgress';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { DailyChallengeCard, DailyChallengeModal } from '@/components/DailyChallenge';
+import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 
 function FloatingCard({ suit, delay, x, y, size }: { suit: string; delay: number; x: string; y: string; size: number }) {
   return (
@@ -46,6 +48,8 @@ const statsData = [
 
 export default function HomePage() {
   const { isLevelUnlocked } = useProgress();
+  const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge } = useDailyChallenge();
+  const [challengeOpen, setChallengeOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
@@ -152,6 +156,20 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* DÉFI DU JOUR */}
+      <section className="py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <DailyChallengeCard
+            challenge={challenge}
+            isCompleted={isCompleted}
+            wasCorrect={wasCorrect}
+            streak={streak}
+            loading={loading}
+            onOpen={() => setChallengeOpen(true)}
+          />
+        </div>
+      </section>
+
       {/* LEVELS */}
       <section id="levels" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
@@ -252,6 +270,16 @@ export default function HomePage() {
           </Link>
         </motion.div>
       </section>
+
+      {/* Challenge Modal */}
+      {challengeOpen && challenge && (
+        <DailyChallengeModal
+          challenge={challenge}
+          streak={streak}
+          onComplete={(correct) => { completeChallenge(correct); }}
+          onClose={() => setChallengeOpen(false)}
+        />
+      )}
 
       <footer className="border-t border-white/10 py-8 text-center text-gray-600 text-sm">
         <p className="mb-1 font-medium text-gray-500">Au Tapis ♠ autapis.fr</p>
