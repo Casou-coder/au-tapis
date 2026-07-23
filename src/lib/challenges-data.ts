@@ -23,6 +23,7 @@ export interface Challenge {
   difficulty: 1 | 2 | 3;
   type: ChallengeType;
   title: string;
+  hint?: string;
   villain: VillainProfile;
   context: {
     gameType: 'cash' | 'tournament';

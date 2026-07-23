@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, Trophy, ChevronRight, Brain } from 'lucide-react';
+import { X, Flame, Trophy, ChevronRight, Brain, Lightbulb } from 'lucide-react';
 import type { Challenge } from '@/lib/challenges-data';
+import { CHALLENGE_HINTS } from '@/lib/challenge-hints';
 
 // ─── Card display ─────────────────────────────────────────────────────────────
 
@@ -45,6 +46,10 @@ function StatBar({ label, value, max = 70, color }: { label: string; value: numb
 
 type Screen = 'briefing' | 'challenge' | 'result';
 
+const STREET_LABELS: Record<string, string> = {
+  preflop: 'Préflop', flop: 'Flop', turn: 'Turn', river: 'River',
+};
+
 const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
   debutant: { label: 'Débutant', color: '#22c55e' },
   intermediaire: { label: 'Intermédiaire', color: '#3b82f6' },
@@ -72,6 +77,8 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
   const [screen, setScreen] = useState<Screen>('briefing');
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [hintVisible, setHintVisible] = useState(false);
+  const hint = CHALLENGE_HINTS[challenge.id];
   const levelMeta = LEVEL_LABELS[challenge.level];
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -131,10 +138,6 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
-              {levelMeta.label}
-            </span>
-            <span className="text-xs text-gray-500">{TYPE_LABELS[challenge.type]}</span>
             <button
               ref={closeRef}
               onClick={onClose}
@@ -154,9 +157,12 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
               transition={{ duration: 0.25 }}
               className="p-5"
             >
-              <h3 className="text-white font-bold text-base mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>
-                {challenge.title}
-              </h3>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
+                  {STREET_LABELS[challenge.context.street]}
+                </span>
+                <span className="text-xs text-gray-500">{TYPE_LABELS[challenge.type]}</span>
+              </div>
 
               {/* Villain card */}
               <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -248,7 +254,35 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                 </div>
               </div>
 
-              <p className="text-white font-semibold text-sm mb-4">{challenge.question}</p>
+              <p className="text-white font-semibold text-sm mb-3">{challenge.question}</p>
+
+              {/* Hint */}
+              {hint && !confirmed && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setHintVisible(v => !v)}
+                    className="flex items-center gap-1.5 text-xs text-yellow-500/70 hover:text-yellow-400 transition-colors"
+                  >
+                    <Lightbulb size={13} />
+                    {hintVisible ? 'Masquer l\'aide' : 'Voir l\'aide'}
+                  </button>
+                  <AnimatePresence>
+                    {hintVisible && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="mt-2 text-xs text-gray-400 italic leading-relaxed px-1 border-l-2 border-yellow-500/30 pl-3">
+                          {hint}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Options */}
               <div className="space-y-2 mb-4">
@@ -410,13 +444,17 @@ export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak,
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
                 {levelMeta.label}
               </span>
               <span className="text-gray-500 text-xs">{TYPE_LABELS[challenge.type]}</span>
+              <span className="text-gray-600 text-xs">· {STREET_LABELS[challenge.context.street] ?? challenge.context.street}</span>
             </div>
-            <p className="text-white font-semibold text-sm mb-3">{challenge.title}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">{challenge.villain.emoji}</span>
+              <span className="text-gray-400 text-xs">{challenge.villain.name} · {challenge.context.position}</span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 {challenge.context.heroHand.map((c, i) => <PokerCardSmall key={i} value={c} />)}
