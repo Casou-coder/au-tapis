@@ -5,10 +5,10 @@ import { useProgress } from '@/hooks/useProgress';
 import Navigation from '@/components/Navigation';
 
 const LEVELS = [
-  { id: 'debutant', label: 'Débutant', emoji: '🟢', color: 'text-green-400', total: 7 },
-  { id: 'intermediaire', label: 'Intermédiaire', emoji: '🔵', color: 'text-blue-400', total: 7 },
-  { id: 'avance', label: 'Avancé', emoji: '🟣', color: 'text-purple-400', total: 8 },
-  { id: 'expert', label: 'Expert', emoji: '🟡', color: 'text-yellow-400', total: 8 },
+  { id: 'debutant', label: 'Débutant', emoji: '🟢', color: 'text-green-400', total: 8 },
+  { id: 'intermediaire', label: 'Intermédiaire', emoji: '🔵', color: 'text-blue-400', total: 8 },
+  { id: 'avance', label: 'Avancé', emoji: '🟣', color: 'text-purple-400', total: 9 },
+  { id: 'expert', label: 'Expert', emoji: '🟡', color: 'text-yellow-400', total: 9 },
   { id: 'professionnel', label: 'Professionnel', emoji: '🔴', color: 'text-red-400', total: 6 },
 ];
 

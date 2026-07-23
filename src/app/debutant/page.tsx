@@ -7,7 +7,9 @@ import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react
 import Navigation from '@/components/Navigation';
 import PokerCard from '@/components/PokerCard';
 import { InteractiveHandTrainer } from '@/components/InteractiveHand';
+import { HandPlayer } from '@/components/HandPlayer';
 import { HAND_RANKINGS, POSITIONS, QUIZ_QUESTIONS } from '@/lib/poker-data';
+import { HAND_SCRIPTS } from '@/lib/hand-scripts';
 
 const MODULES = [
   { id: 'regles', title: 'Les Règles', icon: '📖', color: '#27ae60' },
@@ -16,6 +18,7 @@ const MODULES = [
   { id: 'actions', title: 'Les Actions', icon: '⚡', color: '#27ae60' },
   { id: 'selection', title: 'Sélection de mains', icon: '🎯', color: '#27ae60' },
   { id: 'trainer', title: 'Jouer des mains', icon: '🎮', color: '#27ae60' },
+  { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', color: '#27ae60' },
   { id: 'quiz', title: 'Quiz Final', icon: '🏆', color: '#27ae60' },
 ];
 
@@ -36,6 +39,19 @@ export default function DebutantPage() {
     if (activeModule === 'actions') return <ActionsModule {...props} />;
     if (activeModule === 'selection') return <SelectionModule {...props} />;
     if (activeModule === 'trainer') return <TrainerModule {...props} />;
+    if (activeModule === 'main-guidee') return (
+      <div className="min-h-screen bg-[#060d08]">
+        <Navigation />
+        <div className="pt-20 pb-16 px-4">
+          <div className="max-w-2xl mx-auto">
+            <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+              <ChevronLeft size={16} /> Retour aux modules
+            </button>
+            <HandPlayer script={HAND_SCRIPTS['debutant']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+          </div>
+        </div>
+      </div>
+    );
     if (activeModule === 'quiz') return <QuizModule {...props} />;
   }
 

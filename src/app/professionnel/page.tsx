@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { ChevronLeft, Lock, ChevronRight, Star, Trophy, Zap } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import PokerCard from '@/components/PokerCard';
+import { HandPlayer } from '@/components/HandPlayer';
+import { HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { FAMOUS_HANDS, FamousHand } from '@/lib/poker-data';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -16,6 +18,7 @@ const SECTIONS = [
   { id: 'mindset', title: 'Mental Game Elite', icon: '🧠', desc: 'La psychologie des champions du monde' },
   { id: 'cashvstourney', title: 'Cash vs Tournois', icon: '⚡', desc: 'Différences stratégiques au sommet' },
   { id: 'secrets', title: 'Les Grands Secrets', icon: '🔑', desc: 'Ce que les meilleurs ne vous diront jamais' },
+  { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Jouez un overbet river polarisé au niveau pro' },
 ];
 
 export default function ProfessionnelPage() {
@@ -56,6 +59,19 @@ export default function ProfessionnelPage() {
   if (activeSection === 'mindset') return <MindsetSection onBack={() => setActiveSection(null)} />;
   if (activeSection === 'cashvstourney') return <CashVsTourneySection onBack={() => setActiveSection(null)} />;
   if (activeSection === 'secrets') return <SecretsSection onBack={() => setActiveSection(null)} />;
+  if (activeSection === 'main-guidee') return (
+    <div className="min-h-screen bg-[#060d08]">
+      <Navigation />
+      <div className="pt-20 pb-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <button onClick={() => setActiveSection(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+            <ChevronLeft size={16} /> Retour
+          </button>
+          <HandPlayer script={HAND_SCRIPTS['professionnel']} onComplete={() => setActiveSection(null)} onBack={() => setActiveSection(null)} />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#060d08]">

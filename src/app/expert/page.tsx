@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { HandPlayer } from '@/components/HandPlayer';
+import { HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { QUIZ_QUESTIONS } from '@/lib/poker-data';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -16,6 +18,7 @@ const MODULES = [
   { id: 'mental', title: 'Mental Game', icon: '🧠', desc: 'Psychologie et gestion du tilt' },
   { id: 'selection', title: 'Table Selection', icon: '🪑', desc: 'Choisir les meilleures tables' },
   { id: 'study', title: 'Study Routines', icon: '📚', desc: 'Comment progresser efficacement' },
+  { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Naviguez un set sur board connecté' },
   { id: 'quiz', title: 'Quiz Expert', icon: '👑', desc: 'Le test ultime' },
 ];
 
@@ -42,6 +45,19 @@ export default function ExpertPage() {
     if (activeModule === 'mental') return <MentalModule {...props} />;
     if (activeModule === 'selection') return <TableSelectionModule {...props} />;
     if (activeModule === 'study') return <StudyModule {...props} />;
+    if (activeModule === 'main-guidee') return (
+      <div className="min-h-screen bg-[#060d08]">
+        <Navigation />
+        <div className="pt-20 pb-16 px-4">
+          <div className="max-w-2xl mx-auto">
+            <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+              <ChevronLeft size={16} /> Retour aux modules
+            </button>
+            <HandPlayer script={HAND_SCRIPTS['expert']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+          </div>
+        </div>
+      </div>
+    );
     if (activeModule === 'quiz') return <ExpertQuizModule {...props} />;
   }
 

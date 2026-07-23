@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { HandPlayer } from '@/components/HandPlayer';
+import { HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { OUTS_TABLE, POT_ODDS_TABLE, STARTING_HANDS, QUIZ_QUESTIONS } from '@/lib/poker-data';
 
 const MODULES = [
@@ -14,6 +16,7 @@ const MODULES = [
   { id: 'hands', title: 'Hand Selection', icon: '🃏', desc: 'Chart de sélection GTO' },
   { id: 'cbet', title: 'Continuation Bet', icon: '💥', desc: 'L\'arme principale post-flop' },
   { id: 'bluff', title: 'Semi-Bluff', icon: '🎭', desc: 'Bluffer avec des outs' },
+  { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Jouez une vraie main guidée' },
   { id: 'quiz', title: 'Quiz', icon: '🏆', desc: 'Testez vos connaissances' },
 ];
 
@@ -32,6 +35,19 @@ export default function IntermediairePage() {
     if (activeModule === 'hands') return <HandsModule {...props} />;
     if (activeModule === 'cbet') return <CBetModule {...props} />;
     if (activeModule === 'bluff') return <BluffModule {...props} />;
+    if (activeModule === 'main-guidee') return (
+      <div className="min-h-screen bg-[#060d08]">
+        <Navigation />
+        <div className="pt-20 pb-16 px-4">
+          <div className="max-w-2xl mx-auto">
+            <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+              <ChevronLeft size={16} /> Retour aux modules
+            </button>
+            <HandPlayer script={HAND_SCRIPTS['intermediaire']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+          </div>
+        </div>
+      </div>
+    );
     if (activeModule === 'quiz') return <IntermQuizModule {...props} />;
   }
 

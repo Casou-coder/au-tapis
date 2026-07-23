@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { HandPlayer } from '@/components/HandPlayer';
+import { HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { QUIZ_QUESTIONS } from '@/lib/poker-data';
 
 const MODULES = [
@@ -15,6 +17,7 @@ const MODULES = [
   { id: 'icm', title: 'ICM Tournois', icon: '🏆', desc: 'La valeur des jetons en tournoi' },
   { id: 'sizing', title: 'Bet Sizing Theory', icon: '📏', desc: 'Optimiser vos tailles de mises' },
   { id: 'multiway', title: 'Multi-way Pots', icon: '👥', desc: 'Jouer contre plusieurs adversaires' },
+  { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Jouez un bluff complet de A à Z' },
   { id: 'quiz', title: 'Quiz Avancé', icon: '🎯', desc: 'Testez vos connaissances avancées' },
 ];
 
@@ -33,6 +36,19 @@ export default function AvancePage() {
     if (activeModule === 'icm') return <ICMModule {...props} />;
     if (activeModule === 'sizing') return <SizingModule {...props} />;
     if (activeModule === 'multiway') return <MultiwayModule {...props} />;
+    if (activeModule === 'main-guidee') return (
+      <div className="min-h-screen bg-[#060d08]">
+        <Navigation />
+        <div className="pt-20 pb-16 px-4">
+          <div className="max-w-2xl mx-auto">
+            <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+              <ChevronLeft size={16} /> Retour aux modules
+            </button>
+            <HandPlayer script={HAND_SCRIPTS['avance']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+          </div>
+        </div>
+      </div>
+    );
     if (activeModule === 'quiz') return <AvanceQuizModule {...props} />;
   }
 
