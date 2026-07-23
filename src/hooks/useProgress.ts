@@ -1,12 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-
-const supabaseEnabled = !!(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { useState, useCallback } from 'react';
 
 interface ProgressData {
   completedModules: Record<string, boolean>;
@@ -27,115 +21,34 @@ function saveLocal(data: ProgressData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-function parseModuleKey(key: string) {
-  const idx = key.indexOf('-');
-  return idx === -1
-    ? { level_id: key, module_id: key }
-    : { level_id: key.slice(0, idx), module_id: key.slice(idx + 1) };
-}
-
-async function getSupabase() {
-  const { createClient } = await import('@/lib/supabase/client');
-  return createClient();
-}
-
 export function useProgress() {
-  const { user } = useAuth();
-  const [progress, setProgress] = useState<ProgressData>(defaultProgress);
+  const [progress, setProgress] = useState<ProgressData>(() => loadLocal());
 
-  useEffect(() => {
-    if (!user || !supabaseEnabled) {
-      setProgress(loadLocal());
-      return;
-    }
-
-    let cancelled = false;
-
-    async function fetchFromSupabase() {
-      try {
-        const supabase = await getSupabase();
-        const [{ data: modules }, { data: levels }, { data: quizzes }] = await Promise.all([
-          supabase.from('user_progress').select('level_id, module_id').eq('user_id', user!.id),
-          supabase.from('user_completed_levels').select('level_id').eq('user_id', user!.id),
-          supabase.from('user_quiz_scores').select('quiz_id, score').eq('user_id', user!.id),
-        ]);
-
-        if (cancelled) return;
-
-        const completedModules: Record<string, boolean> = {};
-        modules?.forEach((m: { level_id: string; module_id: string }) => {
-          completedModules[`${m.level_id}-${m.module_id}`] = true;
-        });
-
-        const completedLevels: Record<string, boolean> = {};
-        levels?.forEach((l: { level_id: string }) => { completedLevels[l.level_id] = true; });
-
-        const quizScores: Record<string, number> = {};
-        quizzes?.forEach((q: { quiz_id: string; score: number }) => { quizScores[q.quiz_id] = q.score; });
-
-        setProgress({ completedModules, completedLevels, quizScores });
-      } catch {
-        // Fall back to localStorage on Supabase error
-        if (!cancelled) setProgress(loadLocal());
-      }
-    }
-
-    fetchFromSupabase();
-    return () => { cancelled = true; };
-  }, [user?.id]);
-
-  const completeModule = useCallback(async (moduleKey: string) => {
-    if (progress.completedModules[moduleKey]) return;
-
-    const next = {
-      ...progress,
-      completedModules: { ...progress.completedModules, [moduleKey]: true },
-    };
-    setProgress(next);
-
-    if (user && supabaseEnabled) {
-      try {
-        const supabase = await getSupabase();
-        const { level_id, module_id } = parseModuleKey(moduleKey);
-        await supabase.from('user_progress').upsert({ user_id: user.id, level_id, module_id });
-      } catch { saveLocal(next); }
-    } else {
+  const completeModule = useCallback((moduleKey: string) => {
+    setProgress(prev => {
+      if (prev.completedModules[moduleKey]) return prev;
+      const next = { ...prev, completedModules: { ...prev.completedModules, [moduleKey]: true } };
       saveLocal(next);
-    }
-  }, [progress, user]);
+      return next;
+    });
+  }, []);
 
-  const completeLevel = useCallback(async (levelId: string) => {
-    if (progress.completedLevels[levelId]) return;
-
-    const next = {
-      ...progress,
-      completedLevels: { ...progress.completedLevels, [levelId]: true },
-    };
-    setProgress(next);
-
-    if (user && supabaseEnabled) {
-      try {
-        const supabase = await getSupabase();
-        await supabase.from('user_completed_levels').upsert({ user_id: user.id, level_id: levelId });
-      } catch { saveLocal(next); }
-    } else {
+  const completeLevel = useCallback((levelId: string) => {
+    setProgress(prev => {
+      if (prev.completedLevels[levelId]) return prev;
+      const next = { ...prev, completedLevels: { ...prev.completedLevels, [levelId]: true } };
       saveLocal(next);
-    }
-  }, [progress, user]);
+      return next;
+    });
+  }, []);
 
-  const saveQuizScore = useCallback(async (quizId: string, score: number) => {
-    const next = { ...progress, quizScores: { ...progress.quizScores, [quizId]: score } };
-    setProgress(next);
-
-    if (user && supabaseEnabled) {
-      try {
-        const supabase = await getSupabase();
-        await supabase.from('user_quiz_scores').upsert({ user_id: user.id, quiz_id: quizId, score });
-      } catch { saveLocal(next); }
-    } else {
+  const saveQuizScore = useCallback((quizId: string, score: number) => {
+    setProgress(prev => {
+      const next = { ...prev, quizScores: { ...prev.quizScores, [quizId]: score } };
       saveLocal(next);
-    }
-  }, [progress, user]);
+      return next;
+    });
+  }, []);
 
   const isLevelUnlocked = useCallback((levelId: string) => {
     if (levelId === 'professionnel') return progress.completedLevels['expert'] === true;
@@ -149,29 +62,10 @@ export function useProgress() {
     return { completed, total: totalModules, percentage: Math.round((completed / totalModules) * 100) };
   }, [progress.completedModules]);
 
-  const resetProgress = useCallback(async () => {
-    if (user && supabaseEnabled) {
-      try {
-        const supabase = await getSupabase();
-        await Promise.all([
-          supabase.from('user_progress').delete().eq('user_id', user.id),
-          supabase.from('user_completed_levels').delete().eq('user_id', user.id),
-          supabase.from('user_quiz_scores').delete().eq('user_id', user.id),
-        ]);
-      } catch {}
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
+  const resetProgress = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
     setProgress(defaultProgress);
-  }, [user]);
+  }, []);
 
-  return {
-    progress,
-    completeModule,
-    completeLevel,
-    saveQuizScore,
-    isLevelUnlocked,
-    getLevelProgress,
-    resetProgress,
-  };
+  return { progress, completeModule, completeLevel, saveQuizScore, isLevelUnlocked, getLevelProgress, resetProgress };
 }

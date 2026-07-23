@@ -4,8 +4,7 @@ import { useState, useEffect, useId } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, ChevronRight, User, Menu, X } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Home, ChevronRight, Menu, X } from 'lucide-react';
 
 const MotionLink = motion.create(Link);
 
@@ -34,7 +33,6 @@ const allLinks = navGroups.flatMap(g => g.links);
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
 
@@ -105,32 +103,6 @@ export default function Navigation() {
               <Home size={16} aria-hidden="true" />
             </Link>
 
-            {user ? (
-              <MotionLink
-                href="/profil"
-                whileTap={{ scale: 0.93 }}
-                transition={{ duration: 0.1 }}
-                aria-current={pathname.startsWith('/profil') ? 'page' : undefined}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  pathname.startsWith('/profil')
-                    ? 'text-yellow-400 bg-white/10'
-                    : 'text-gray-400 hover:text-yellow-400 hover:bg-white/5'
-                }`}
-              >
-                <User size={14} aria-hidden="true" />
-                <span className="hidden sm:inline">Profil</span>
-              </MotionLink>
-            ) : (
-              <MotionLink
-                href="/login"
-                whileTap={{ scale: 0.93 }}
-                transition={{ duration: 0.1 }}
-                className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 text-sm font-medium transition-all"
-              >
-                Connexion
-              </MotionLink>
-            )}
-
             {/* Mobile hamburger */}
             <button
               onClick={() => setMenuOpen(o => !o)}
@@ -200,19 +172,10 @@ export default function Navigation() {
                   </div>
                 ))}
 
-                <div className="border-t border-white/10 pt-4 flex items-center gap-3">
+                <div className="border-t border-white/10 pt-4">
                   <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors" aria-label="Accueil">
                     <Home size={15} aria-hidden="true" /> Accueil
                   </Link>
-                  {user ? (
-                    <Link href="/profil" aria-current={pathname.startsWith('/profil') ? 'page' : undefined} className="flex items-center gap-2 text-gray-400 hover:text-yellow-400 text-sm transition-colors ml-auto">
-                      <User size={15} aria-hidden="true" /> Profil
-                    </Link>
-                  ) : (
-                    <Link href="/login" className="ml-auto px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-medium">
-                      Connexion
-                    </Link>
-                  )}
                 </div>
               </nav>
             </motion.div>

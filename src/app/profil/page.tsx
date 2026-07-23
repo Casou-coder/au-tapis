@@ -1,8 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { useProgress } from '@/hooks/useProgress';
 import Navigation from '@/components/Navigation';
 
@@ -15,16 +13,8 @@ const LEVELS = [
 ];
 
 export default function ProfilPage() {
-  const { user, signOut } = useAuth();
   const { getLevelProgress, resetProgress, isLevelUnlocked } = useProgress();
-  const router = useRouter();
 
-  async function handleSignOut() {
-    await signOut();
-    router.push('/');
-  }
-
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Joueur';
   const totalCompleted = LEVELS.reduce((sum, l) => sum + getLevelProgress(l.id, l.total).completed, 0);
   const totalModules = LEVELS.reduce((sum, l) => sum + l.total, 0);
 
@@ -32,20 +22,18 @@ export default function ProfilPage() {
     <div className="min-h-screen bg-[#0a0f0a]">
       <Navigation />
 
-      <main className="max-w-3xl mx-auto px-4 pt-28 pb-16">
-        {/* Header profil */}
+      <main id="main-content" className="max-w-3xl mx-auto px-4 pt-28 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-3xl mx-auto mb-4">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-3xl mx-auto mb-4" aria-hidden="true">
             ♠
           </div>
           <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
-            {username}
+            Ma Progression
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
 
           <div className="mt-4 inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-4 py-1.5">
             <span className="text-yellow-400 font-bold">{totalCompleted}</span>
@@ -64,7 +52,14 @@ export default function ProfilPage() {
             <span>Progression globale</span>
             <span>{Math.round((totalCompleted / totalModules) * 100)}%</span>
           </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="h-2 bg-white/10 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={Math.round((totalCompleted / totalModules) * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Progression globale"
+          >
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400"
               initial={{ width: 0 }}
@@ -90,7 +85,7 @@ export default function ProfilPage() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span>{level.emoji}</span>
+                    <span aria-hidden="true">{level.emoji}</span>
                     <span className={`font-semibold text-sm ${level.color}`}>{level.label}</span>
                     {!unlocked && <span className="text-xs text-gray-500">🔒 Verrouillé</span>}
                     {prog.completed === prog.total && unlocked && (
@@ -101,13 +96,17 @@ export default function ProfilPage() {
                     {prog.completed}/{prog.total} modules
                   </span>
                 </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-1.5 bg-white/10 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={prog.percentage}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Progression ${level.label}`}
+                >
                   <div
                     className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${prog.percentage}%`,
-                      background: unlocked ? 'currentColor' : '#374151',
-                    }}
+                    style={{ width: `${prog.percentage}%`, background: unlocked ? '#eab308' : '#374151' }}
                   />
                 </div>
               </motion.div>
@@ -115,25 +114,17 @@ export default function ProfilPage() {
           })}
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => {
-              if (confirm('Réinitialiser toute votre progression ? Cette action est irréversible.')) {
-                resetProgress();
-              }
-            }}
-            className="flex-1 py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium"
-          >
-            Réinitialiser la progression
-          </button>
-          <button
-            onClick={handleSignOut}
-            className="flex-1 py-3 rounded-xl border border-white/20 text-gray-300 hover:bg-white/5 transition-colors text-sm font-medium"
-          >
-            Déconnexion
-          </button>
-        </div>
+        {/* Reset */}
+        <button
+          onClick={() => {
+            if (confirm('Réinitialiser toute votre progression ? Cette action est irréversible.')) {
+              resetProgress();
+            }
+          }}
+          className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium"
+        >
+          Réinitialiser la progression
+        </button>
       </main>
     </div>
   );

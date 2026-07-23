@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
 import { useProgress } from './useProgress';
 import { Challenge, selectDailyChallenge, getUserLevel } from '@/lib/challenges-data';
 
@@ -45,31 +44,20 @@ function computeStreak(history: DayRecord[]): number {
 }
 
 export function useDailyChallenge() {
-  const { user } = useAuth();
   const { progress } = useProgress();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
   const [streak, setStreak] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  // Stable ref for completedLevels to avoid re-running on reference change
-  const completedLevelsRef = useRef(progress.completedLevels);
-  const completedLevelsStr = JSON.stringify(progress.completedLevels);
-
-  useEffect(() => {
-    completedLevelsRef.current = progress.completedLevels;
-  });
 
   useEffect(() => {
     const today = getToday();
     const history = loadHistory();
     const todayRecord = history.find(h => h.date === today);
     const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
-    const level = getUserLevel(completedLevelsRef.current);
-    const userId = user?.id ?? 'anonymous';
+    const level = getUserLevel(progress.completedLevels);
 
-    const picked = selectDailyChallenge(level, completedIds, userId, today);
+    const picked = selectDailyChallenge(level, completedIds, 'anonymous', today);
     setChallenge(picked);
     setStreak(computeStreak(history));
 
@@ -77,9 +65,7 @@ export function useDailyChallenge() {
       setIsCompleted(true);
       setWasCorrect(todayRecord.correct);
     }
-    setLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, completedLevelsStr]);
+  }, [progress.completedLevels]);
 
   const completeChallenge = useCallback((correct: boolean) => {
     if (!challenge) return;
@@ -95,5 +81,5 @@ export function useDailyChallenge() {
 
   const history = typeof window !== 'undefined' ? loadHistory() : [];
 
-  return { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history };
+  return { challenge, isCompleted, wasCorrect, streak, loading: false, completeChallenge, history };
 }
