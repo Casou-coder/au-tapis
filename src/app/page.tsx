@@ -136,7 +136,7 @@ export default function HomePage() {
               transition={{ duration: 0.12 }}
               className="group flex items-center justify-center gap-2 bg-gradient-to-r from-green-700 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-bold px-8 py-4 rounded-xl transition-all glow-green"
             >
-              Commencer gratuitement
+              Commencer à apprendre
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </motion.button>
           </motion.div>
