@@ -4556,9 +4556,7 @@ export const CHALLENGES: Challenge[] = [
     question: 'Avec 55, tu dois payer 4$ dans un pot de 12$ (3 callers + open). Es-tu rentable ici ?',
     options: [
       { label: 'Non, 55 est trop faible contre plusieurs joueurs', isCorrect: false, explanation: 'Avec un set (30BB de stack), tu peux regagner beaucoup. Face à 3 adversaires, les implied odds sont excellentes.' },
-      { label: 'Oui — implied odds : si tu touches un set, tu gagnes des stacks', isCorrect: true, explanation: 'Correct ! La règle "set mining" : tu touches un set ~12% du temps. À 100BB, gagner un stack contre un joueur = 200$. Tu risques 4$ pour potentiellement gagner 100];
-
-// ─── HELPERS. Rentable.' },
+      { label: 'Oui — implied odds : si tu touches un set, tu gagnes des stacks', isCorrect: true, explanation: 'Correct ! La règle "set mining" : tu touches un set ~12% du temps. À 100BB, gagner un stack contre un joueur = 200$. Tu risques 4$ pour potentiellement gagner 100$+. Rentable.' },
       { label: 'Fold — les petites paires ne valent rien sans être un set', isCorrect: false, explanation: 'C\'est précisément pour ça qu\'on appelle un set qu\'on call ! L\'objectif avec une petite paire est de miner le set.' },
       { label: 'Raise pour prendre l\'initiative', isCorrect: false, explanation: 'Raise avec 55 face à plusieurs adversaires ne fait pas sens. Tu n\'as pas d\'avantage de range. Call pour les implied odds.' },
     ],
