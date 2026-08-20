@@ -292,7 +292,7 @@ export default function HomePage() {
             Prêt à jouer ?
           </h2>
           <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-            Rejoignez des milliers de joueurs qui ont maîtrisé le poker grâce à nos cours.
+            Cours gratuits, quiz interactifs, mains légendaires. Progressez à votre rythme, du débutant au niveau pro.
           </p>
           <MotionLink
             href="/debutant"

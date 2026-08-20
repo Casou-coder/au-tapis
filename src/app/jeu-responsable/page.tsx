@@ -16,83 +16,83 @@ const fadeUp = {
 const mentalTips = [
   {
     icon: Clock,
-    title: 'Fixe des limites de temps',
-    body: "Avant de jouer, decide combien de temps tu y consacreras. Pose une alarme. Respecte-la meme en cas de bonne serie : le tilt ne frappe pas que quand tu perds.",
+    title: 'Fixez des limites de temps',
+    body: "Avant de jouer, décidez combien de temps vous y consacrerez. Posez une alarme. Respectez-la même en cas de bonne série : le tilt ne frappe pas que quand on perd.",
   },
   {
     icon: Banknote,
-    title: 'Joue uniquement ce que tu peux perdre',
-    body: "Le bankroll management n'est pas une option. Ne joue jamais avec l'argent du loyer, des courses ou d'une epargne. Une regle simple : si la perte te ferait stresser, c'est trop.",
+    title: 'Ne jouez que ce que vous pouvez perdre',
+    body: "Le bankroll management n'est pas une option. Ne jouez jamais avec l'argent du loyer, des courses ou d'une épargne. Une règle simple : si la perte vous ferait stresser, c'est trop.",
   },
   {
     icon: Brain,
-    title: "Reconnais le tilt avant qu'il t'ecrase",
-    body: "Le tilt, jouer sous l'emprise de l'emotion, est la premiere cause de perte. Si tu sens la frustration monter : pause obligatoire. 10 minutes minimum. Reviens quand ton raisonnement est clair.",
+    title: "Reconnaissez le tilt avant qu'il vous écrase",
+    body: "Le tilt — jouer sous l'emprise de l'émotion — est la première cause de perte. Si vous sentez la frustration monter : pause obligatoire. 10 minutes minimum. Revenez quand votre raisonnement est clair.",
   },
   {
     icon: BarChart3,
-    title: 'Evalue ton jeu sur le long terme',
-    body: "Une session ne dit rien. Une semaine non plus. Juge tes decisions sur leur qualite, pas sur leur resultat. La variance fait partie du jeu : un mauvais resultat n'est pas forcement une mauvaise decision.",
+    title: 'Évaluez votre jeu sur le long terme',
+    body: "Une session ne dit rien. Une semaine non plus. Jugez vos décisions sur leur qualité, pas sur leur résultat. La variance fait partie du jeu : un mauvais résultat n'est pas forcément une mauvaise décision.",
   },
   {
     icon: Users,
-    title: 'Ne joue pas pour fuir',
-    body: "Le poker comme exutoire au stress, a l'ennui ou aux problemes personnels est un signal d'alerte. Le jeu doit etre un loisir conscient, pas une echappatoire.",
+    title: 'Ne jouez pas pour fuir',
+    body: "Le poker comme exutoire au stress, à l'ennui ou aux problèmes personnels est un signal d'alerte. Le jeu doit être un loisir conscient, pas une échappatoire.",
   },
   {
     icon: Heart,
-    title: 'Parle de ta pratique autour de toi',
-    body: "Isoler sa pratique est un signe preoccupant. Si tu caches combien de temps ou d'argent tu joues, c'est le moment de t'interroger honnetement.",
+    title: 'Parlez de votre pratique autour de vous',
+    body: "Isoler sa pratique est un signe préoccupant. Si vous cachez combien de temps ou d'argent vous jouez, c'est le moment de vous interroger honnêtement.",
   },
 ];
 
 const howToPlayTips = [
   {
     icon: Monitor,
-    title: 'Commence sans argent reel',
-    body: "Avant de toucher a une mise, joue en play money : sur des sites gratuits, avec des amis, ou ici sur Forged Poker. La mecanique des mises, les positions, les ranges : tout ca s'apprend sans risquer un centime. N'engage de l'argent reel que quand les regles sont devenues automatiques.",
+    title: 'Commencez sans argent réel',
+    body: "Avant de toucher à une mise, jouez en play money : sur des sites gratuits, avec des amis, ou ici sur Forged Poker. La mécanique des mises, les positions, les ranges : tout cela s'apprend sans risquer un centime. N'engagez de l'argent réel que quand les règles sont devenues automatiques.",
   },
   {
     icon: TrendingUp,
     title: "Le jeu en ligne est un vrai outil d'apprentissage",
-    body: "Ne sous-estime pas le poker online. En live, tu joues peut-etre 30 mains par heure. En ligne, c'est 60 a 80, voire plusieurs tables en parallele. Ce volume accelere est un avantage unique : tu rencontres plus de situations, plus vite, et tu corriges plus vite. Le live apprend la lecture humaine ; le online apprend la discipline mathematique. Les deux sont indispensables.",
+    body: "Ne sous-estimez pas le poker online. En live, on joue peut-être 30 mains par heure. En ligne, c'est 60 à 80, voire plusieurs tables en parallèle. Ce volume accéléré est un avantage unique : on rencontre plus de situations, plus vite, et on corrige plus vite. Le live apprend la lecture humaine ; le online apprend la discipline mathématique. Les deux sont indispensables.",
   },
   {
     icon: Eye,
-    title: 'Lis tes adversaires en permanence',
-    body: "Chaque information compte. En live : le timing d'une relance, un regard vers les jetons apres avoir vu sa main, une respiration qui change. En ligne : le sizing inhabituel, une decision prise trop vite ou trop lentement. Un bon joueur n'observe pas seulement ses cartes : il observe la table entiere, a chaque street, meme quand il est couche.",
+    title: 'Lisez vos adversaires en permanence',
+    body: "Chaque information compte. En live : le timing d'une relance, un regard vers les jetons après avoir vu sa main, une respiration qui change. En ligne : le sizing inhabituel, une décision prise trop vite ou trop lentement. Un bon joueur n'observe pas seulement ses cartes : il observe la table entière, à chaque street, même quand il est couché.",
   },
   {
     icon: Crosshair,
-    title: 'Comprends pour exploiter',
-    body: "L'objectif n'est pas de jouer tes cartes : c'est de jouer ton adversaire. Un joueur trop passif qui appelle toutes tes mises ? Value-bet large sur chaque main forte, reduis tes bluffs a zero face a lui. Un joueur qui fold trop sur le flop ? Bet plus souvent en continuation. L'exploitation consciente de ces tendances, c'est ce qui separe un joueur moyen d'un joueur rentable.",
+    title: 'Comprenez pour exploiter',
+    body: "L'objectif n'est pas de jouer vos cartes : c'est de jouer votre adversaire. Un joueur trop passif qui appelle toutes vos mises ? Value-bettez large sur chaque main forte, réduisez vos bluffs à zéro face à lui. Un joueur qui fold trop sur le flop ? Bettez plus souvent en continuation. L'exploitation consciente de ces tendances, c'est ce qui sépare un joueur moyen d'un joueur rentable.",
   },
   {
     icon: Sword,
     title: 'Le bluff est un outil, pas un style',
-    body: "Bluffer n'a de sens que si ton adversaire est capable de folder : bluffer un calling station, c'est bruler de l'argent. Un bon bluff raconte une histoire coherente avec l'ensemble de la main : ta position, le board, ton sizing depuis le debut. Ne bluffe jamais par ennui, par frustration ou pour voir. Chaque bluff doit avoir une raison precise.",
+    body: "Bluffer n'a de sens que si votre adversaire est capable de folder : bluffer un calling station, c'est brûler de l'argent. Un bon bluff raconte une histoire cohérente avec l'ensemble de la main : votre position, le board, votre sizing depuis le début. Ne bluffez jamais par ennui, par frustration ou pour voir. Chaque bluff doit avoir une raison précise.",
   },
   {
     icon: TrendingDown,
-    title: 'Sur une main forte, construis le pot',
-    body: "Beaucoup de debutants slowplay leurs meilleures mains par peur de faire fuir l'adversaire. C'est une erreur frequente et couteuse. Si ton adversaire est pret a payer, laisse-le payer : bet, relance, construis le pot tot. Le poker n'est pas un jeu ou l'on se cache quand on est fort : c'est un jeu ou l'on sait quand montrer sa force et en tirer le maximum.",
+    title: 'Sur une main forte, construisez le pot',
+    body: "Beaucoup de débutants slowplay leurs meilleures mains par peur de faire fuir l'adversaire. C'est une erreur fréquente et coûteuse. Si votre adversaire est prêt à payer, laissez-le payer : bettez, relancez, construisez le pot tôt. Le poker n'est pas un jeu où l'on se cache quand on est fort : c'est un jeu où l'on sait quand montrer sa force et en tirer le maximum.",
   },
 ];
 
 const warningSignals = [
-  "Tu joues avec de l'argent prevu pour d'autres depenses",
-  "Tu empruntes pour financer ta pratique",
-  "Tu passes de plus en plus de temps a jouer malgre tes obligations",
-  "Tu ressens le besoin de cacher ta pratique a tes proches",
-  'Tu continues a jouer pour "recuperer" tes pertes (chasing losses)',
-  "Tu ressens de l'irritabilite ou de l'anxiete quand tu ne joues pas",
-  "Le jeu prend le dessus sur ton sommeil, ton travail, tes relations",
+  "Vous jouez avec de l'argent prévu pour d'autres dépenses",
+  "Vous empruntez pour financer votre pratique",
+  "Vous passez de plus en plus de temps à jouer malgré vos obligations",
+  "Vous ressentez le besoin de cacher votre pratique à vos proches",
+  'Vous continuez à jouer pour "récupérer" vos pertes (chasing losses)',
+  "Vous ressentez de l'irritabilité ou de l'anxiété quand vous ne jouez pas",
+  "Le jeu prend le dessus sur votre sommeil, votre travail, vos relations",
 ];
 
 const resources = [
   {
     name: 'Joueurs Info Service',
-    description: "Ligne d'ecoute nationale, anonyme et gratuite, specialisee jeu problematique",
+    description: "Ligne d'écoute nationale, anonyme et gratuite, spécialisée jeu problématique",
     contact: '09 74 75 13 13',
     url: 'https://www.joueurs-info-service.fr',
     type: 'phone',
@@ -106,7 +106,7 @@ const resources = [
   },
   {
     name: 'Alcool Info Service / Drogues Info Service',
-    description: "Ecoute, information et orientation pour toutes les addictions comportementales",
+    description: "Écoute, information et orientation pour toutes les addictions comportementales",
     contact: '0 800 23 13 13',
     url: 'https://www.drogues-info-service.fr',
     type: 'phone',
@@ -135,7 +135,7 @@ export default function JeuResponsablePage() {
           </h1>
           <p className="text-gray-400 text-lg leading-relaxed">
             Forged Poker est un site d&apos;apprentissage sans argent réel. Mais le poker se pratique aussi en argent réel,
-            et ça change tout. Cette page est là pour que tu abordes ça avec lucidité.
+            et ça change tout. Cette page est là pour que vous abordiez ça avec lucidité.
           </p>
         </motion.div>
 
@@ -289,7 +289,7 @@ export default function JeuResponsablePage() {
             <h2 className="text-white font-bold text-lg">Signaux d&apos;alerte</h2>
           </div>
           <p className="text-gray-400 text-sm mb-5">
-            Si tu te reconnais dans plusieurs de ces situations, il est important d&apos;en parler à un professionnel.
+            Si vous vous reconnaissez dans plusieurs de ces situations, il est important d&apos;en parler à un professionnel.
           </p>
           <ul className="space-y-2.5">
             {warningSignals.map((signal, i) => (
