@@ -4,16 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import { HandPlayer } from '@/components/HandPlayer';
-import { HAND_SCRIPTS } from '@/lib/hand-scripts';
+import { MultiHandPlayer } from '@/components/HandPlayer';
+import { XpToast } from '@/components/XpToast';
+import { ALL_HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { OUTS_TABLE, POT_ODDS_TABLE, STARTING_HANDS, QUIZ_QUESTIONS } from '@/lib/poker-data';
+import InlineQuiz from '@/components/InlineQuiz';
+import { useProgress } from '@/hooks/useProgress';
 
 const MODULES = [
   { id: 'potodds', title: 'Pot Odds', icon: '📊', desc: 'Calcul de rentabilité des calls' },
   { id: 'ev', title: 'Valeur Attendue (EV)', icon: '🧮', desc: 'Mathématiques du poker' },
   { id: 'outs', title: 'Outs & Équité', icon: '🎲', desc: 'Probabilités de compléter les draws' },
-  { id: 'hands', title: 'Hand Selection', icon: '🃏', desc: 'Chart de sélection GTO' },
+  { id: 'hands', title: 'Sélection de Mains', icon: '🃏', desc: 'Chart de sélection GTO' },
   { id: 'cbet', title: 'Continuation Bet', icon: '💥', desc: 'L\'arme principale post-flop' },
   { id: 'bluff', title: 'Semi-Bluff', icon: '🎭', desc: 'Bluffer avec des outs' },
   { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Jouez une vraie main guidée' },
@@ -22,10 +24,18 @@ const MODULES = [
 
 export default function IntermediairePage() {
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
-
-  const complete = (id: string) => { setCompletedModules(prev => new Set([...prev, id])); setActiveModule(null); };
-  const progress = (completedModules.size / MODULES.length) * 100;
+  const { progress, completeModule, completeLevel, addXp } = useProgress();
+  const [xpToast, setXpToast] = useState<number | null>(null);
+  const isDone = (modId: string) => !!progress.completedModules[`intermediaire-${modId}`];
+  const completedCount = MODULES.filter(m => isDone(m.id)).length;
+  const complete = (id: string, xp = 50) => {
+    completeModule(`intermediaire-${id}`);
+    addXp(xp);
+    setXpToast(xp);
+    if (MODULES.every(m => m.id === id || isDone(m.id))) completeLevel('intermediaire');
+    setActiveModule(null);
+  };
+  const progressPct = (completedCount / MODULES.length) * 100;
 
   if (activeModule) {
     const props = { onComplete: () => complete(activeModule), onBack: () => setActiveModule(null) };
@@ -37,13 +47,12 @@ export default function IntermediairePage() {
     if (activeModule === 'bluff') return <BluffModule {...props} />;
     if (activeModule === 'main-guidee') return (
       <div className="min-h-screen bg-[#060d08]">
-        <Navigation />
         <div className="pt-20 pb-16 px-4">
           <div className="max-w-2xl mx-auto">
             <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
               <ChevronLeft size={16} /> Retour aux modules
             </button>
-            <HandPlayer script={HAND_SCRIPTS['intermediaire']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+            <MultiHandPlayer scripts={ALL_HAND_SCRIPTS['intermediaire']} onComplete={(score) => complete(activeModule, 50 + (score >= 4 ? 150 : score >= 3 ? 100 : score >= 2 ? 50 : 0))} onBack={() => setActiveModule(null)} />
           </div>
         </div>
       </div>
@@ -53,7 +62,7 @@ export default function IntermediairePage() {
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
+      <AnimatePresence>{xpToast !== null && <XpToast amount={xpToast} onDone={() => setXpToast(null)} />}</AnimatePresence>
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
@@ -70,19 +79,19 @@ export default function IntermediairePage() {
             <p className="text-gray-400 mt-2">Maîtrisez les mathématiques du poker et la stratégie post-flop.</p>
             <div className="mt-6">
               <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>{completedModules.size}/{MODULES.length} modules</span>
-                <span>{Math.round(progress)}%</span>
+                <span>{completedCount}/{MODULES.length} modules</span>
+                <span>{Math.round(progressPct)}%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-blue-700 to-blue-400 rounded-full" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8 }} />
+                <motion.div className="h-full bg-gradient-to-r from-blue-700 to-blue-400 rounded-full" initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.8 }} />
               </div>
             </div>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {MODULES.map((mod, i) => {
-              const done = completedModules.has(mod.id);
-              const locked = i > 0 && !completedModules.has(MODULES[i - 1].id);
+              const done = isDone(mod.id);
+              const locked = i > 0 && !isDone(MODULES[i - 1].id);
               return (
                 <motion.button key={mod.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                   onClick={() => !locked && setActiveModule(mod.id)}
@@ -105,7 +114,7 @@ export default function IntermediairePage() {
             })}
           </div>
 
-          {completedModules.size === MODULES.length && (
+          {completedCount === MODULES.length && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-6 rounded-2xl border border-purple-500/40 bg-purple-900/20 text-center">
               <div className="text-4xl mb-3">🔮</div>
               <h3 className="text-xl font-bold text-white mb-2">Niveau Intermédiaire complété !</h3>
@@ -130,7 +139,7 @@ function PotOddsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
   const potOddsPercent = Math.round((callAmount / (pot + callAmount)) * 100);
 
   return (
-    <LevelModuleLayout title="Pot Odds" icon="📊" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Pot Odds" icon="📊" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-potodds">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Les Pot Odds</h2>
       <p className="text-gray-400 text-sm mb-6">Le pot odds est le ratio entre ce que vous risquez et ce que vous pouvez gagner. Si votre équité &gt; pot odds%, le call est rentable.</p>
 
@@ -166,9 +175,9 @@ function PotOddsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
         </div>
 
         <div className={`mt-4 p-3 rounded-xl text-sm ${potOddsPercent < 20 ? 'bg-green-900/30 text-green-300 border border-green-700/30' : potOddsPercent < 35 ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/30' : 'bg-red-900/30 text-red-300 border border-red-700/30'}`}>
-          {potOddsPercent < 20 ? '✅ Pot odds très favorables — la plupart des draws sont rentables ici' :
-            potOddsPercent < 35 ? '⚡ Pot odds corrects — flush draw et OESD rentables' :
-              '⚠️ Pot odds défavorables — besoin d\'une main forte ou de très bons draws'}
+          {potOddsPercent < 20 ? '✅ Pot odds très favorables : la plupart des draws sont rentables ici' :
+            potOddsPercent < 35 ? '⚡ Pot odds corrects : flush draw et OESD rentables' :
+              '⚠️ Pot odds défavorables : besoin d\'une main forte ou de très bons draws'}
         </div>
       </div>
 
@@ -207,7 +216,7 @@ function EVModule({ onComplete, onBack }: { onComplete: () => void; onBack: () =
   const ev = (winProb / 100) * winAmount - ((100 - winProb) / 100) * loseAmount;
 
   return (
-    <LevelModuleLayout title="Valeur Attendue (EV)" icon="🧮" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Valeur Attendue (EV)" icon="🧮" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-ev">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Expected Value (EV)</h2>
       <p className="text-gray-400 text-sm mb-4">
         L&apos;EV est le gain moyen d&apos;une décision répétée des milliers de fois. <strong className="text-white">EV+ = décision rentable à long terme</strong>.
@@ -275,7 +284,7 @@ function OutsModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
   const selected = OUTS_TABLE.find(r => r.outs === outs) || OUTS_TABLE[8];
 
   return (
-    <LevelModuleLayout title="Outs & Équité" icon="🎲" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Outs & Équité" icon="🎲" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-outs">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Calculer vos Outs</h2>
       <p className="text-gray-400 text-sm mb-4">
         Un <strong className="text-white">out</strong> est une carte qui améliore votre main pour la rendre gagnante. Connaître vos outs = calculer vos chances.
@@ -341,7 +350,7 @@ function HandsModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
   const filtered = filter === 'all' ? STARTING_HANDS : STARTING_HANDS.filter(h => h.category === filter);
 
   return (
-    <LevelModuleLayout title="Hand Selection Chart" icon="🃏" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Hand Selection Chart" icon="🃏" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-hands">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Sélection de Mains</h2>
       <p className="text-gray-400 text-sm mb-4">Chart de référence pour la sélection de mains pré-flop. Filtrez par catégorie.</p>
 
@@ -451,7 +460,7 @@ function CBetModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
   ];
 
   return (
-    <LevelModuleLayout title="Continuation Bet" icon="💥" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Continuation Bet" icon="💥" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-cbet">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{steps[step].title}</h2>
         <span className="text-gray-500 text-sm">{step + 1}/{steps.length}</span>
@@ -480,7 +489,7 @@ function CBetModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
 
 function BluffModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <LevelModuleLayout title="Semi-Bluff" icon="🎭" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title="Semi-Bluff" icon="🎭" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-bluff">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>L&apos;Art du Semi-Bluff</h2>
       <p className="text-gray-400 text-sm mb-5">Le semi-bluff est un bluff avec une main qui peut encore s&apos;améliorer. C&apos;est l&apos;arme la plus puissante du joueur intermédiaire.</p>
 
@@ -593,13 +602,12 @@ function IntermQuizModule({ onComplete, onBack }: { onComplete: () => void; onBa
 
 // ── SHARED LAYOUT ─────────────────────────────────────────────────────────────
 
-function LevelModuleLayout({ children, title, icon, color, onBack, onComplete }: {
+function LevelModuleLayout({ children, title, icon, color, onBack, onComplete, quizKey }: {
   children: React.ReactNode; title: string; icon: string; color: string;
-  onBack: () => void; onComplete: () => void;
+  onBack: () => void; onComplete: () => void; quizKey?: string;
 }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -612,6 +620,7 @@ function LevelModuleLayout({ children, title, icon, color, onBack, onComplete }:
             </div>
             <div className="bg-[#0a1410] border border-white/10 rounded-2xl p-6 min-h-[400px] mb-4">
               {children}
+              {quizKey && <InlineQuiz moduleKey={quizKey} />}
             </div>
             <button onClick={onComplete} className="w-full py-3 rounded-xl font-bold text-white transition-all" style={{ background: color }}>
               ✓ Module terminé

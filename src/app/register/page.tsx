@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import Navigation from '@/components/Navigation';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -51,7 +50,6 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#0a0f0a] flex flex-col">
-        <Navigation />
         <main className="flex-1 flex items-center justify-center px-4 pt-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -78,7 +76,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f0a] flex flex-col">
-      <Navigation />
       <main className="flex-1 flex items-center justify-center px-4 pt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

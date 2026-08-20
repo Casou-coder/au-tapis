@@ -2,14 +2,34 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 const MotionLink = motion.create(Link);
 import { Lock, ChevronRight, Star, Zap, Trophy, Target, BookOpen, Play } from 'lucide-react';
-import { LEVELS } from '@/lib/poker-data';
+import { LEVELS } from '@/lib/levels';
 import { useProgress } from '@/hooks/useProgress';
-import { useRef, useState } from 'react';
-import { DailyChallengeCard, DailyChallengeModal } from '@/components/DailyChallenge';
-import { useDailyChallenge } from '@/hooks/useDailyChallenge';
+import { useRef } from 'react';
+
+const DailyChallengeSection = dynamic(() => import('@/components/DailyChallengeSection'), {
+  ssr: false,
+  loading: () => <div className="h-48 rounded-2xl bg-white/5 animate-pulse" />,
+});
+
+function smoothScroll(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = window.scrollY;
+  const target = el.getBoundingClientRect().top + window.scrollY;
+  const duration = 1000;
+  const startTime = performance.now();
+  const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const step = (now: number) => {
+    const p = Math.min((now - startTime) / duration, 1);
+    window.scrollTo(0, start + (target - start) * ease(p));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 function FloatingCard({ suit, delay, x, y, size }: { suit: string; delay: number; x: string; y: string; size: number }) {
   return (
@@ -49,9 +69,8 @@ const statsData = [
 ];
 
 export default function HomePage() {
-  const { isLevelUnlocked } = useProgress();
-  const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge } = useDailyChallenge();
-  const [challengeOpen, setChallengeOpen] = useState(false);
+  const { isLevelUnlocked, getLevelProgress, progress } = useProgress();
+  const isNewVisitor = progress.totalXp === 0 && Object.keys(progress.completedModules).length === 0;
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
@@ -80,10 +99,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl font-bold mb-4 leading-none"
+            className="text-5xl sm:text-7xl md:text-8xl font-bold mb-4 leading-none"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            <span className="text-gradient-gold">Au Tapis.</span>
+            <span className="text-gradient-gold">Forged Poker.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -111,23 +130,15 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <MotionLink
-              href="/debutant"
+            <motion.button
+              onClick={() => smoothScroll('stats')}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.12 }}
               className="group flex items-center justify-center gap-2 bg-gradient-to-r from-green-700 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-bold px-8 py-4 rounded-xl transition-all glow-green"
             >
               Commencer gratuitement
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </MotionLink>
-            <motion.a
-              href="#levels"
-              whileTap={{ scale: 0.96 }}
-              transition={{ duration: 0.12 }}
-              className="flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-xl transition-all hover:bg-white/5"
-            >
-              Voir les niveaux
-            </motion.a>
+            </motion.button>
           </motion.div>
         </motion.div>
 
@@ -143,15 +154,15 @@ export default function HomePage() {
       </section>
 
       {/* STATS */}
-      <section aria-label="Statistiques" className="py-16 border-y border-white/5 bg-black/30">
-        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section id="stats" aria-label="Statistiques" className="py-16 border-y border-white/5 bg-black/30">
+        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {statsData.map((stat, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 36, scale: 0.88 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ delay: i * 0.13, duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}
               className="text-center"
             >
               <stat.icon size={24} className="mx-auto mb-3 text-yellow-500" />
@@ -163,16 +174,9 @@ export default function HomePage() {
       </section>
 
       {/* DÉFI DU JOUR */}
-      <section className="py-12 px-4">
+      <section id="defi" className="py-12 px-4">
         <div className="max-w-2xl mx-auto">
-          <DailyChallengeCard
-            challenge={challenge}
-            isCompleted={isCompleted}
-            wasCorrect={wasCorrect}
-            streak={streak}
-            loading={loading}
-            onOpen={() => setChallengeOpen(true)}
-          />
+          <DailyChallengeSection />
         </div>
       </section>
 
@@ -193,9 +197,31 @@ export default function HomePage() {
             </p>
           </motion.div>
 
+          {isNewVisitor && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-10 flex justify-center"
+            >
+              <MotionLink
+                href="/onboarding"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.12 }}
+                className="inline-flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 hover:border-yellow-500/60 rounded-2xl px-6 py-3 text-sm transition-all group"
+              >
+                <span className="text-xl">🎯</span>
+                <span className="text-gray-300">Nouveau joueur ? Découvrez votre niveau recommandé</span>
+                <span className="text-yellow-400 font-semibold group-hover:translate-x-1 transition-transform">Quiz →</span>
+              </MotionLink>
+            </motion.div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {LEVELS.map((level, i) => {
               const unlocked = isLevelUnlocked(level.id);
+              const levelProgress = getLevelProgress(level.id, level.modules);
               return (
                 <motion.div
                   key={level.id}
@@ -205,7 +231,7 @@ export default function HomePage() {
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={i === 4 ? 'md:col-span-2 lg:col-span-1 lg:col-start-2' : ''}
                 >
-                  <LevelCard level={level} unlocked={unlocked} index={i} />
+                  <LevelCard level={level} unlocked={unlocked} index={i} levelProgress={levelProgress} />
                 </motion.div>
               );
             })}
@@ -223,16 +249,16 @@ export default function HomePage() {
             className="text-4xl font-bold text-center text-white mb-16"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            Pourquoi Au Tapis ?
+            Pourquoi Forged Poker ?
           </motion.h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: '🎯', title: 'Progressif & Structuré', desc: 'Chaque niveau s\'appuie sur le précédent. Pas de jargon inutile — uniquement ce dont vous avez besoin à chaque étape.' },
+              { icon: '🎯', title: 'Progressif & Structuré', desc: 'Chaque niveau s\'appuie sur le précédent. Pas de jargon inutile, uniquement ce dont vous avez besoin à chaque étape.' },
               { icon: '🧮', title: 'Basé sur les Maths', desc: 'Apprenez à calculer les pot odds, l\'équité, l\'EV. Le poker est un jeu de décisions mathématiques à long terme.' },
               { icon: '🎮', title: 'Interactif & Pratique', desc: 'Jouez des mains réelles, répondez à des quiz, analysez des situations emblématiques des plus grands pros.' },
               { icon: '🏆', title: 'Mains Légendaires', desc: 'Étudiez les coups extraordinaires de Phil Ivey, Moneymaker, Isildur1. Comprenez le pourquoi de chaque décision.' },
               { icon: '🔒', title: 'Gratuit & Sans Argent', desc: 'Aucune mise d\'argent réelle. Apprenez en toute sérénité, sans risque, uniquement pour la maîtrise du jeu.' },
-              { icon: '🧠', title: 'GTO & Psychologie', desc: 'Du game theory optimal au mental game de champion — tous les aspects d\'un joueur de haut niveau.' },
+              { icon: '🧠', title: 'GTO & Psychologie', desc: 'Du game theory optimal au mental game de champion, tous les aspects d\'un joueur de haut niveau.' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -280,25 +306,23 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Challenge Modal */}
-      {challengeOpen && challenge && (
-        <DailyChallengeModal
-          challenge={challenge}
-          streak={streak}
-          onComplete={(correct) => { completeChallenge(correct); }}
-          onClose={() => setChallengeOpen(false)}
-        />
-      )}
-
       <footer className="border-t border-white/10 py-8 text-center text-gray-600 text-sm">
-        <p className="mb-1 font-medium text-gray-500">Au Tapis ♠ autapis.fr</p>
+        <p className="mb-1 font-medium text-gray-500">Forged Poker ♠ forgedpoker.com</p>
         <p>Apprenez le jeu, pas l&apos;addiction. Pas de jeux d&apos;argent réels.</p>
       </footer>
     </main>
   );
 }
 
-function LevelCard({ level, unlocked, index }: { level: typeof LEVELS[0]; unlocked: boolean; index: number }) {
+function LevelCard({ level, unlocked, index, levelProgress }: {
+  level: typeof LEVELS[0];
+  unlocked: boolean;
+  index: number;
+  levelProgress: { completed: number; total: number; percentage: number };
+}) {
+  const hasStarted = levelProgress.completed > 0;
+  const isComplete = levelProgress.completed >= levelProgress.total;
+
   return (
     <MotionLink
       href={unlocked ? `/${level.id}` : '#levels'}
@@ -328,6 +352,9 @@ function LevelCard({ level, unlocked, index }: { level: typeof LEVELS[0]; unlock
               <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: level.color + '20', color: level.color }}>
                 Niveau {index + 1}
               </span>
+              {isComplete && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/10 text-white">✓ Terminé</span>
+              )}
             </div>
             <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{level.name}</h3>
             <p className="text-sm" style={{ color: level.color }}>{level.subtitle}</p>
@@ -340,15 +367,34 @@ function LevelCard({ level, unlocked, index }: { level: typeof LEVELS[0]; unlock
           ))}
           {level.topics.length > 3 && <span className="text-xs text-gray-500">+{level.topics.length - 3} autres</span>}
         </div>
+
+        {unlocked && (
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+              <span>{levelProgress.completed}/{levelProgress.total} modules</span>
+              {levelProgress.percentage > 0 && <span>{levelProgress.percentage}%</span>}
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                initial={{ width: 0 }}
+                whileInView={{ width: `${levelProgress.percentage}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                style={{ background: isComplete ? '#22c55e' : level.color }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs text-gray-500">
-            <span>{level.modules} modules</span>
-            <span>·</span>
             <span>{level.estimatedHours}</span>
           </div>
           {unlocked && (
-            <div className="flex items-center gap-1 text-sm font-medium group-hover:gap-2 transition-all" style={{ color: level.color }}>
-              Commencer <ChevronRight size={16} />
+            <div className="flex items-center gap-1 text-sm font-medium group-hover:gap-2 transition-all" style={{ color: isComplete ? '#22c55e' : level.color }}>
+              {isComplete ? 'Revoir' : hasStarted ? 'Continuer' : 'Commencer'}
+              <ChevronRight size={16} />
             </div>
           )}
         </div>

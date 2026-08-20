@@ -45,13 +45,13 @@ const SAMPLE_SCENARIOS: HandScenario[] = [
       { label: 'Fold', action: 'fold', isCorrect: false, explanation: 'Trop tight ! Vous avez un flush draw avec le nut flush draw (A♥). Pot odds correctes + pot equity élevée.' },
       { label: 'Call', action: 'call', isCorrect: true, explanation: 'Correct ! Call avec 9 outs flush + nut draw. Pot odds ~29% vs équité ~36% sur 2 streets = call très rentable.' },
       { label: 'Raise (Semi-bluff)', action: 'raise', isCorrect: true, explanation: 'Aussi correct ! Raise 2.5-3x la mise adverse. Vous avez la meilleure draw + fold equity. Très puissant en position.' },
-      { label: 'Check', action: 'check', isCorrect: false, explanation: 'Ce n\'est pas possible ici — l\'adversaire vient de bet. Vous devez choisir entre fold, call, ou raise.' },
+      { label: 'Check', action: 'check', isCorrect: false, explanation: 'Ce n\'est pas possible ici : l\'adversaire vient de bet. Vous devez choisir entre fold, call, ou raise.' },
     ],
   },
   {
     id: 'scenario-2',
     title: 'Top Pair sur Board Humide',
-    description: 'You opened UTG, un joueur appelle en CO. Board vient dangereux. Il check.',
+    description: 'Vous avez ouvert UTG, un joueur appelle en CO. Board vient dangereux. Il check.',
     position: 'UTG (Early Position)',
     stack: '100 BB',
     heroHand: [
@@ -94,8 +94,8 @@ const SAMPLE_SCENARIOS: HandScenario[] = [
     options: [
       { label: 'Bluff pot bet', action: 'raise', isCorrect: false, explanation: 'Trop gros pour un bluff pur ici. Vous n\'avez pas de blockers As. Overbet expose trop de chips.' },
       { label: 'Bluff 2/3 pot', action: 'call', isCorrect: true, explanation: 'Acceptable ! Vous représentez un flush (rate) ou un straight. Le board A-K suggère vous pouviez avoir ces draws depuis la position CO.' },
-      { label: 'Check (give up)', action: 'check', isCorrect: true, explanation: 'Aussi correct. Vous n\'avez rien — sans fold equity élevée et sans blockers, abandonner est raisonnable.' },
-      { label: 'Small bet 1/4 pot', action: 'call', isCorrect: false, explanation: 'Trop petite — ne force pas les bonnes mains à folder et donne des odds correctes à la plupart.' },
+      { label: 'Check (give up)', action: 'check', isCorrect: true, explanation: 'Aussi correct. Vous n\'avez rien : sans fold equity élevée et sans blockers, abandonner est raisonnable.' },
+      { label: 'Small bet 1/4 pot', action: 'call', isCorrect: false, explanation: 'Trop petite : ne force pas les bonnes mains à folder et donne des odds correctes à la plupart.' },
     ],
   },
 ];
@@ -260,6 +260,7 @@ export function InteractiveHandTrainer() {
         ))}
       </div>
       <InteractiveHand
+        key={currentScenario}
         scenario={SAMPLE_SCENARIOS[currentScenario]}
         onComplete={currentScenario < SAMPLE_SCENARIOS.length - 1 ? handleComplete : undefined}
       />

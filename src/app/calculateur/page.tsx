@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useState, useCallback } from 'react';
 import { ChevronLeft, RefreshCw, Info } from 'lucide-react';
-import Navigation from '@/components/Navigation';
 import PokerCard from '@/components/PokerCard';
 import { Card, Rank, Suit, OUTS_TABLE } from '@/lib/poker-data';
 
@@ -201,7 +200,7 @@ export default function CalculateurPage() {
   const [board, setBoard] = useState<(Card | null)[]>([null, null, null, null, null]);
   const [equity, setEquity] = useState<number | null>(null);
   const [calculating, setCalculating] = useState(false);
-  const [tab, setTab] = useState<'equity' | 'outs' | 'odds'>('equity');
+  const [tab, setTab] = useState<'equity' | 'outs' | 'odds' | 'matchups'>('equity');
 
   const allCards = [...heroHand, ...villainHand, ...board].filter(Boolean) as Card[];
 
@@ -235,7 +234,6 @@ export default function CalculateurPage() {
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -254,6 +252,7 @@ export default function CalculateurPage() {
                 { id: 'equity', label: 'Équité HU', icon: '⚔️' },
                 { id: 'outs', label: 'Table des Outs', icon: '🎲' },
                 { id: 'odds', label: 'Pot Odds', icon: '📊' },
+                { id: 'matchups', label: 'Matchups', icon: '📚' },
               ].map(t => (
                 <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
@@ -356,7 +355,7 @@ export default function CalculateurPage() {
 
                 <div className="flex items-start gap-2 text-xs text-gray-600 bg-white/3 rounded-xl p-3">
                   <Info size={13} className="shrink-0 mt-0.5" />
-                  <p>Sélectionnez les 2 cartes Hero et Villain, puis cliquez Calculer. Le board est optionnel — sans board, l&apos;équité est calculée preflop sur toutes les runouts possibles.</p>
+                  <p>Sélectionnez les 2 cartes Hero et Villain, puis cliquez Calculer. Le board est optionnel, sans board, l&apos;équité est calculée preflop sur toutes les runouts possibles.</p>
                 </div>
               </div>
             )}
@@ -419,9 +418,189 @@ export default function CalculateurPage() {
 
             {/* POT ODDS TAB */}
             {tab === 'odds' && <PotOddsCalculator />}
+
+            {/* MATCHUPS TAB */}
+            {tab === 'matchups' && <MatchupsTable />}
           </motion.div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── MATCHUPS TABLE ────────────────────────────────────────────────────────────
+
+const MATCHUP_CATEGORIES = [
+  {
+    label: 'Overpair vs Overpair',
+    icon: '👑',
+    matchups: [
+      { hero: 'AA', villain: 'KK', equity: 81, note: 'Domination classique' },
+      { hero: 'AA', villain: 'QQ', equity: 80, note: 'AA vs QQ' },
+      { hero: 'AA', villain: 'JJ', equity: 80, note: 'AA vs JJ' },
+      { hero: 'KK', villain: 'QQ', equity: 81, note: 'KK vs QQ' },
+      { hero: 'KK', villain: 'JJ', equity: 81, note: 'KK vs JJ' },
+      { hero: 'QQ', villain: 'JJ', equity: 81, note: 'QQ vs JJ' },
+      { hero: 'JJ', villain: 'TT', equity: 81, note: 'JJ vs TT' },
+      { hero: 'TT', villain: '99', equity: 81, note: 'TT vs 99' },
+    ],
+  },
+  {
+    label: 'Overpair vs Overcards',
+    icon: '⚔️',
+    matchups: [
+      { hero: 'QQ', villain: 'AK', equity: 57, note: 'Le classique "flip favorable"' },
+      { hero: 'JJ', villain: 'AK', equity: 56, note: 'JJ légèrement favori' },
+      { hero: 'TT', villain: 'AK', equity: 55, note: 'TT vs AK, très proche' },
+      { hero: '99', villain: 'AK', equity: 54, note: 'Très proche du 50/50' },
+      { hero: '88', villain: 'AK', equity: 53, note: '88 très léger favori' },
+      { hero: '77', villain: 'AK', equity: 53, note: 'AK légèrement favori' },
+      { hero: 'QQ', villain: 'AQ', equity: 70, note: 'QQ domine AQ (kicker bloqué)' },
+      { hero: 'KK', villain: 'AK', equity: 68, note: 'KK vs AK, A bloqué' },
+      { hero: 'JJ', villain: 'AQ', equity: 55, note: 'JJ vs AQ, proche' },
+      { hero: 'TT', villain: 'AQ', equity: 55, note: 'TT vs AQ' },
+    ],
+  },
+  {
+    label: 'Pair vs Pair (flip)',
+    icon: '🎲',
+    matchups: [
+      { hero: 'AA', villain: 'AA', equity: 50, note: 'Chop parfait' },
+      { hero: '22', villain: 'AK', equity: 49, note: 'Coin flip classique' },
+      { hero: '22', villain: 'AQ', equity: 50, note: 'Quasi 50/50' },
+      { hero: '55', villain: 'AK', equity: 51, note: '55 très légèrement favori' },
+      { hero: '33', villain: 'KQ', equity: 52, note: '33 très léger favori' },
+      { hero: '22', villain: 'KQ', equity: 51, note: 'Coin flip' },
+      { hero: '66', villain: 'AK', equity: 52, note: '66 très léger avantage' },
+      { hero: '44', villain: 'AK', equity: 50, note: 'Quasi coin flip' },
+    ],
+  },
+  {
+    label: 'Domination (même rang)',
+    icon: '🏆',
+    matchups: [
+      { hero: 'AK', villain: 'AQ', equity: 73, note: 'AK domine AQ (Q bloqué)' },
+      { hero: 'AK', villain: 'AJ', equity: 73, note: 'AK domine AJ' },
+      { hero: 'AK', villain: 'A9', equity: 72, note: 'Forte domination' },
+      { hero: 'AK', villain: 'A2', equity: 72, note: 'Forte domination kicker' },
+      { hero: 'AQ', villain: 'AJ', equity: 72, note: 'AQ domine AJ' },
+      { hero: 'AQ', villain: 'A9', equity: 72, note: 'AQ vs A9' },
+      { hero: 'KQ', villain: 'KJ', equity: 72, note: 'KQ domine KJ' },
+      { hero: 'KQ', villain: 'K8', equity: 72, note: 'Forte domination' },
+      { hero: 'KJ', villain: 'QJ', equity: 63, note: 'KJ domine QJ (J bloqué)' },
+      { hero: 'AK', villain: 'KQ', equity: 63, note: 'AK vs KQ (K bloqué)' },
+    ],
+  },
+  {
+    label: 'Suited Connectors vs Pair',
+    icon: '🎯',
+    matchups: [
+      { hero: 'KK', villain: '98s', equity: 77, note: 'Paire vs suited connector' },
+      { hero: 'QQ', villain: '98s', equity: 76, note: 'QQ légèrement moins favori' },
+      { hero: 'JJ', villain: '98s', equity: 72, note: 'JJ vs 98s, 9 et 8 bloqués' },
+      { hero: 'TT', villain: '98s', equity: 68, note: 'TT vs 98s, très proche' },
+      { hero: 'AA', villain: '76s', equity: 77, note: 'AA vs petit connector' },
+      { hero: 'KK', villain: '76s', equity: 77, note: 'KK vs 76s' },
+      { hero: 'JJ', villain: '87s', equity: 72, note: 'JJ vs 87s' },
+      { hero: 'QQ', villain: 'JTs', equity: 73, note: 'QQ vs JTs, J bloqué' },
+      { hero: 'TT', villain: 'JTs', equity: 70, note: 'Presque flip avec overcard' },
+      { hero: 'AA', villain: 'KQs', equity: 66, note: 'AA vs KQs, 2 overcards + flush' },
+    ],
+  },
+  {
+    label: 'Scénarios post-flop',
+    icon: '🃏',
+    matchups: [
+      { hero: 'Set', villain: 'Flush draw', equity: 67, note: 'Set favori mais draw dangereux' },
+      { hero: 'Deux paires', villain: 'Flush draw', equity: 65, note: 'Deux paires vs draw' },
+      { hero: 'Top pair', villain: 'Flush draw', equity: 56, note: 'Très proche du 50/50' },
+      { hero: 'Top pair', villain: 'OESD', equity: 62, note: 'Top pair vs straight draw' },
+      { hero: 'Top pair', villain: 'OESD+FD', equity: 40, note: 'DANGER : vous êtes derrière !' },
+      { hero: 'Set', villain: 'OESD+FD', equity: 62, note: 'Set tient face au combo draw' },
+      { hero: 'Flush', villain: 'Full house', equity: 22, note: 'Flush largement derrière' },
+      { hero: 'OESD', villain: 'Flush draw', equity: 50, note: 'Deux draws, quasi flip' },
+      { hero: 'Top pair', villain: 'Deux paires', equity: 24, note: 'Top pair en mauvaise posture' },
+      { hero: 'Overpair', villain: 'Set', equity: 9, note: 'Set vs overpair : quasi mort' },
+    ],
+  },
+  {
+    label: 'Spots multiway',
+    icon: '👥',
+    matchups: [
+      { hero: 'AA', villain: 'KK+JJ', equity: 64, note: 'AA vs 2 joueurs' },
+      { hero: 'KK', villain: 'QQ+JJ', equity: 64, note: 'KK vs 2 joueurs' },
+      { hero: 'AK', villain: 'QQ+JJ', equity: 38, note: 'AK vs 2 pairs, derrière' },
+      { hero: 'QQ', villain: 'AK+AQ', equity: 43, note: 'QQ vs 2 mains avec As' },
+      { hero: 'AA', villain: '2x AK', equity: 74, note: 'AA vs 2 overcards' },
+      { hero: 'JJ', villain: 'AK+AQ', equity: 35, note: 'JJ difficile vs 2 big hands' },
+    ],
+  },
+];
+
+function MatchupsTable() {
+  const [activeCategory, setActiveCategory] = useState(0);
+  const category = MATCHUP_CATEGORIES[activeCategory];
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 rounded-xl bg-blue-900/15 border border-blue-600/20 text-sm text-blue-300">
+        <p className="font-medium mb-0.5">📚 Équités de référence</p>
+        <p className="text-xs text-blue-400/80">Mémorisez ces spots, ils reviennent constamment en jeu. Équités preflop sauf section post-flop.</p>
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {MATCHUP_CATEGORIES.map((cat, i) => (
+          <button key={i} onClick={() => setActiveCategory(i)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              activeCategory === i ? 'bg-green-700 text-white' : 'bg-white/5 text-gray-400 hover:text-white'
+            }`}>
+            {cat.icon} {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Matchup rows */}
+      <div className="overflow-x-auto rounded-xl border border-white/10">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-white/5 text-gray-400 text-xs">
+              <th className="text-left py-3 px-4">Hero</th>
+              <th className="text-left py-3 px-4">Villain</th>
+              <th className="text-center py-3 px-4">Équité Hero</th>
+              <th className="text-center py-3 px-4">Équité Villain</th>
+              <th className="text-left py-3 px-4 hidden sm:table-cell">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {category.matchups.map((m, i) => {
+              const heroEq = m.equity;
+              const villainEq = 100 - m.equity;
+              return (
+                <tr key={i} className={`border-t border-white/5 ${i % 2 === 0 ? '' : 'bg-white/2'}`}>
+                  <td className="py-3 px-4">
+                    <span className="font-bold text-blue-300">{m.hero}</span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="font-bold text-red-300">{m.villain}</span>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span className={`font-bold ${heroEq >= 50 ? 'text-green-400' : 'text-red-400'}`}>{heroEq}%</span>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span className={`font-bold ${villainEq >= 50 ? 'text-green-400' : 'text-red-400'}`}>{villainEq}%</span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-xs hidden sm:table-cell">{m.note}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-gray-600 text-xs text-center">
+        {category.matchups.length} matchups · Équités approximatives (±1-2%)
+      </p>
     </div>
   );
 }

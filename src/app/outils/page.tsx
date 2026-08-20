@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, Grid3x3, Coins, Brain, Target, TrendingUp, ChevronRight } from 'lucide-react';
-import Navigation from '@/components/Navigation';
+import { Calculator, Grid3x3, Coins, Brain, Target, TrendingUp, ChevronRight, AlertTriangle, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -17,15 +17,64 @@ interface Tool {
   icon: React.ReactNode;
   category: string;
   tag?: string;
+  howTo: string[];
 }
 
 const TOOLS: Tool[] = [
-  { id: 'texture', title: 'Texture de Board', description: 'Analysez n\'importe quel flop : sécheresse, draws possibles, avantage de range.', icon: <Grid3x3 size={20} />, category: 'Équité', tag: 'Nouveau' },
-  { id: 'equity-quiz', title: 'Estimateur d\'Équité', description: 'Entraînez votre intuition en estimant l\'équité de matchups classiques.', icon: <Target size={20} />, category: 'Équité' },
-  { id: 'bounty', title: 'Convertisseur Bounty KO', description: 'Calculez la valeur réelle d\'une prime en tournoi PKO et son impact sur vos décisions.', icon: <Coins size={20} />, category: 'Tournoi' },
-  { id: 'ranges', title: 'Constructeur de Range', description: 'Construisez et visualisez vos ranges preflop sur la grille 13×13.', icon: <Grid3x3 size={20} />, category: 'Ranges' },
-  { id: 'bankroll', title: 'Calculateur de Bankroll', description: 'Trouvez la limite adaptée à votre bankroll et votre profil de risque.', icon: <TrendingUp size={20} />, category: 'Mental & Gestion' },
-  { id: 'objectifs', title: 'Mes Objectifs Poker', description: 'Définissez vos objectifs et générez un plan de progression personnalisé.', icon: <Brain size={20} />, category: 'Mental & Gestion' },
+  {
+    id: 'texture', title: 'Texture de Board', description: 'Analysez n\'importe quel flop : sécheresse, draws possibles, avantage de range.',
+    icon: <Grid3x3 size={20} />, category: 'Équité', tag: 'Nouveau',
+    howTo: [
+      'Cliquez sur une valeur (A, K, Q…) puis choisissez la couleur pour ajouter une carte.',
+      'Ajoutez 3 à 5 cartes pour obtenir l\'analyse complète du board.',
+      'Cliquez sur une carte pour la retirer. Cliquez "Réinitialiser" pour repartir de zéro.',
+    ],
+  },
+  {
+    id: 'equity-quiz', title: 'Estimateur d\'Équité', description: 'Entraînez votre intuition en estimant l\'équité de matchups classiques.',
+    icon: <Target size={20} />, category: 'Équité',
+    howTo: [
+      'Un matchup (Hero vs Villain) est affiché. Déplacez le curseur pour estimer l\'équité de Hero en %.',
+      'Cliquez "Révéler" pour voir la vraie valeur et votre score (0-100 pts selon l\'écart).',
+      'Enchaînez les matchups pour améliorer votre sens de l\'équité. Visez 80+ pts de moyenne.',
+    ],
+  },
+  {
+    id: 'bounty', title: 'Convertisseur Bounty KO', description: 'Calculez la valeur réelle d\'une prime en tournoi PKO et son impact sur vos décisions.',
+    icon: <Coins size={20} />, category: 'Tournoi',
+    howTo: [
+      'Entrez votre stack, le stack de l\'adversaire et le montant de la prime (bounty).',
+      'L\'outil calcule la valeur ICM réelle de la prime selon votre probabilité de l\'emporter.',
+      'Utilisez le résultat pour ajuster votre seuil de call en all-in face à un joueur avec prime.',
+    ],
+  },
+  {
+    id: 'ranges', title: 'Constructeur de Range', description: 'Construisez et visualisez vos ranges preflop sur la grille 13×13.',
+    icon: <Grid3x3 size={20} />, category: 'Ranges',
+    howTo: [
+      'Cliquez sur une case de la grille pour ajouter ou retirer une main de votre range.',
+      'Les cases de la diagonale sont les paires (AA, KK…), au-dessus suited (AKs), en-dessous offsuit (AKo).',
+      'Utilisez les boutons de présélection pour charger des ranges standards (BTN open, BB défense…).',
+    ],
+  },
+  {
+    id: 'bankroll', title: 'Calculateur de Bankroll', description: 'Trouvez la limite adaptée à votre bankroll et votre profil de risque.',
+    icon: <TrendingUp size={20} />, category: 'Mental & Gestion',
+    howTo: [
+      'Entrez votre bankroll totale disponible pour le poker (en €).',
+      'Choisissez votre profil de risque : conservateur (30 buy-ins), standard (20), agressif (15).',
+      'L\'outil recommande la limite maximale à jouer et projette le temps pour monter de palier.',
+    ],
+  },
+  {
+    id: 'objectifs', title: 'Mes Objectifs Poker', description: 'Définissez vos objectifs et générez un plan de progression personnalisé.',
+    icon: <Brain size={20} />, category: 'Mental & Gestion',
+    howTo: [
+      'Renseignez votre niveau actuel, votre objectif et le temps hebdomadaire disponible.',
+      'L\'outil génère un plan structuré avec les étapes clés et une estimation de durée.',
+      'Revenez régulièrement ajuster vos paramètres selon votre progression réelle.',
+    ],
+  },
 ];
 
 const CATEGORIES = ['Tous', 'Équité', 'Tournoi', 'Ranges', 'Mental & Gestion'];
@@ -86,7 +135,7 @@ function analyzeBoard(cards: string[]) {
 
   const rangeAdvantage = highCards >= 2 ? 'Avantage pour le 3-betteur (plus de broadways)' :
     ranks.some(r => r >= 8) ? 'Avantage pour le défenseur de blind (plus de paires connectées)' :
-    'Advantage modéré — dépend des positions';
+    'Advantage modéré, dépend des positions';
 
   return { texture, textureColor, wetness, flushDraw, straightDraw, topRank, rangeAdvantage, highCards };
 }
@@ -110,7 +159,7 @@ function BoardTextureTool() {
     <div className="space-y-5">
       {/* Board display */}
       <div>
-        <p className="text-gray-400 text-sm mb-2">Board (3 à 5 cartes) — cliquez pour retirer</p>
+        <p className="text-gray-400 text-sm mb-2">Board (3 à 5 cartes), cliquez pour retirer</p>
         <div className="flex gap-2 items-center min-h-[56px] flex-wrap">
           {board.map((c, i) => <BoardCard key={i} value={c} onRemove={() => setBoard(prev => prev.filter((_, j) => j !== i))} />)}
           {board.length < 5 && (
@@ -297,7 +346,7 @@ function EquityQuizTool() {
               <div className="h-full rounded-full" style={{ width: `${matchup.equity}%`, background: '#22c55e' }} />
             </div>
             <p className={`text-sm font-bold ${pts >= 80 ? 'text-green-400' : pts >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
-              {pts >= 80 ? '🎯 Excellent !' : pts >= 50 ? '👍 Pas mal !' : '📚 À travailler'} — {pts}/100 pts (écart : {diff}%)
+              {pts >= 80 ? '🎯 Excellent !' : pts >= 50 ? '👍 Pas mal !' : '📚 À travailler'} : {pts}/100 pts (écart : {diff}%)
             </p>
           </div>
           <button onClick={next}
@@ -430,7 +479,7 @@ function RangeBuilder() {
         <button onClick={() => setSelected(new Set())} className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs hover:bg-red-500/20 transition-colors">
           Reset
         </button>
-        <span className="ml-auto text-yellow-400 font-bold text-sm">{pct}% — {totalCombos} combos</span>
+        <span className="ml-auto text-yellow-400 font-bold text-sm">{pct}%, {totalCombos} combos</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -533,7 +582,7 @@ function BankrollTool() {
         <div className="rounded-xl p-4 space-y-2" style={{ background: '#c9a84c15', border: '1px solid #c9a84c30' }}>
           <p className="text-yellow-400 font-bold text-sm">✅ Limite recommandée</p>
           <p className="text-white font-bold">{current.label}</p>
-          <p className="text-gray-400 text-xs">Niveau : {current.level} — {biNeeded} buy-ins minimum</p>
+          <p className="text-gray-400 text-xs">Niveau : {current.level}, {biNeeded} buy-ins minimum</p>
           {moveUp && <p className="text-gray-300 text-xs mt-1">Prochain palier : {moveUp.label} à {moveUp.bi * biNeeded}€ de bankroll</p>}
           {hoursToMoveUp && winrate > 0 && (
             <p className="text-gray-400 text-xs">Environ {hoursToMoveUp}h de jeu pour monter (à {winrate} BB/100)</p>
@@ -560,7 +609,7 @@ function ObjectifsTool() {
 
   const plans: Record<string, string[]> = {
     'Grand débutant': ['Maîtriser les 10 forces de mains', 'Jouer uniquement les meilleures mains preflop (top 15%)', 'Apprendre les pot odds basiques'],
-    'Débutant': ['Finir le niveau Débutant d\'Au Tapis', 'Faire 5000 mains en NL2', 'Étudier les positions et la sélection de mains'],
+    'Débutant': ['Finir le niveau Débutant de Forged Poker', 'Faire 5000 mains en NL2', 'Étudier les positions et la sélection de mains'],
     'Intermédiaire': ['Intégrer les calculs EV dans chaque décision', 'Analyser 3 sessions par semaine', 'Travailler la c-bet selectivité'],
     'Avancé': ['Commencer l\'analyse solver', 'Étudier les ranges GTO preflop', 'Travailler les spots ICM en tournoi'],
     'Expert': ['Run It Once Elite membership', 'Review de sessions avec un tracker (HM3/PT4)', 'Étudier GTO Wizard tous les jours'],
@@ -631,37 +680,54 @@ const TOOL_COMPONENTS: Record<ToolId, React.ReactNode> = {
   objectifs: <ObjectifsTool />,
 };
 
-export default function OutilsPage() {
+function OutilsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('Tous');
-  const [activeTool, setActiveTool] = useState<ToolId | null>(null);
+
+  const activeTool = (searchParams.get('t') as ToolId | null) ?? null;
+  const validTool = TOOLS.find(t => t.id === activeTool) ? activeTool : null;
+  const activeMeta = TOOLS.find(t => t.id === validTool);
+
+  function openTool(id: ToolId) { router.push(`/outils?t=${id}`); }
+  function closeTool() { router.push('/outils'); }
 
   const filtered = activeCategory === 'Tous' ? TOOLS : TOOLS.filter(t => t.category === activeCategory);
-  const activeMeta = TOOLS.find(t => t.id === activeTool);
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
-      <Navigation />
 
       <main className="max-w-5xl mx-auto px-4 pt-28 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
             Outils Poker
           </h1>
-          <p className="text-gray-400">Calculateurs, analyseurs et entraîneurs pour améliorer votre jeu — directement dans le navigateur.</p>
+          <p className="text-gray-400">Calculateurs, analyseurs et entraîneurs pour améliorer votre jeu, directement dans le navigateur.</p>
         </motion.div>
 
-        {/* Also link to existing calculator */}
-        <div className="mb-6 p-4 rounded-xl flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-3">
-            <Calculator size={18} className="text-yellow-400" />
-            <div>
-              <p className="text-white text-sm font-semibold">Calculatrice d'Équité Monte Carlo</p>
-              <p className="text-gray-500 text-xs">Simulez l'équité de deux mains avec 2000 runouts</p>
-            </div>
-          </div>
-          <Link href="/calculateur" className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-black" style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}>
-            Ouvrir <ChevronRight size={13} />
-          </Link>
+        {/* Ressources externes */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { href: '/calculateur', icon: <Calculator size={16} />, title: 'Calculatrice Équité', desc: 'Simulez l\'équité de deux mains (Monte Carlo)' },
+            { href: '/erreurs', icon: <AlertTriangle size={16} />, title: 'Erreurs Communes', desc: 'Les fautes les plus fréquentes par niveau' },
+            { href: '/session', icon: <Clock size={16} />, title: 'Tracker de Sessions', desc: 'Suivez vos résultats et analysez votre ROI' },
+          ].map(({ href, icon, title, desc }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center gap-3 p-4 rounded-xl group hover:border-white/20 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-yellow-400 shrink-0" style={{ background: '#c9a84c15' }}>
+                {icon}
+              </div>
+              <div className="min-w-0">
+                <p className="text-white text-xs font-semibold group-hover:text-yellow-400 transition-colors">{title}</p>
+                <p className="text-gray-500 text-xs leading-snug">{desc}</p>
+              </div>
+              <ChevronRight size={13} className="text-gray-600 group-hover:text-yellow-400 shrink-0 ml-auto transition-colors" />
+            </Link>
+          ))}
         </div>
 
         {/* Category filter */}
@@ -676,7 +742,7 @@ export default function OutilsPage() {
         </div>
 
         {/* Tools grid */}
-        {!activeTool ? (
+        {!validTool ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((tool, i) => (
               <motion.button
@@ -684,7 +750,7 @@ export default function OutilsPage() {
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTool(tool.id)}
+                onClick={() => openTool(tool.id)}
                 className="text-left p-5 rounded-2xl transition-all group"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
               >
@@ -708,7 +774,7 @@ export default function OutilsPage() {
         ) : (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-3 mb-5">
-              <button onClick={() => setActiveTool(null)} className="text-gray-400 hover:text-white transition-colors text-sm">
+              <button onClick={closeTool} className="text-gray-400 hover:text-white transition-colors text-sm">
                 ← Retour
               </button>
               <span className="text-gray-600">/</span>
@@ -716,7 +782,7 @@ export default function OutilsPage() {
             </div>
 
             <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-yellow-400" style={{ background: '#c9a84c20' }}>
                   {activeMeta?.icon}
                 </div>
@@ -725,11 +791,35 @@ export default function OutilsPage() {
                   <p className="text-gray-500 text-xs">{activeMeta?.description}</p>
                 </div>
               </div>
-              {TOOL_COMPONENTS[activeTool]}
+
+              {/* How to use */}
+              {activeMeta?.howTo && (
+                <div className="rounded-xl p-4 mb-6" style={{ background: '#1a3a8f15', border: '1px solid #3b82f620' }}>
+                  <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">Comment utiliser</p>
+                  <ol className="space-y-1.5">
+                    {activeMeta.howTo.map((step, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300 leading-relaxed">
+                        <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-[10px] mt-0.5">{i + 1}</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {validTool && TOOL_COMPONENTS[validTool]}
             </div>
           </motion.div>
         )}
       </main>
     </div>
+  );
+}
+
+export default function OutilsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0f0a]" />}>
+      <OutilsContent />
+    </Suspense>
   );
 }

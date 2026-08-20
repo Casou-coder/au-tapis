@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://autapis.fr';
+const BASE_URL = 'https://forgedpoker.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

@@ -4,7 +4,9 @@ import { useState, useEffect, useId } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, ChevronRight, Menu, X } from 'lucide-react';
+import { ChevronRight, Menu, X, User, LogOut } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MotionLink = motion.create(Link);
 
@@ -23,7 +25,8 @@ const navGroups = [
     label: 'Pratique',
     links: [
       { href: '/defis', label: '🎯 Défis', color: 'text-orange-400', dot: '#f97316' },
-      { href: '/calculateur', label: '🧮 Calc', color: 'text-gray-300', dot: '#9ca3af' },
+      { href: '/preflop', label: '📊 Charts', color: 'text-gray-300', dot: '#9ca3af' },
+      { href: '/glossaire', label: '📖 Glossaire', color: 'text-gray-300', dot: '#9ca3af' },
       { href: '/outils', label: '🔧 Outils', color: 'text-gray-300', dot: '#9ca3af' },
     ],
   },
@@ -34,7 +37,14 @@ const allLinks = navGroups.flatMap(g => g.links);
 export default function Navigation() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const menuId = useId();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Close menu on Escape key
   useEffect(() => {
@@ -60,12 +70,12 @@ export default function Navigation() {
       >
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" aria-label="Au Tapis — Accueil">
+          <Link href="/" className="flex items-center gap-2 group" aria-label="Forged Poker, Accueil">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-sm font-bold" aria-hidden="true">
               ♠
             </div>
             <span className="font-bold text-white group-hover:text-yellow-400 transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
-              Au Tapis
+              Forged Poker
             </span>
           </Link>
 
@@ -95,13 +105,32 @@ export default function Navigation() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="hidden sm:flex items-center gap-1 text-gray-400 hover:text-white transition-colors text-sm"
-              aria-label="Accueil"
-            >
-              <Home size={16} aria-hidden="true" />
-            </Link>
+            {/* Auth button, toujours visible */}
+            {user ? (
+              <div className="flex items-center gap-1">
+                <Link href="/profil" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all" aria-label="Mon profil">
+                  <span className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-black text-xs font-bold">
+                    {(user.email ?? 'U')[0].toUpperCase()}
+                  </span>
+                  <span className="hidden sm:inline text-yellow-400 text-xs font-medium">Profil</span>
+                </Link>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                  aria-label="Se déconnecter"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold transition-all text-xs"
+              >
+                <User size={13} />
+                <span>Connexion</span>
+              </Link>
+            )}
 
             {/* Mobile hamburger */}
             <button
@@ -172,10 +201,25 @@ export default function Navigation() {
                   </div>
                 ))}
 
-                <div className="border-t border-white/10 pt-4">
-                  <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors" aria-label="Accueil">
-                    <Home size={15} aria-hidden="true" /> Accueil
+                <div className="border-t border-white/10 pt-4 space-y-3">
+                  <Link href="/jeu-responsable" className="flex items-center gap-1.5 text-gray-600 hover:text-gray-400 text-xs transition-colors">
+                    <span className="px-1.5 py-0.5 rounded bg-red-500/15 text-red-400/80 font-bold text-xs">18+</span>
+                    Jeu responsable
                   </Link>
+                  {user ? (
+                    <div className="flex items-center justify-between">
+                      <Link href="/profil" className="flex items-center gap-2 text-yellow-400 text-sm">
+                        <User size={15} /> {user.email}
+                      </Link>
+                      <button onClick={() => supabase.auth.signOut()} className="text-gray-500 hover:text-red-400 text-xs transition-colors">
+                        Déconnexion
+                      </button>
+                    </div>
+                  ) : (
+                    <Link href="/auth" className="flex items-center gap-2 text-yellow-400 text-sm">
+                      <User size={15} /> Connexion / Inscription
+                    </Link>
+                  )}
                 </div>
               </nav>
             </motion.div>

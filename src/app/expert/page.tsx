@@ -4,37 +4,39 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import { HandPlayer } from '@/components/HandPlayer';
-import { HAND_SCRIPTS } from '@/lib/hand-scripts';
+import { MultiHandPlayer } from '@/components/HandPlayer';
+import { XpToast } from '@/components/XpToast';
+import { ALL_HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { QUIZ_QUESTIONS } from '@/lib/poker-data';
+import InlineQuiz from '@/components/InlineQuiz';
 import { useProgress } from '@/hooks/useProgress';
 
 const MODULES = [
-  { id: 'solvers', title: 'Solver Thinking', icon: '🤖', desc: 'Raisonner comme un GTO solver' },
+  { id: 'solvers', title: 'Raisonnement Solver', icon: '🤖', desc: 'Raisonner comme un GTO solver' },
   { id: 'balanced', title: 'Ranges Balancées', icon: '⚖️', desc: 'Construire des ranges parfaitement équilibrées' },
   { id: 'exploitation', title: 'Exploitation Avancée', icon: '🎯', desc: 'Exploiter les tendances adverses' },
   { id: 'hud', title: 'HUD & Stats', icon: '📊', desc: 'Lire et utiliser les statistiques' },
-  { id: 'mental', title: 'Mental Game', icon: '🧠', desc: 'Psychologie et gestion du tilt' },
-  { id: 'selection', title: 'Table Selection', icon: '🪑', desc: 'Choisir les meilleures tables' },
-  { id: 'study', title: 'Study Routines', icon: '📚', desc: 'Comment progresser efficacement' },
+  { id: 'mental', title: 'Jeu Mental', icon: '🧠', desc: 'Psychologie et gestion du tilt' },
+  { id: 'selection', title: 'Sélection de Table', icon: '🪑', desc: 'Choisir les meilleures tables' },
+  { id: 'study', title: "Routines d'Étude", icon: '📚', desc: 'Comment progresser efficacement' },
   { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Naviguez un set sur board connecté' },
   { id: 'quiz', title: 'Quiz Expert', icon: '👑', desc: 'Le test ultime' },
 ];
 
 export default function ExpertPage() {
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
-  const { completeLevel } = useProgress();
-
-  const complete = (id: string) => {
-    const next = new Set([...completedModules, id]);
-    setCompletedModules(next);
-    if (next.size === MODULES.length) completeLevel('expert');
+  const { progress, completeModule, completeLevel, addXp } = useProgress();
+  const [xpToast, setXpToast] = useState<number | null>(null);
+  const isDone = (modId: string) => !!progress.completedModules[`expert-${modId}`];
+  const completedCount = MODULES.filter(m => isDone(m.id)).length;
+  const complete = (id: string, xp = 50) => {
+    completeModule(`expert-${id}`);
+    addXp(xp);
+    setXpToast(xp);
+    if (MODULES.every(m => m.id === id || isDone(m.id))) completeLevel('expert');
     setActiveModule(null);
   };
-
-  const progress = (completedModules.size / MODULES.length) * 100;
+  const progressPct = (completedCount / MODULES.length) * 100;
 
   if (activeModule) {
     const props = { onComplete: () => complete(activeModule), onBack: () => setActiveModule(null) };
@@ -47,13 +49,12 @@ export default function ExpertPage() {
     if (activeModule === 'study') return <StudyModule {...props} />;
     if (activeModule === 'main-guidee') return (
       <div className="min-h-screen bg-[#060d08]">
-        <Navigation />
         <div className="pt-20 pb-16 px-4">
           <div className="max-w-2xl mx-auto">
             <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
               <ChevronLeft size={16} /> Retour aux modules
             </button>
-            <HandPlayer script={HAND_SCRIPTS['expert']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+            <MultiHandPlayer scripts={ALL_HAND_SCRIPTS['expert']} onComplete={(score) => complete(activeModule, 50 + (score >= 4 ? 150 : score >= 3 ? 100 : score >= 2 ? 50 : 0))} onBack={() => setActiveModule(null)} />
           </div>
         </div>
       </div>
@@ -63,7 +64,7 @@ export default function ExpertPage() {
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
+      <AnimatePresence>{xpToast !== null && <XpToast amount={xpToast} onDone={() => setXpToast(null)} />}</AnimatePresence>
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
@@ -86,19 +87,19 @@ export default function ExpertPage() {
 
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>{completedModules.size}/{MODULES.length} modules</span>
-                <span>{Math.round(progress)}%</span>
+                <span>{completedCount}/{MODULES.length} modules</span>
+                <span>{Math.round(progressPct)}%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #92400e, #d97706, #fbbf24)' }} initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8 }} />
+                <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #92400e, #d97706, #fbbf24)' }} initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.8 }} />
               </div>
             </div>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {MODULES.map((mod, i) => {
-              const done = completedModules.has(mod.id);
-              const locked = i > 0 && !completedModules.has(MODULES[i - 1].id);
+              const done = isDone(mod.id);
+              const locked = i > 0 && !isDone(MODULES[i - 1].id);
               return (
                 <motion.button key={mod.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                   onClick={() => !locked && setActiveModule(mod.id)}
@@ -121,7 +122,7 @@ export default function ExpertPage() {
             })}
           </div>
 
-          {completedModules.size === MODULES.length && (
+          {completedCount === MODULES.length && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-6 rounded-2xl border border-red-500/40 bg-red-900/20 text-center pulse-gold">
               <div className="text-5xl mb-3">👑</div>
               <h3 className="text-2xl font-bold text-white mb-2">Niveau Expert complété !</h3>
@@ -138,10 +139,9 @@ export default function ExpertPage() {
   );
 }
 
-function ExpertModuleLayout({ children, title, icon, onBack, onComplete }: { children: React.ReactNode; title: string; icon: string; onBack: () => void; onComplete: () => void; }) {
+function ExpertModuleLayout({ children, title, icon, onBack, onComplete, quizKey }: { children: React.ReactNode; title: string; icon: string; onBack: () => void; onComplete: () => void; quizKey?: string; }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -152,7 +152,10 @@ function ExpertModuleLayout({ children, title, icon, onBack, onComplete }: { chi
               <span className="text-2xl">{icon}</span>
               <h1 className="text-xl font-bold text-yellow-400">{title}</h1>
             </div>
-            <div className="bg-[#0d0e08] border border-yellow-900/30 rounded-2xl p-6 min-h-[400px] mb-4">{children}</div>
+            <div className="bg-[#0d0e08] border border-yellow-900/30 rounded-2xl p-6 min-h-[400px] mb-4">
+              {children}
+              {quizKey && <InlineQuiz moduleKey={quizKey} />}
+            </div>
             <button onClick={onComplete} className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 transition-all">✓ Module terminé</button>
           </motion.div>
         </div>
@@ -163,7 +166,7 @@ function ExpertModuleLayout({ children, title, icon, onBack, onComplete }: { chi
 
 function SolversModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Solver Thinking" icon="🤖" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Raisonnement Solver" icon="🤖" onBack={onBack} onComplete={onComplete} quizKey="expert-solvers">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Raisonner comme un Solver</h2>
       <p className="text-gray-400 text-sm mb-5">Les solvers (PioSOLVER, GTO+) ont révolutionné le poker moderne. Comprendre leur logique vous place à un niveau différent.</p>
 
@@ -187,10 +190,10 @@ function SolversModule({ onComplete, onBack }: { onComplete: () => void; onBack:
       <div className="p-4 rounded-xl bg-yellow-900/20 border border-yellow-600/30">
         <p className="text-yellow-400 font-medium text-sm mb-2">🤖 Outils recommandés</p>
         <div className="space-y-1 text-sm">
-          <div className="text-gray-300">PioSOLVER — Standard de l&apos;industrie pour les pros</div>
-          <div className="text-gray-300">GTO+ — Plus abordable, très puissant</div>
-          <div className="text-gray-300">Simple GTO Trainer — Pour pratiquer les spots GTO</div>
-          <div className="text-gray-300">Poker Snowie — IA accessible pour débutants avancés</div>
+          <div className="text-gray-300">PioSOLVER : standard de l&apos;industrie pour les pros</div>
+          <div className="text-gray-300">GTO+ : plus abordable, très puissant</div>
+          <div className="text-gray-300">Simple GTO Trainer : pour pratiquer les spots GTO</div>
+          <div className="text-gray-300">Poker Snowie : IA accessible pour débutants avancés</div>
         </div>
       </div>
     </ExpertModuleLayout>
@@ -199,7 +202,7 @@ function SolversModule({ onComplete, onBack }: { onComplete: () => void; onBack:
 
 function BalancedModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Ranges Balancées" icon="⚖️" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Ranges Balancées" icon="⚖️" onBack={onBack} onComplete={onComplete} quizKey="expert-balanced">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Construire des Ranges Parfaites</h2>
       <p className="text-gray-400 text-sm mb-5">Une range balancée est <strong className="text-white">non-exploitable</strong>. Elle contient le bon ratio value/bluff pour chaque sizing.</p>
 
@@ -219,7 +222,7 @@ function BalancedModule({ onComplete, onBack }: { onComplete: () => void; onBack
           { spot: 'River value betting', balance: 'Pour chaque 2 value bets, incluez 1 bluff de même sizing', example: 'Set = value, A-high flush blocker = bluff' },
           { spot: '3-betting pre-flop', balance: '~2/3 value (QQ+, AKs) + 1/3 bluffs (A5s, A4s, K5s)', example: 'Ratio qui vous rend non-foldable et non-exploitable' },
           { spot: 'Check-raising flop', balance: 'Mixes top set, flush draws, OESD avec bottom pair bluffs', example: 'Incluez toujours les 2 pôles extrêmes' },
-          { spot: 'Donk betting', balance: 'Rare en GTO — réservé à des situations très spécifiques', example: 'Paired boards où vous avez trips et l\'adversaire non' },
+          { spot: 'Donk betting', balance: 'Rare en GTO, réservé à des situations très spécifiques', example: 'Paired boards où vous avez trips et l\'adversaire non' },
         ].map((item, i) => (
           <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
             <div className="text-yellow-300 text-xs font-medium mb-1">{item.spot}</div>
@@ -234,7 +237,7 @@ function BalancedModule({ onComplete, onBack }: { onComplete: () => void; onBack
 
 function ExploitationModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Exploitation Avancée" icon="🎯" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Exploitation Avancée" icon="🎯" onBack={onBack} onComplete={onComplete} quizKey="expert-exploitation">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Exploiter les Tendances Adverses</h2>
       <p className="text-gray-400 text-sm mb-5">Contre des adversaires avec des failles, abandonnez le GTO et <strong className="text-white">exploitez au maximum</strong>.</p>
 
@@ -259,9 +262,9 @@ function ExploitationModule({ onComplete, onBack }: { onComplete: () => void; on
             example: '3-bet% > 12% → votre 4-bet range s\'élargit'
           },
           {
-            flaw: 'Never bluffs / always bluffs',
+            flaw: 'Ne bluff jamais / bluff toujours',
             color: '#8e44ad', bg: 'bg-purple-900/20 border-purple-600/30',
-            exploit: 'Never bluffs → foldez vos bluff-catchers en face de bets. Always bluffs → call-down avec tout.',
+            exploit: 'Ne bluff jamais → foldez vos bluff-catchers en face de bets. Bluff toujours → call-down avec tout.',
             example: 'Identifiez les tendances sur 100+ mains'
           },
           {
@@ -284,7 +287,7 @@ function ExploitationModule({ onComplete, onBack }: { onComplete: () => void; on
 
 function HUDModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="HUD & Stats" icon="📊" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="HUD & Stats" icon="📊" onBack={onBack} onComplete={onComplete} quizKey="expert-hud">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Lire les Statistiques</h2>
       <p className="text-gray-400 text-sm mb-5">Les HUDs (Heads-Up Display) affichent les stats adverses. En ligne, c&apos;est un outil incontournable au haut niveau.</p>
 
@@ -316,7 +319,7 @@ function HUDModule({ onComplete, onBack }: { onComplete: () => void; onBack: () 
 
 function MentalModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Mental Game" icon="🧠" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Jeu Mental" icon="🧠" onBack={onBack} onComplete={onComplete} quizKey="expert-mental">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Le Mental Game de Champion</h2>
       <p className="text-gray-400 text-sm mb-5">Le tilt coûte plus cher que toutes les erreurs techniques réunies. Maîtrisez votre mental.</p>
 
@@ -326,7 +329,7 @@ function MentalModule({ onComplete, onBack }: { onComplete: () => void; onBack: 
           { type: 'Tilt de colère', trigger: 'Bad beat, sucout', response: 'Pause immédiate, respiration, walk' },
           { type: 'Tilt de frustration', trigger: 'Série de mauvais résultats', response: 'Stop-loss session, review les mains' },
           { type: 'Tilt de vengeance', trigger: 'Manque de respect perçu', response: 'Jeu vs un adversaire spécifique' },
-          { type: 'Tilt de euphorie', trigger: 'Grosse victoire', response: 'Trop confiant, loose play' },
+          { type: 'Tilt de euphorie', trigger: 'Grosse victoire', response: 'Trop confiant, jeu relâché' },
           { type: 'Tilt de désespoir', trigger: 'Gros downswing', response: 'Descendre de limites, break' },
         ].map((item, i) => (
           <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -345,7 +348,7 @@ function MentalModule({ onComplete, onBack }: { onComplete: () => void; onBack: 
         <h3 className="font-bold text-white">Outils de gestion mentale</h3>
         {[
           { tool: 'Stop-loss quotidien', detail: 'Définissez un maximum de pertes par session (ex: 3 buy-ins). Au-delà, stop obligatoire.' },
-          { tool: 'Session review', detail: 'Après chaque session, analysez vos erreurs à tête reposée, jamais directement après une perte.' },
+          { tool: 'Revue de session', detail: 'Après chaque session, analysez vos erreurs à tête reposée, jamais directement après une perte.' },
           { tool: 'Processus vs résultat', detail: 'Évaluez vos décisions sur leur qualité, pas sur le résultat. Un fold correct est +EV même si l\'adversaire avait les bluffs.' },
           { tool: 'Méditation et préparation', detail: 'Phil Ivey, Daniel Negreanu utilisent des routines de préparation. Votre état mental avant la session est crucial.' },
         ].map((item, i) => (
@@ -361,9 +364,9 @@ function MentalModule({ onComplete, onBack }: { onComplete: () => void; onBack: 
 
 function TableSelectionModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Table Selection" icon="🪑" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Sélection de Table" icon="🪑" onBack={onBack} onComplete={onComplete} quizKey="expert-selection">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Choisir les Meilleures Tables</h2>
-      <p className="text-gray-400 text-sm mb-5">La table selection est souvent <strong className="text-white">plus importante que la skill</strong>. Jouer contre des fish est la clé de la rentabilité.</p>
+      <p className="text-gray-400 text-sm mb-5">La sélection de table est souvent <strong className="text-white">plus importante que la compétence</strong>. Jouer contre des fish est la clé de la rentabilité.</p>
 
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="p-3 rounded-xl bg-green-900/20 border border-green-600/30">
@@ -390,8 +393,8 @@ function TableSelectionModule({ onComplete, onBack }: { onComplete: () => void; 
 
       <div className="space-y-3">
         {[
-          { tip: 'Seat selection', detail: 'Asseyez-vous à gauche des fish (ils agissent avant vous post-flop) et à droite des agressifs (vous voyez leurs actions).' },
-          { tip: 'Lobby observation', detail: 'Avant de join une table, observez le VPIP moyen et les pot sizes. Tables avec gros pots = action + fish.' },
+          { tip: 'Choix de place', detail: 'Asseyez-vous à gauche des fish (ils agissent avant vous post-flop) et à droite des agressifs (vous voyez leurs actions).' },
+          { tip: 'Lobby observation', detail: 'Avant de rejoindre une table, observez le VPIP moyen et les pot sizes. Tables avec gros pots = action + fish.' },
           { tip: 'Ne soyez pas le fish', detail: 'Si vous ne savez pas qui est le fish à la table après 30 min, c\'est vous. Changez de table sans hésiter.' },
           { tip: 'Quitter la bonne table aussi', detail: 'Si les fish partent et ne restent que des regs solides, levez-vous. Pas d\'ego ici.' },
         ].map((item, i) => (
@@ -407,7 +410,7 @@ function TableSelectionModule({ onComplete, onBack }: { onComplete: () => void; 
 
 function StudyModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ExpertModuleLayout title="Study Routines" icon="📚" onBack={onBack} onComplete={onComplete}>
+    <ExpertModuleLayout title="Routines d'Étude" icon="📚" onBack={onBack} onComplete={onComplete} quizKey="expert-study">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Comment Progresser</h2>
       <p className="text-gray-400 text-sm mb-5">Les meilleurs joueurs passent autant de temps à étudier qu&apos;à jouer. Voici comment structurer votre apprentissage.</p>
 
@@ -419,25 +422,25 @@ function StudyModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
       <div className="space-y-3">
         {[
           {
-            phase: 'Session review (post-session)',
+            phase: 'Revue de session (post-session)',
             time: '30-60 min',
             tasks: ['Exportez les mains clés en HH', 'Identifiez 2-3 spots difficiles', 'Notez vos doutes et questions'],
             color: '#27ae60',
           },
           {
-            phase: 'Solver work',
+            phase: 'Travail au solver',
             time: '1-2h / semaine',
             tasks: ['Importez les spots difficiles dans PioSOLVER', 'Analysez les nodes clés', 'Mémorisez les fréquences importantes'],
             color: '#3498db',
           },
           {
-            phase: 'Range construction',
+            phase: 'Construction de range',
             time: '30 min / semaine',
             tasks: ['Révisez les charts pré-flop', 'Travaillez les défenses de BB', 'Pratiquez les spots 3-bet'],
             color: '#8e44ad',
           },
           {
-            phase: 'Database analysis',
+            phase: 'Analyse de base de données',
             time: '1h / semaine',
             tasks: ['Cherchez vos leaks dans les stats', 'Comparez vos stats aux benchmarks', 'Identifiez les spots non-rentables'],
             color: '#c9a84c',

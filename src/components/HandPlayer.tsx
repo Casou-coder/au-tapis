@@ -68,6 +68,105 @@ function ProgressDots({ total, current, results }: { total: number; current: num
   );
 }
 
+// ─── Multi-script picker ──────────────────────────────────────────────────────
+
+interface MultiHandPlayerProps {
+  scripts: HandScript[];
+  onComplete: (score: number) => void;
+  onBack: () => void;
+}
+
+const LEVEL_COLORS: Record<string, string> = {
+  debutant: '#22c55e',
+  intermediaire: '#3b82f6',
+  avance: '#a855f7',
+  expert: '#eab308',
+  professionnel: '#ef4444',
+};
+
+export function MultiHandPlayer({ scripts, onComplete, onBack }: MultiHandPlayerProps) {
+  const [selected, setSelected] = useState<HandScript | null>(null);
+
+  if (selected) {
+    return (
+      <HandPlayer
+        script={selected}
+        onComplete={onComplete}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
+  const color = LEVEL_COLORS[scripts[0]?.level] ?? '#eab308';
+
+  return (
+    <div className="max-w-xl mx-auto">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: color + '20' }}>
+            <Target size={16} style={{ color }} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color }}>Mains Guidées</p>
+            <p className="text-white text-sm font-medium">{scripts.length} mains disponibles</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {scripts.map((script, i) => (
+            <motion.button
+              key={script.id}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setSelected(script)}
+              className="w-full text-left rounded-2xl p-4 border transition-all group"
+              style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = color + '40'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: color + '20', color }}>
+                      Main {i + 1}
+                    </span>
+                    <span className="text-xs text-gray-500 font-mono">{script.setup.position}</span>
+                    <div className="flex gap-0.5">
+                      {script.setup.heroHand.map((c, j) => {
+                        const suit = c.slice(-1);
+                        const isRed = suit === '♥' || suit === '♦';
+                        return (
+                          <span key={j} className={`text-xs font-bold ${isRed ? 'text-red-400' : 'text-white'}`}>{c}</span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <p className="text-white font-semibold text-sm mb-0.5">{script.title}</p>
+                  <p className="text-gray-500 text-xs">{script.concept}</p>
+                </div>
+                <div className="ml-3 flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="flex items-center gap-1 text-xs" style={{ color }}>
+                    <Trophy size={11} />
+                    {script.xp} XP
+                  </span>
+                  <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-white/5">
+                <span className="text-xs text-gray-600">{script.villain.emoji} vs {script.villain.name}</span>
+                <span className="text-xs text-gray-600">·</span>
+                <span className="text-xs text-gray-600">{script.steps.length} décisions</span>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface HandPlayerProps {
@@ -356,7 +455,7 @@ export function HandPlayer({ script, onComplete, onBack }: HandPlayerProps) {
               {/* Board */}
               <div className="text-center mb-3">
                 {currentStep.board.length === 0 ? (
-                  <p className="text-gray-600 text-xs">Préflop — pas de board</p>
+                  <p className="text-gray-600 text-xs">Préflop, pas de board</p>
                 ) : (
                   <div>
                     <p className="text-gray-500 text-xs mb-1.5">Board</p>

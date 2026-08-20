@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Trophy, Calendar, Lock } from 'lucide-react';
-import Navigation from '@/components/Navigation';
 import { DailyChallengeModal, DailyChallengeCard } from '@/components/DailyChallenge';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 import { CHALLENGES, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
@@ -38,7 +37,6 @@ export default function DefisPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
-      <Navigation />
 
       <main className="max-w-4xl mx-auto px-4 pt-28 pb-16">
         {/* Header */}

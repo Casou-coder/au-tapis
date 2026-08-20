@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Poker Professionnel — Mental game, multi-tables et haut niveau',
-  description: 'Stratégies de haut niveau, gestion mentale, multi-tabling, bankroll management professionnel. Pour ceux qui veulent jouer au niveau des meilleurs.',
-  keywords: ['poker professionnel', 'mental game poker', 'multi-table poker', 'bankroll management', 'poker haut niveau'],
+  title: 'Poker Professionnel : Mains légendaires et stratégies des champions',
+  description: 'Analysez les mains légendaires de Phil Ivey et Moneymaker, découvrez les stratégies des champions WSOP, le mental game elite et les secrets du plus haut niveau.',
+  keywords: ['poker professionnel', 'mains légendaires poker', 'stratégie champions poker', 'WSOP poker', 'mental game élite', 'cash game vs tournois', 'Phil Ivey poker'],
   openGraph: {
-    title: 'Poker Professionnel — Mental game et haut niveau',
-    description: 'Le niveau ultime : mental game, jeu multi-tables, gestion de bankroll professionnelle et stratégies élites.',
-    url: 'https://autapis.fr/professionnel',
+    title: 'Poker Professionnel : Mains légendaires et stratégies des champions',
+    description: 'Phil Ivey, Moneymaker, WSOP : analysez les mains qui ont fait l\'histoire et adoptez les stratégies des meilleurs joueurs du monde.',
+    url: 'https://forgedpoker.com/professionnel',
   },
-  alternates: { canonical: 'https://autapis.fr/professionnel' },
+  alternates: { canonical: 'https://forgedpoker.com/professionnel' },
 };
 
 export default function ProfessionnelLayout({ children }: { children: React.ReactNode }) {

@@ -1,26 +1,42 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useProgress } from '@/hooks/useProgress';
-import Navigation from '@/components/Navigation';
+import Link from 'next/link';
+import { useProgress, getXpTitle, XP_TITLES } from '@/hooks/useProgress';
+import { useDailyChallenge } from '@/hooks/useDailyChallenge';
+import { CHALLENGES } from '@/lib/challenges-data';
 
 const LEVELS = [
   { id: 'debutant', label: 'Débutant', emoji: '🟢', color: 'text-green-400', total: 8 },
   { id: 'intermediaire', label: 'Intermédiaire', emoji: '🔵', color: 'text-blue-400', total: 8 },
   { id: 'avance', label: 'Avancé', emoji: '🟣', color: 'text-purple-400', total: 9 },
   { id: 'expert', label: 'Expert', emoji: '🟡', color: 'text-yellow-400', total: 9 },
-  { id: 'professionnel', label: 'Professionnel', emoji: '🔴', color: 'text-red-400', total: 6 },
+  { id: 'professionnel', label: 'Professionnel', emoji: '🔴', color: 'text-red-400', total: 7 },
 ];
 
 export default function ProfilPage() {
-  const { getLevelProgress, resetProgress, isLevelUnlocked } = useProgress();
+  const { progress, getLevelProgress, resetProgress, isLevelUnlocked } = useProgress();
+  const { history, streak } = useDailyChallenge();
+
+  const totalDefis = CHALLENGES.length;
+  const completedDefis = history.filter(h => h.completed).length;
+  const correctDefis = history.filter(h => h.correct).length;
+  const successRate = completedDefis > 0 ? Math.round((correctDefis / completedDefis) * 100) : 0;
+  const defiPct = Math.round((completedDefis / totalDefis) * 100);
 
   const totalCompleted = LEVELS.reduce((sum, l) => sum + getLevelProgress(l.id, l.total).completed, 0);
   const totalModules = LEVELS.reduce((sum, l) => sum + l.total, 0);
 
+  const totalXp = progress.totalXp || 0;
+  const currentTitle = getXpTitle(totalXp);
+  const nextTitle = XP_TITLES.find(t => t.min > totalXp);
+  const xpToNextTitle = nextTitle ? nextTitle.min - totalXp : 0;
+  const titleProgress = nextTitle
+    ? ((totalXp - currentTitle.min) / (nextTitle.min - currentTitle.min)) * 100
+    : 100;
+
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
-      <Navigation />
 
       <main id="main-content" className="max-w-3xl mx-auto px-4 pt-28 pb-16">
         <motion.div
@@ -39,6 +55,31 @@ export default function ProfilPage() {
             <span className="text-yellow-400 font-bold">{totalCompleted}</span>
             <span className="text-gray-400 text-sm">/ {totalModules} modules terminés</span>
           </div>
+
+          {/* XP & titre */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="mt-5 w-full max-w-xs mx-auto"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-lg font-bold text-white">{currentTitle.emoji} {currentTitle.label}</span>
+              <span className="text-yellow-400 font-bold text-sm">⚡ {totalXp.toLocaleString('fr-FR')} XP</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}
+                initial={{ width: 0 }}
+                animate={{ width: `${titleProgress}%` }}
+                transition={{ duration: 1, delay: 0.4 }}
+              />
+            </div>
+            {nextTitle ? (
+              <p className="text-gray-500 text-xs mt-1 text-right">{xpToNextTitle} XP avant {nextTitle.emoji} {nextTitle.label}</p>
+            ) : (
+              <p className="text-yellow-400 text-xs mt-1 text-center font-medium">Rang maximum atteint 👑</p>
+            )}
+          </motion.div>
         </motion.div>
 
         {/* Barre globale */}
@@ -113,6 +154,47 @@ export default function ProfilPage() {
             );
           })}
         </div>
+
+        {/* Défis */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-white">Défis quotidiens</h2>
+            <Link href="/defis" className="text-xs text-orange-400 hover:text-orange-300 transition-colors">Voir les défis →</Link>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <div className="text-2xl font-bold text-orange-400">{streak}</div>
+              <div className="text-gray-500 text-xs mt-0.5">🔥 Streak</div>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-bold text-white">{completedDefis}</div>
+              <div className="text-gray-500 text-xs mt-0.5">complétés</div>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-bold text-green-400">{successRate}%</div>
+              <div className="text-gray-500 text-xs mt-0.5">réussite</div>
+            </div>
+          </div>
+
+          <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+            <span>{completedDefis}/{totalDefis} défis explorés</span>
+            <span>{defiPct}%</span>
+          </div>
+          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-orange-600 to-orange-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${defiPct}%` }}
+              transition={{ duration: 1, delay: 0.6 }}
+            />
+          </div>
+        </motion.div>
 
         {/* Reset */}
         <button

@@ -3,11 +3,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronLeft, Lock, ChevronRight, Star, Trophy, Zap } from 'lucide-react';
-import Navigation from '@/components/Navigation';
+import { ChevronLeft, Lock, ChevronRight, Star } from 'lucide-react';
 import PokerCard from '@/components/PokerCard';
-import { HandPlayer } from '@/components/HandPlayer';
-import { HAND_SCRIPTS } from '@/lib/hand-scripts';
+import { MultiHandPlayer } from '@/components/HandPlayer';
+import { XpToast } from '@/components/XpToast';
+import { ALL_HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { FAMOUS_HANDS, FamousHand } from '@/lib/poker-data';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -15,22 +15,36 @@ const SECTIONS = [
   { id: 'legends', title: 'Mains Légendaires', icon: '🏆', desc: '6 coups qui ont changé l\'histoire du poker' },
   { id: 'pros', title: 'Stratégies des Pros', icon: '🎯', desc: 'Les secrets des meilleurs joueurs au monde' },
   { id: 'wsop', title: 'WSOP & High Stakes', icon: '💰', desc: 'Les plus grands tournois et les plus hauts enjeux' },
-  { id: 'mindset', title: 'Mental Game Elite', icon: '🧠', desc: 'La psychologie des champions du monde' },
+  { id: 'mindset', title: 'Jeu Mental Elite', icon: '🧠', desc: 'La psychologie des champions du monde' },
   { id: 'cashvstourney', title: 'Cash vs Tournois', icon: '⚡', desc: 'Différences stratégiques au sommet' },
   { id: 'secrets', title: 'Les Grands Secrets', icon: '🔑', desc: 'Ce que les meilleurs ne vous diront jamais' },
   { id: 'main-guidee', title: 'Main Guidée', icon: '🃏', desc: 'Jouez un overbet river polarisé au niveau pro' },
 ];
 
 export default function ProfessionnelPage() {
-  const { isLevelUnlocked } = useProgress();
+  const { isLevelUnlocked, progress, completeModule, completeLevel, addXp } = useProgress();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [selectedHand, setSelectedHand] = useState<FamousHand | null>(null);
+  const [xpToast, setXpToast] = useState<number | null>(null);
   const unlocked = isLevelUnlocked('professionnel');
+
+  const isDone = (secId: string) => !!progress.completedModules[`professionnel-${secId}`];
+  const completedCount = SECTIONS.filter(s => isDone(s.id)).length;
+  const progressPct = (completedCount / SECTIONS.length) * 100;
+
+  const completeSection = (id: string) => {
+    if (!isDone(id)) {
+      completeModule(`professionnel-${id}`);
+      addXp(80);
+      setXpToast(80);
+      if (SECTIONS.every(s => s.id === id || isDone(s.id))) completeLevel('professionnel');
+    }
+    setActiveSection(null);
+  };
 
   if (!unlocked) {
     return (
       <div className="min-h-screen bg-[#060d08] flex flex-col">
-        <Navigation />
         <div className="flex-1 flex items-center justify-center px-4 pt-20">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-lg">
             <div className="w-24 h-24 rounded-full border-2 border-red-500/50 flex items-center justify-center mx-auto mb-6 bg-red-900/20">
@@ -52,22 +66,21 @@ export default function ProfessionnelPage() {
   }
 
   if (activeSection === 'legends') {
-    return <LegendsSection onBack={() => setActiveSection(null)} onSelectHand={setSelectedHand} />;
+    return <LegendsSection onBack={() => completeSection('legends')} onSelectHand={setSelectedHand} />;
   }
-  if (activeSection === 'pros') return <ProsSection onBack={() => setActiveSection(null)} />;
-  if (activeSection === 'wsop') return <WSOPSection onBack={() => setActiveSection(null)} />;
-  if (activeSection === 'mindset') return <MindsetSection onBack={() => setActiveSection(null)} />;
-  if (activeSection === 'cashvstourney') return <CashVsTourneySection onBack={() => setActiveSection(null)} />;
-  if (activeSection === 'secrets') return <SecretsSection onBack={() => setActiveSection(null)} />;
+  if (activeSection === 'pros') return <ProsSection onBack={() => completeSection('pros')} />;
+  if (activeSection === 'wsop') return <WSOPSection onBack={() => completeSection('wsop')} />;
+  if (activeSection === 'mindset') return <MindsetSection onBack={() => completeSection('mindset')} />;
+  if (activeSection === 'cashvstourney') return <CashVsTourneySection onBack={() => completeSection('cashvstourney')} />;
+  if (activeSection === 'secrets') return <SecretsSection onBack={() => completeSection('secrets')} />;
   if (activeSection === 'main-guidee') return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
-          <button onClick={() => setActiveSection(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+          <button onClick={() => completeSection('main-guidee')} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
             <ChevronLeft size={16} /> Retour
           </button>
-          <HandPlayer script={HAND_SCRIPTS['professionnel']} onComplete={() => setActiveSection(null)} onBack={() => setActiveSection(null)} />
+          <MultiHandPlayer scripts={ALL_HAND_SCRIPTS['professionnel']} onComplete={() => completeSection('main-guidee')} onBack={() => completeSection('main-guidee')} />
         </div>
       </div>
     </div>
@@ -75,7 +88,7 @@ export default function ProfessionnelPage() {
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
+      <AnimatePresence>{xpToast !== null && <XpToast amount={xpToast} onDone={() => setXpToast(null)} />}</AnimatePresence>
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Hero */}
@@ -85,7 +98,7 @@ export default function ProfessionnelPage() {
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-4xl">👑</span>
                 <div>
-                  <p className="text-red-400 text-sm font-medium">Niveau 5 — Exclusif</p>
+                  <p className="text-red-400 text-sm font-medium">Niveau 5 : Exclusif</p>
                   <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Professionnel</h1>
                 </div>
               </div>
@@ -95,25 +108,42 @@ export default function ProfessionnelPage() {
             </div>
           </motion.div>
 
+          {/* Progress */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm text-gray-500 mb-2">
+              <span>{completedCount}/{SECTIONS.length} sections</span>
+              <span>{Math.round(progressPct)}%</span>
+            </div>
+            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #7f1d1d, #ef4444)' }} initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.8 }} />
+            </div>
+          </div>
+
           {/* Sections */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SECTIONS.map((section, i) => (
-              <motion.button
-                key={section.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                onClick={() => setActiveSection(section.id)}
-                className="text-left p-5 rounded-2xl border border-red-600/20 bg-red-900/10 hover:border-red-500/40 hover:bg-red-900/20 transition-all cursor-pointer group"
-              >
-                <div className="text-3xl mb-2">{section.icon}</div>
-                <h3 className="font-bold text-white text-lg mb-1 group-hover:text-red-300 transition-colors">{section.title}</h3>
-                <p className="text-gray-500 text-sm">{section.desc}</p>
-                <div className="flex items-center gap-1 text-red-400 text-sm mt-3">
-                  Découvrir <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.button>
-            ))}
+            {SECTIONS.map((section, i) => {
+              const done = isDone(section.id);
+              return (
+                <motion.button
+                  key={section.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`text-left p-5 rounded-2xl border transition-all cursor-pointer group ${done ? 'border-red-500/50 bg-red-900/20' : 'border-red-600/20 bg-red-900/10 hover:border-red-500/40 hover:bg-red-900/20'}`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="text-3xl">{section.icon}</div>
+                    {done && <span className="text-red-400 text-xs font-bold">✓</span>}
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-1 group-hover:text-red-300 transition-colors">{section.title}</h3>
+                  <p className="text-gray-500 text-sm">{section.desc}</p>
+                  <div className="flex items-center gap-1 text-red-400 text-sm mt-3">
+                    {done ? 'Revoir' : 'Découvrir'} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -126,7 +156,6 @@ export default function ProfessionnelPage() {
 function LegendsSection({ onBack, onSelectHand }: { onBack: () => void; onSelectHand: (h: FamousHand) => void }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           <button onClick={onBack} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
@@ -148,7 +177,7 @@ function LegendsSection({ onBack, onSelectHand }: { onBack: () => void; onSelect
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">{hand.year} · {hand.tournament.split('—')[0].trim()}</div>
+                      <div className="text-xs text-gray-500 mb-1">{hand.year} · {hand.tournament.split(',')[0].trim()}</div>
                       <h3 className="font-bold text-white text-lg leading-tight">{hand.title}</h3>
                       <p className="text-red-400 text-sm mt-0.5">{hand.players.join(' vs ')}</p>
                     </div>
@@ -184,7 +213,6 @@ function HandDetail({ hand, onBack }: { hand: FamousHand; onBack: () => void }) 
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <button onClick={onBack} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6">
@@ -279,7 +307,7 @@ function ProsSection({ onBack }: { onBack: () => void }) {
       name: 'Phil Ivey', title: 'Le Tigre', wins: '10 bracelets WSOP',
       style: 'Équilibré, impossible à lire, parfait reads live',
       quote: '"Vous ne pouvez pas battre quelqu\'un qui ne fait jamais d\'erreur."',
-      tip: 'Ivey observe chaque adversaire avant de jouer le moindre jeton. Ses reads live sont légendaires — il vous lit avant même que vous n\'ayez vu vos cartes.',
+      tip: 'Ivey observe chaque adversaire avant de jouer le moindre jeton. Ses reads live sont légendaires : il vous lit avant même que vous n\'ayez vu vos cartes.',
       color: '#c9a84c',
     },
     {
@@ -321,7 +349,6 @@ function ProsSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           <button onClick={onBack} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6"><ChevronLeft size={16} /> Retour</button>
@@ -362,13 +389,13 @@ function WSOPSection({ onBack }: { onBack: () => void }) {
   return (
     <ProfModuleLayout title="WSOP & High Stakes" icon="💰" onBack={onBack}>
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Le Sommet du Poker</h2>
-      <p className="text-gray-400 text-sm mb-5">Les World Series of Poker et les high stakes cash games représentent le pinnacle du jeu.</p>
+      <p className="text-gray-400 text-sm mb-5">Les World Series of Poker et les high stakes cash games représentent le sommet du jeu.</p>
 
       <div className="space-y-4">
         <div className="p-4 rounded-xl bg-yellow-900/20 border border-yellow-600/30">
-          <h3 className="text-yellow-400 font-bold mb-2">WSOP Main Event — Le Saint Graal</h3>
+          <h3 className="text-yellow-400 font-bold mb-2">WSOP Main Event : Le Saint Graal</h3>
           <ul className="text-gray-300 text-sm space-y-1.5">
-            <li>🏆 Buy-in : $10,000 — environ 8 000+ participants</li>
+            <li>🏆 Buy-in : $10,000 (environ 8 000+ participants)</li>
             <li>💰 Prize pool : souvent $70M-$90M</li>
             <li>⏰ Durée : 10+ jours de tournoi</li>
             <li>👑 Champions récents : Espen Jorstad (2022), Koray Aldemir (2021)</li>
@@ -419,7 +446,7 @@ function MindsetSection({ onBack }: { onBack: () => void }) {
         {[
           {
             principle: 'L\'indifférence au résultat',
-            detail: 'Les champions évaluent uniquement la qualité de leurs décisions. Un bad beat ne les affecte pas — ils savent qu\'ils ont bien joué. Le résultat est de la variance.',
+            detail: 'Les champions évaluent uniquement la qualité de leurs décisions. Un bad beat ne les affecte pas : ils savent qu\'ils ont bien joué. Le résultat est de la variance.',
             pro: 'Phil Ivey',
             color: '#c9a84c',
           },
@@ -431,13 +458,13 @@ function MindsetSection({ onBack }: { onBack: () => void }) {
           },
           {
             principle: 'L\'adaptabilité instantanée',
-            detail: 'En quelques mains, les meilleurs identifient les tendances adverses et adaptent leur stratégie. Ils ne jouent pas le GTO en mode automatique — ils listent activement.',
+            detail: 'En quelques mains, les meilleurs identifient les tendances adverses et adaptent leur stratégie. Ils ne jouent pas le GTO en mode automatique : ils écoutent activement.',
             pro: 'Daniel Negreanu',
             color: '#27ae60',
           },
           {
             principle: 'La gestion de l\'adversité',
-            detail: 'Tous les pros ont vécu des downswings dévastateurs. La résilience — la capacité à continuer à bien jouer malgré les mauvais résultats — est un skill crucial.',
+            detail: 'Tous les pros ont vécu des downswings dévastateurs. La résilience, la capacité à continuer à bien jouer malgré les mauvais résultats, est une compétence cruciale.',
             pro: 'Tom Dwan',
             color: '#8e44ad',
           },
@@ -490,9 +517,9 @@ function CashVsTourneySection({ onBack }: { onBack: () => void }) {
         <h3 className="font-bold text-white">Ajustements stratégiques clés</h3>
         {[
           { aspect: 'Bluff frequency', cash: 'Calibré sur pot odds et équité', tourney: 'Réduit proche de la bulle, augmente avec gros stack' },
-          { aspect: 'Hand selection', cash: 'Stable — toujours les mêmes ranges', tourney: 'Varie avec stack depth : push/fold en fin' },
+          { aspect: 'Hand selection', cash: 'Stable, toujours les mêmes ranges', tourney: 'Varie avec stack depth : push/fold en fin' },
           { aspect: 'Set mining', cash: 'Rentable avec 15:1 implied odds', tourney: 'Moins rentable si stack trop court' },
-          { aspect: 'Slow play', cash: 'Valide avec bonnes implied odds', tourney: 'Risqué — perdre tous ses jetons = élimination' },
+          { aspect: 'Slow play', cash: 'Valide avec bonnes implied odds', tourney: 'Risqué : perdre tous ses jetons = élimination' },
         ].map((item, i) => (
           <div key={i} className="grid grid-cols-3 gap-2 text-xs">
             <div className="text-yellow-400 font-medium p-2 rounded-lg bg-white/5 flex items-center">{item.aspect}</div>
@@ -515,7 +542,7 @@ function SecretsSection({ onBack }: { onBack: () => void }) {
         {[
           {
             secret: 'La sélection de table bat le skill',
-            detail: 'Un joueur moyen assis avec des fish gagnera plus qu\'un excellent joueur assis avec des regs. La table selection est la compétence n°1 pour la rentabilité — et la moins sexy.',
+            detail: 'Un joueur moyen assis avec des fish gagnera plus qu\'un excellent joueur assis avec des regs. La table selection est la compétence n°1 pour la rentabilité, et la moins sexy.',
             icon: '🪑',
           },
           {
@@ -525,7 +552,7 @@ function SecretsSection({ onBack }: { onBack: () => void }) {
           },
           {
             secret: 'Les pros font des erreurs constamment',
-            detail: 'La différence, c\'est qu\'ils font des erreurs moins coûteuses et les corrigent plus vite. Accepter l\'erreur comme inévitable est un leap mental crucial vers l\'excellence.',
+            detail: 'La différence, c\'est qu\'ils font des erreurs moins coûteuses et les corrigent plus vite. Accepter l\'erreur comme inévitable est un bond mental crucial vers l\'excellence.',
             icon: '⚠️',
           },
           {
@@ -535,7 +562,7 @@ function SecretsSection({ onBack }: { onBack: () => void }) {
           },
           {
             secret: 'Étudier > Jouer pour progresser',
-            detail: 'Après un certain niveau, 1 heure d\'étude ciblée vous fait plus progresser que 5 heures de jeu. Mais l\'ego résiste — on préfère "être dans l\'action".',
+            detail: 'Après un certain niveau, 1 heure d\'étude ciblée vous fait plus progresser que 5 heures de jeu. Mais l\'ego résiste : on préfère "être dans l\'action".',
             icon: '📚',
           },
           {
@@ -562,7 +589,6 @@ function SecretsSection({ onBack }: { onBack: () => void }) {
 function ProfModuleLayout({ children, title, icon, onBack }: { children: React.ReactNode; title: string; icon: string; onBack: () => void; }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, ArrowRight } from 'lucide-react';
-import Navigation from '@/components/Navigation';
 import PokerCard from '@/components/PokerCard';
 import { InteractiveHandTrainer } from '@/components/InteractiveHand';
-import { HandPlayer } from '@/components/HandPlayer';
+import { HandPlayer, MultiHandPlayer } from '@/components/HandPlayer';
+import { XpToast } from '@/components/XpToast';
 import { HAND_RANKINGS, POSITIONS, QUIZ_QUESTIONS } from '@/lib/poker-data';
-import { HAND_SCRIPTS } from '@/lib/hand-scripts';
+import InlineQuiz from '@/components/InlineQuiz';
+import { ALL_HAND_SCRIPTS } from '@/lib/hand-scripts';
+import { useProgress } from '@/hooks/useProgress';
 
 const MODULES = [
   { id: 'regles', title: 'Les Règles', icon: '📖', color: '#27ae60' },
@@ -24,10 +26,17 @@ const MODULES = [
 
 export default function DebutantPage() {
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
+  const { progress, completeModule, completeLevel, addXp } = useProgress();
+  const [xpToast, setXpToast] = useState<number | null>(null);
 
-  const complete = (id: string) => {
-    setCompletedModules(prev => new Set([...prev, id]));
+  const isDone = (modId: string) => !!progress.completedModules[`debutant-${modId}`];
+  const completedCount = MODULES.filter(m => isDone(m.id)).length;
+
+  const complete = (id: string, xp = 50) => {
+    completeModule(`debutant-${id}`);
+    addXp(xp);
+    setXpToast(xp);
+    if (MODULES.every(m => m.id === id || isDone(m.id))) completeLevel('debutant');
     setActiveModule(null);
   };
 
@@ -41,13 +50,12 @@ export default function DebutantPage() {
     if (activeModule === 'trainer') return <TrainerModule {...props} />;
     if (activeModule === 'main-guidee') return (
       <div className="min-h-screen bg-[#060d08]">
-        <Navigation />
         <div className="pt-20 pb-16 px-4">
           <div className="max-w-2xl mx-auto">
             <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
               <ChevronLeft size={16} /> Retour aux modules
             </button>
-            <HandPlayer script={HAND_SCRIPTS['debutant']} onComplete={() => complete(activeModule)} onBack={() => setActiveModule(null)} />
+            <MultiHandPlayer scripts={ALL_HAND_SCRIPTS['debutant']} onComplete={(score) => complete(activeModule, 50 + (score >= 4 ? 150 : score >= 3 ? 100 : score >= 2 ? 50 : 0))} onBack={() => setActiveModule(null)} />
           </div>
         </div>
       </div>
@@ -55,11 +63,11 @@ export default function DebutantPage() {
     if (activeModule === 'quiz') return <QuizModule {...props} />;
   }
 
-  const progress = (completedModules.size / MODULES.length) * 100;
+  const progressPct = (completedCount / MODULES.length) * 100;
 
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
+      <AnimatePresence>{xpToast !== null && <XpToast amount={xpToast} onDone={() => setXpToast(null)} />}</AnimatePresence>
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -79,14 +87,14 @@ export default function DebutantPage() {
             {/* Progress bar */}
             <div className="mt-6">
               <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>{completedModules.size}/{MODULES.length} modules terminés</span>
-                <span>{Math.round(progress)}%</span>
+                <span>{completedCount}/{MODULES.length} modules terminés</span>
+                <span>{Math.round(progressPct)}%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-green-700 to-green-400 rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
+                  animate={{ width: `${progressPct}%` }}
                   transition={{ duration: 0.8 }}
                 />
               </div>
@@ -96,8 +104,8 @@ export default function DebutantPage() {
           {/* Modules grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {MODULES.map((mod, i) => {
-              const done = completedModules.has(mod.id);
-              const locked = i > 0 && !completedModules.has(MODULES[i - 1].id);
+              const done = isDone(mod.id);
+              const locked = i > 0 && !isDone(MODULES[i - 1].id);
               return (
                 <motion.button
                   key={mod.id}
@@ -137,7 +145,7 @@ export default function DebutantPage() {
           </div>
 
           {/* Next level */}
-          {completedModules.size === MODULES.length && (
+          {completedCount === MODULES.length && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -264,7 +272,7 @@ function ReglesModule({ onComplete, onBack }: { onComplete: () => void; onBack: 
   ];
 
   return (
-    <ModuleLayout title="Les Règles du Poker" icon="📖" color="#27ae60" onBack={onBack} step={step} totalSteps={steps.length} onComplete={onComplete} onNext={() => setStep(s => s + 1)} onPrev={() => setStep(s => s - 1)}>
+    <ModuleLayout title="Les Règles du Poker" icon="📖" color="#27ae60" onBack={onBack} step={step} totalSteps={steps.length} onComplete={onComplete} onNext={() => step < steps.length - 1 ? setStep(s => s + 1) : onComplete()} onPrev={() => step > 0 ? setStep(s => s - 1) : onBack()} isLastStep={step === steps.length - 1} quizKey="debutant-regles">
       <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>
         {steps[step].title}
       </h2>
@@ -284,7 +292,7 @@ function MainsModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
   const hand = HAND_RANKINGS[selectedHand];
 
   return (
-    <ModuleLayout title="Force des Mains" icon="🃏" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep>
+    <ModuleLayout title="Force des Mains" icon="🃏" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep quizKey="debutant-mains">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
         Hiérarchie des mains
       </h2>
@@ -362,7 +370,7 @@ function PositionsModule({ onComplete, onBack }: { onComplete: () => void; onBac
   const labelMap = { bad: 'Mauvaise', neutral: 'Neutre', good: 'Bonne', best: 'Excellente' };
 
   return (
-    <ModuleLayout title="Les Positions" icon="📍" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep>
+    <ModuleLayout title="Les Positions" icon="📍" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep quizKey="debutant-positions">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Les Positions à la Table</h2>
       <p className="text-gray-400 text-sm mb-4">Votre position détermine quand vous agissez. Plus tard = mieux.</p>
 
@@ -426,7 +434,7 @@ function ActionsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
       name: 'Fold (Se coucher)', color: '#e74c3c', icon: '🗑️',
       description: 'Abandonner sa main. Vous perdez uniquement ce que vous avez déjà misé. À utiliser quand votre main est faible ou que les conditions sont défavorables.',
       when: 'Quand votre main est faible, les pot odds défavorables, ou face à une grosse relance que vous ne pouvez pas justifier.',
-      mistake: 'Folding trop peu (calling station) ou trop souvent (trop tight).',
+      mistake: 'Se coucher trop peu (calling station) ou trop souvent (trop serré).',
     },
     {
       name: 'Check (Checker)', color: '#3498db', icon: '✋',
@@ -454,7 +462,7 @@ function ActionsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
     },
     {
       name: 'All-In', color: '#c9a84c', icon: '👑',
-      description: 'Miser tous vos jetons d\'un coup. Action terminale — vous ne pouvez plus agir. Peut servir comme value ultime ou bluff extrême.',
+      description: 'Miser tous vos jetons d\'un coup. Action terminale : vous ne pouvez plus agir. Peut servir comme value ultime ou bluff extrême.',
       when: 'Quand vous avez la nuts (meilleure main possible), en protection contre les draws, ou comme bluff calculé.',
       mistake: 'All-in trop souvent ou avec des mains marginales sans analyse.',
     },
@@ -463,7 +471,7 @@ function ActionsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
   const a = actions[step];
 
   return (
-    <ModuleLayout title="Les Actions" icon="⚡" color="#27ae60" onBack={onBack} step={step} totalSteps={actions.length} onComplete={onComplete} onNext={() => step < actions.length - 1 ? setStep(s => s + 1) : onComplete()} onPrev={() => step > 0 ? setStep(s => s - 1) : onBack()} isLastStep={step === actions.length - 1}>
+    <ModuleLayout title="Les Actions" icon="⚡" color="#27ae60" onBack={onBack} step={step} totalSteps={actions.length} onComplete={onComplete} onNext={() => step < actions.length - 1 ? setStep(s => s + 1) : onComplete()} onPrev={() => step > 0 ? setStep(s => s - 1) : onBack()} isLastStep={step === actions.length - 1} quizKey="debutant-actions">
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-4">
           <div className="flex items-center gap-3">
@@ -498,9 +506,9 @@ function ActionsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
 
 function SelectionModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
   return (
-    <ModuleLayout title="Sélection de mains" icon="🎯" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep>
+    <ModuleLayout title="Sélection de mains" icon="🎯" color="#27ae60" onBack={onBack} step={0} totalSteps={1} onComplete={onComplete} onNext={onComplete} onPrev={onBack} isLastStep quizKey="debutant-selection">
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Quelles mains jouer ?</h2>
-      <p className="text-gray-400 text-sm mb-4">En débutant, adoptez une approche tight (sélective) et aggressive.</p>
+      <p className="text-gray-400 text-sm mb-4">En débutant, adoptez une approche serrée (sélective) et agressive.</p>
 
       <div className="space-y-3">
         {[
@@ -634,15 +642,14 @@ function TrainerModule({ onComplete, onBack }: { onComplete: () => void; onBack:
 // ── MODULE LAYOUT ─────────────────────────────────────────────────────────────
 
 function ModuleLayout({
-  children, title, icon, color, onBack, step, totalSteps, onComplete, onNext, onPrev, isLastStep,
+  children, title, icon, color, onBack, step, totalSteps, onComplete, onNext, onPrev, isLastStep, quizKey,
 }: {
   children: React.ReactNode; title: string; icon: string; color: string;
   onBack: () => void; step: number; totalSteps: number; onComplete: () => void;
-  onNext: () => void; onPrev: () => void; isLastStep?: boolean;
+  onNext: () => void; onPrev: () => void; isLastStep?: boolean; quizKey?: string;
 }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
-      <Navigation />
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -662,6 +669,7 @@ function ModuleLayout({
 
             <div className="bg-[#0a1410] border border-white/10 rounded-2xl p-6 min-h-[400px]">
               {children}
+              {isLastStep && quizKey && <InlineQuiz moduleKey={quizKey} />}
             </div>
 
             <div className="flex gap-3 mt-6">

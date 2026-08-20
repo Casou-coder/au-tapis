@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/profil', '/api/'],
     },
-    sitemap: 'https://autapis.fr/sitemap.xml',
+    sitemap: 'https://forgedpoker.com/sitemap.xml',
   };
 }
