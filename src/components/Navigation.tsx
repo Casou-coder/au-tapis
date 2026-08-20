@@ -25,6 +25,7 @@ const navGroups = [
     label: 'Pratique',
     links: [
       { href: '/defis', label: '🎯 Défis', color: 'text-orange-400', dot: '#f97316' },
+      { href: '/classement', label: '🏆 Classement', color: 'text-yellow-400', dot: '#eab308' },
       { href: '/preflop', label: '📊 Charts', color: 'text-gray-300', dot: '#9ca3af' },
       { href: '/glossaire', label: '📖 Glossaire', color: 'text-gray-300', dot: '#9ca3af' },
       { href: '/outils', label: '🔧 Outils', color: 'text-gray-300', dot: '#9ca3af' },

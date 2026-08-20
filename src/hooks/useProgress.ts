@@ -8,10 +8,21 @@ interface ProgressData {
   completedLevels: Record<string, boolean>;
   quizScores: Record<string, number>;
   totalXp: number;
+  weeklyXp: number;
+  weekStart: string;
 }
 
 const STORAGE_KEY = 'poker-academy-progress';
-const defaultProgress: ProgressData = { completedModules: {}, completedLevels: {}, quizScores: {}, totalXp: 0 };
+const defaultProgress: ProgressData = { completedModules: {}, completedLevels: {}, quizScores: {}, totalXp: 0, weeklyXp: 0, weekStart: '' };
+
+function getWeekStart(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  return monday.toISOString().split('T')[0];
+}
 
 export const XP_TITLES = [
   { min: 0,    max: 299,        label: 'Poisson',  emoji: '🐟' },
@@ -45,6 +56,8 @@ function mergeProgress(a: ProgressData, b: ProgressData): ProgressData {
       quizKeys.map(k => [k, Math.max(a.quizScores?.[k] ?? 0, b.quizScores?.[k] ?? 0)])
     ),
     totalXp: Math.max(a.totalXp || 0, b.totalXp || 0),
+    weeklyXp: (a.weekStart ?? '') >= (b.weekStart ?? '') ? (a.weeklyXp || 0) : (b.weeklyXp || 0),
+    weekStart: (a.weekStart ?? '') >= (b.weekStart ?? '') ? (a.weekStart || '') : (b.weekStart || ''),
   };
 }
 
@@ -131,7 +144,14 @@ export function useProgress() {
 
   const addXp = useCallback((amount: number) => {
     setProgress(prev => {
-      const next = { ...prev, totalXp: (prev.totalXp || 0) + amount };
+      const weekStart = getWeekStart();
+      const isNewWeek = prev.weekStart !== weekStart;
+      const next = {
+        ...prev,
+        totalXp: (prev.totalXp || 0) + amount,
+        weeklyXp: isNewWeek ? amount : (prev.weeklyXp || 0) + amount,
+        weekStart,
+      };
       persist(next);
       return next;
     });
