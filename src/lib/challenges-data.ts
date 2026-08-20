@@ -4603,37 +4603,7 @@ export const CHALLENGES: Challenge[] = [
     options: [
       { label: 'Fold — il a sûrement l\'As', isCorrect: false, explanation: 'Tu as un SET ! C\'est une main exceptionnellement forte. Même si villain a A-x, tu bats une paire d\'As facilement.' },
       { label: 'Call pour contrôler le pot', isCorrect: false, explanation: 'Caller avec un set est sous-optimal. Tu as une main très forte — raise pour construire le pot et extraire de la valeur.' },
-      { label: 'Raise à 35 ─────────────────────────────────────────────────────────────────
-
-export const CHALLENGE_LEVEL_ORDER: ChallengeLevel[] = [
-  'debutant', 'intermediaire', 'avance', 'expert', 'professionnel'
-];
-
-export function getUserLevel(completedLevels: Record<string, boolean>): ChallengeLevel {
-  if (completedLevels['expert']) return 'professionnel';
-  if (completedLevels['avance']) return 'expert';
-  if (completedLevels['intermediaire']) return 'avance';
-  if (completedLevels['debutant']) return 'intermediaire';
-  return 'debutant';
-}
-
-export function getChallengesForLevel(level: ChallengeLevel): Challenge[] {
-  return CHALLENGES.filter(c => c.level === level);
-}
-
-// Sélection déterministe par date + userId pour que chaque user ait son propre défi
-export function selectDailyChallenge(
-  level: ChallengeLevel,
-  completedIds: string[],
-  userId: string,
-  date: string, // format "YYYY-MM-DD"
-): Challenge {
-  const pool = getChallengesForLevel(level).filter(c => !completedIds.includes(c.id));
-  const seed = [...(userId + date)].reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const eligible = pool.length > 0 ? pool : getChallengesForLevel(level); // reset si tout fait
-  return eligible[seed % eligible.length];
-}
-, isCorrect: true, explanation: 'Correct ! Un set est dans le top de ton range. L\'As n\'est pas dangereux pour toi — tu bats toutes les paires d\'As. Raise pour construire le pot et maximiser la valeur.' },
+      { label: 'Raise à 35$', isCorrect: true, explanation: 'Correct ! Un set est dans le top de ton range. L\'As n\'est pas dangereux pour toi — tu bats toutes les paires d\'As. Raise pour construire le pot et maximiser la valeur.' },
       { label: 'All-in', isCorrect: false, explanation: 'All-in peut être envisagé mais est peut-être trop large. Un raise à 2-3x extrait plus car villain peut call avec A-x et payer le river aussi.' },
     ],
     lesson: 'Un set (trois d\'une même valeur) est rarement battu. Ne pas paniquer face à un overcard. Construis le pot avec confiance.',
@@ -4754,37 +4724,7 @@ export function selectDailyChallenge(
     options: [
       { label: 'Call et voir le flop', isCorrect: false, explanation: 'QQ est trop fort pour juste call. Tu rates de la valeur et laisses entrer les blindes à prix réduit. Le 3-bet isole et extrait de la valeur.' },
       { label: 'Fold — UTG range bat QQ', isCorrect: false, explanation: 'Seulement AA et KK battent QQ préflop. Le range UTG d\'un TAG inclut beaucoup de mains qui perdent contre QQ. Fold serait une erreur grave.' },
-      { label: '3-bet à 12-13 ─────────────────────────────────────────────────────────────────
-
-export const CHALLENGE_LEVEL_ORDER: ChallengeLevel[] = [
-  'debutant', 'intermediaire', 'avance', 'expert', 'professionnel'
-];
-
-export function getUserLevel(completedLevels: Record<string, boolean>): ChallengeLevel {
-  if (completedLevels['expert']) return 'professionnel';
-  if (completedLevels['avance']) return 'expert';
-  if (completedLevels['intermediaire']) return 'avance';
-  if (completedLevels['debutant']) return 'intermediaire';
-  return 'debutant';
-}
-
-export function getChallengesForLevel(level: ChallengeLevel): Challenge[] {
-  return CHALLENGES.filter(c => c.level === level);
-}
-
-// Sélection déterministe par date + userId pour que chaque user ait son propre défi
-export function selectDailyChallenge(
-  level: ChallengeLevel,
-  completedIds: string[],
-  userId: string,
-  date: string, // format "YYYY-MM-DD"
-): Challenge {
-  const pool = getChallengesForLevel(level).filter(c => !completedIds.includes(c.id));
-  const seed = [...(userId + date)].reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const eligible = pool.length > 0 ? pool : getChallengesForLevel(level); // reset si tout fait
-  return eligible[seed % eligible.length];
-}
-, isCorrect: true, explanation: 'Excellent ! QQ est une main premium. Face à un TAG, 3-bet pour valeur isole le villain, construit le pot, et extrait de la valeur contre JJ, TT, AK, AQ qui peuvent payer.' },
+      { label: '3-bet à 12-13$', isCorrect: true, explanation: 'Excellent ! QQ est une main premium. Face à un TAG, 3-bet pour valeur isole le villain, construit le pot, et extrait de la valeur contre JJ, TT, AK, AQ qui peuvent payer.' },
       { label: '3-bet all-in', isCorrect: false, explanation: 'All-in préflop à 100BB est trop grand avec QQ. Si villain call, seul AA et KK vous battent (rarement), mais tu rates de la valeur si villain fold JJ, TT, AK.' },
     ],
     lesson: 'Le 3-bet pour valeur avec QQ/KK/AA isole le villain et construit le pot. 3x l\'open est standard. Ne jamais slowplay les mains premium préflop quand elles ont une forte edge.',
