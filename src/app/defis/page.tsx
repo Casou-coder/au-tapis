@@ -1,45 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Trophy, Calendar, Lock } from 'lucide-react';
+import { Flame, Trophy, Calendar, Lock, Shuffle } from 'lucide-react';
 import { DailyChallengeModal, DailyChallengeCard } from '@/components/DailyChallenge';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 import { CHALLENGES, Challenge, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
 import { useProgress } from '@/hooks/useProgress';
 
 const LEVEL_META: Record<ChallengeLevel, { label: string; color: string; emoji: string }> = {
-  debutant: { label: 'Débutant', color: '#22c55e', emoji: '🟢' },
-  intermediaire: { label: 'Intermédiaire', color: '#3b82f6', emoji: '🔵' },
-  avance: { label: 'Avancé', color: '#a855f7', emoji: '🟣' },
-  expert: { label: 'Expert', color: '#eab308', emoji: '🟡' },
-  professionnel: { label: 'Professionnel', color: '#ef4444', emoji: '🔴' },
+  debutant:     { label: 'Débutant',      color: '#22c55e', emoji: '🟢' },
+  intermediaire:{ label: 'Intermédiaire', color: '#3b82f6', emoji: '🔵' },
+  avance:       { label: 'Avancé',        color: '#a855f7', emoji: '🟣' },
+  expert:       { label: 'Expert',        color: '#eab308', emoji: '🟡' },
+  professionnel:{ label: 'Professionnel', color: '#ef4444', emoji: '🔴' },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  decision: '🎯 Décision',
-  calculation: '🔢 Calcul',
-  reads: '👁 Read',
-  gto: '🤖 GTO',
-  icm: '💰 ICM',
-};
+const TYPE_OPTIONS = [
+  { id: 'all',         label: 'Tous les types' },
+  { id: 'decision',    label: '🎯 Décision' },
+  { id: 'calculation', label: '🔢 Calcul' },
+  { id: 'reads',       label: '👁 Read' },
+  { id: 'gto',         label: '🤖 GTO' },
+  { id: 'icm',         label: '💰 ICM' },
+];
+
+const DIFF_OPTIONS = [
+  { id: 'all', label: 'Toutes' },
+  { id: 1,     label: '● Facile' },
+  { id: 2,     label: '●● Moyen' },
+  { id: 3,     label: '●●● Difficile' },
+];
+
+const BATCH = 20;
 
 export default function DefisPage() {
   const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
   const { isLevelUnlocked, addXp } = useProgress();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [practiceChallenge, setPracticeChallenge] = useState<Challenge | null>(null);
-  const [activeLevel, setActiveLevel] = useState<ChallengeLevel | 'all'>('all');
+
+  // Filters
+  const [activeLevel, setActiveLevel]     = useState<ChallengeLevel | 'all'>('all');
+  const [activeType, setActiveType]       = useState<string>('all');
+  const [activeDiff, setActiveDiff]       = useState<number | 'all'>('all');
+  const [visibleCount, setVisibleCount]   = useState(BATCH);
+
   const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
 
-  const filtered = activeLevel === 'all'
-    ? CHALLENGES
-    : CHALLENGES.filter(c => c.level === activeLevel);
+  // Reset batch when filters change
+  useEffect(() => { setVisibleCount(BATCH); }, [activeLevel, activeType, activeDiff]);
+
+  // Filtered + sorted pool (daily challenge hidden until completed)
+  const pool = CHALLENGES.filter(c => {
+    if (!isCompleted && challenge && c.id === challenge.id) return false;
+    if (activeLevel !== 'all' && c.level !== activeLevel) return false;
+    if (activeType  !== 'all' && c.type  !== activeType)  return false;
+    if (activeDiff  !== 'all' && c.difficulty !== activeDiff) return false;
+    return true;
+  });
+
+  const sorted = [
+    ...pool.filter(c => !completedIds.includes(c.id)),
+    ...pool.filter(c =>  completedIds.includes(c.id)),
+  ];
+
+  const visible  = sorted.slice(0, visibleCount);
+  const hasMore  = sorted.length > visibleCount;
+
+  const pickRandom = useCallback(() => {
+    const eligible = pool.filter(c => {
+      const unlocked = c.level === 'debutant' || isLevelUnlocked(c.level);
+      return unlocked && !completedIds.includes(c.id);
+    });
+    const source = eligible.length > 0 ? eligible : pool.filter(c => c.level === 'debutant' || isLevelUnlocked(c.level));
+    if (!source.length) return;
+    setPracticeChallenge(source[Math.floor(Math.random() * source.length)]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool, completedIds, isLevelUnlocked]);
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
-
       <main className="max-w-4xl mx-auto px-4 pt-28 pb-16">
+
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
@@ -60,7 +104,6 @@ export default function DefisPage() {
               onOpen={() => setModalOpen(true)}
             />
           </div>
-
           <div className="space-y-3">
             <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <Flame size={22} className="text-orange-400 mx-auto mb-1" />
@@ -80,33 +123,88 @@ export default function DefisPage() {
           </div>
         </div>
 
-        {/* Library */}
-        <div className="mb-5">
-          <h2 className="text-white font-bold text-lg mb-3">Bibliothèque de défis</h2>
-          <div className="flex gap-2 flex-wrap">
+        {/* Library header */}
+        <div className="mb-4">
+          <h2 className="text-white font-bold text-lg mb-4">Bibliothèque de défis</h2>
+
+          {/* Filtre niveau */}
+          <div className="flex gap-2 flex-wrap mb-2">
             {(['all', ...CHALLENGE_LEVEL_ORDER] as const).map(l => {
-              const isActive = activeLevel === l;
+              const active = activeLevel === l;
               const meta = l === 'all' ? null : LEVEL_META[l];
               return (
-                <button
-                  key={l}
-                  onClick={() => setActiveLevel(l)}
+                <button key={l} onClick={() => setActiveLevel(l)}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
                   style={{
-                    background: isActive ? (meta?.color ?? '#c9a84c') + '20' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${isActive ? (meta?.color ?? '#c9a84c') + '50' : 'rgba(255,255,255,0.1)'}`,
-                    color: isActive ? (meta?.color ?? '#c9a84c') : '#6b7280',
-                  }}
-                >
+                    background: active ? (meta?.color ?? '#c9a84c') + '20' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${active ? (meta?.color ?? '#c9a84c') + '50' : 'rgba(255,255,255,0.1)'}`,
+                    color: active ? (meta?.color ?? '#c9a84c') : '#6b7280',
+                  }}>
                   {l === 'all' ? 'Tous' : `${meta!.emoji} ${meta!.label}`}
                 </button>
               );
             })}
           </div>
+
+          {/* Filtre type */}
+          <div className="flex gap-2 flex-wrap mb-2">
+            {TYPE_OPTIONS.map(t => {
+              const active = activeType === t.id;
+              return (
+                <button key={t.id} onClick={() => setActiveType(t.id)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    background: active ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${active ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    color: active ? '#a5b4fc' : '#6b7280',
+                  }}>
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtre difficulté */}
+          <div className="flex gap-2 flex-wrap mb-4">
+            {DIFF_OPTIONS.map(d => {
+              const active = activeDiff === d.id;
+              return (
+                <button key={String(d.id)} onClick={() => setActiveDiff(d.id as number | 'all')}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    background: active ? 'rgba(251,146,60,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${active ? 'rgba(251,146,60,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                    color: active ? '#fb923c' : '#6b7280',
+                  }}>
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Barre résultats + bouton aléatoire */}
+          <div className="flex items-center justify-between">
+            <p className="text-gray-500 text-sm">
+              {sorted.length} défi{sorted.length > 1 ? 's' : ''}
+              {completedIds.length > 0 && (
+                <span className="text-gray-600"> · {pool.filter(c => completedIds.includes(c.id)).length} fait{pool.filter(c => completedIds.includes(c.id)).length > 1 ? 's' : ''}</span>
+              )}
+            </p>
+            <button
+              onClick={pickRandom}
+              disabled={pool.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40"
+              style={{ background: 'rgba(202,163,60,0.1)', border: '1px solid rgba(202,163,60,0.25)', color: '#c9a84c' }}
+            >
+              <Shuffle size={13} />
+              Défi aléatoire
+            </button>
+          </div>
         </div>
 
+        {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filtered.map((c, i) => {
+          {visible.map((c, i) => {
             const meta = LEVEL_META[c.level];
             const done = completedIds.includes(c.id);
             const unlocked = c.level === 'debutant' || isLevelUnlocked(c.level);
@@ -118,10 +216,10 @@ export default function DefisPage() {
                 animate={{ opacity: 1, y: 0 }}
                 whileTap={unlocked ? { scale: 0.97 } : {}}
                 whileHover={unlocked ? { y: -2 } : {}}
-                transition={{ delay: i * 0.03, duration: 0.15 }}
+                transition={{ delay: Math.min(i, 10) * 0.03, duration: 0.15 }}
                 onClick={unlocked ? () => setPracticeChallenge(c) : undefined}
-                className={`rounded-xl p-4 relative${unlocked ? ' cursor-pointer' : ''}`}
-                style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${done ? meta.color + '30' : 'rgba(255,255,255,0.08)'}` }}
+                className={`rounded-xl p-4 relative transition-opacity${unlocked ? ' cursor-pointer' : ''}${done ? ' opacity-50' : ''}`}
+                style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${done ? meta.color + '20' : 'rgba(255,255,255,0.08)'}` }}
               >
                 {!unlocked && (
                   <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -136,26 +234,41 @@ export default function DefisPage() {
                     {meta.label}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    {done && <span className="text-green-400 text-xs font-medium">✓ Fait</span>}
-                    <span className="text-gray-500 text-xs">{TYPE_LABELS[c.type]}</span>
+                    {done && <span className="text-green-400/70 text-xs font-medium">✓ Fait</span>}
+                    <span className="text-gray-500 text-xs">
+                      {TYPE_OPTIONS.find(t => t.id === c.type)?.label ?? c.type}
+                    </span>
                   </div>
                 </div>
-                <p className="text-white text-sm font-semibold mb-1">{c.title}</p>
+                <p className="text-white text-sm font-semibold mb-2">{c.title}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-1">
-                    {Array.from({ length: c.difficulty }).map((_, i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
+                    {Array.from({ length: c.difficulty }).map((_, j) => (
+                      <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
                     ))}
-                    {Array.from({ length: 3 - c.difficulty }).map((_, i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                    {Array.from({ length: 3 - c.difficulty }).map((_, j) => (
+                      <div key={j} className="w-1.5 h-1.5 rounded-full bg-white/10" />
                     ))}
                   </div>
-                  <span className="text-yellow-400/70 text-xs">+{c.xp} XP</span>
+                  <span className="text-yellow-400/70 text-xs">+{Math.round(c.xp * 0.5)} XP</span>
                 </div>
               </motion.div>
             );
           })}
         </div>
+
+        {/* Voir plus */}
+        {hasMore && (
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setVisibleCount(v => v + BATCH)}
+              className="px-6 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
+            >
+              Voir plus · {sorted.length - visibleCount} restants
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Modal défi du jour */}
