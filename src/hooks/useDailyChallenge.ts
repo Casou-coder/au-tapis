@@ -49,17 +49,19 @@ export function useDailyChallenge() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
   const [streak, setStreak] = useState(0);
+  const [history, setHistory] = useState<DayRecord[]>([]);
 
   useEffect(() => {
     const today = getToday();
-    const history = loadHistory();
-    const todayRecord = history.find(h => h.date === today);
-    const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
+    const h = loadHistory();
+    setHistory(h);
+    const todayRecord = h.find(r => r.date === today);
+    const completedIds = h.filter(r => r.completed).map(r => r.challengeId);
     const level = getUserLevel(progress.completedLevels);
 
     const picked = selectDailyChallenge(level, completedIds, 'anonymous', today);
     setChallenge(picked);
-    setStreak(computeStreak(history));
+    setStreak(computeStreak(h));
 
     if (todayRecord?.completed) {
       setIsCompleted(true);
@@ -70,16 +72,15 @@ export function useDailyChallenge() {
   const completeChallenge = useCallback((correct: boolean) => {
     if (!challenge) return;
     const today = getToday();
-    const history = loadHistory().filter(h => h.date !== today);
+    const prev = loadHistory().filter(h => h.date !== today);
     const newRecord: DayRecord = { date: today, challengeId: challenge.id, completed: true, correct };
-    const next = [...history, newRecord];
+    const next = [...prev, newRecord];
     saveHistory(next);
+    setHistory(next);
     setIsCompleted(true);
     setWasCorrect(correct);
     setStreak(computeStreak(next));
   }, [challenge]);
-
-  const history = typeof window !== 'undefined' ? loadHistory() : [];
 
   return { challenge, isCompleted, wasCorrect, streak, loading: false, completeChallenge, history };
 }
