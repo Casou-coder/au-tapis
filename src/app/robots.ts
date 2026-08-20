@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/profil', '/api/'],
+      disallow: ['/profil', '/api/', '/login', '/register', '/auth', '/onboarding', '/reset-password'],
     },
     sitemap: 'https://forgedpoker.com/sitemap.xml',
   };

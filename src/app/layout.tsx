@@ -49,13 +49,13 @@ export const metadata: Metadata = {
     siteName: 'Forged Poker',
     title: "Forged Poker : Maîtrisez le Poker Texas Hold'em",
     description: "De la première main jusqu'aux stratégies des champions. Cours gratuits, défis quotidiens, outils GTO. Apprenez le poker sans argent réel.",
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Forged Poker : Apprendre le Poker' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Forged Poker : Apprendre le Poker' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: "Forged Poker : Maîtrisez le Poker",
     description: "Apprenez le poker Texas Hold'em gratuitement, du débutant au professionnel.",
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   alternates: { canonical: BASE_URL },
 };
