@@ -14,7 +14,7 @@ type Tab = 'streak' | 'weekly' | 'hard';
 const TABS: { id: Tab; label: string; icon: React.ReactNode; desc: string }[] = [
   { id: 'streak', label: 'Série', icon: <Flame size={16} />, desc: 'Jours consécutifs de défis complétés' },
   { id: 'weekly', label: 'XP Semaine', icon: <Zap size={16} />, desc: 'XP accumulés depuis lundi' },
-  { id: 'hard', label: 'Précision Expert', icon: <Target size={16} />, desc: 'Taux de réussite sur questions difficiles (min. 5 tentées)' },
+  { id: 'hard', label: 'Précision', icon: <Target size={16} />, desc: 'Taux de réussite sur questions difficiles (min. 5 tentées)' },
 ];
 
 const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];

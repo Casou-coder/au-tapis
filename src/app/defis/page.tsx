@@ -17,7 +17,7 @@ const LEVEL_META: Record<ChallengeLevel, { label: string; color: string; emoji: 
 };
 
 const TYPE_OPTIONS = [
-  { id: 'all',         label: 'Tous les types' },
+  { id: 'all',         label: 'Tous' },
   { id: 'decision',    label: '🎯 Décision' },
   { id: 'calculation', label: '🔢 Calcul' },
   { id: 'reads',       label: '👁 Read' },
@@ -104,21 +104,21 @@ export default function DefisPage() {
               onOpen={() => setModalOpen(true)}
             />
           </div>
-          <div className="space-y-3">
-            <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Flame size={22} className="text-orange-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{streak}</p>
-              <p className="text-gray-400 text-xs">Jours consécutifs</p>
+          <div className="grid grid-cols-3 gap-2 md:block md:space-y-3">
+            <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Flame size={18} className="text-orange-400 mx-auto mb-1" />
+              <p className="text-xl md:text-2xl font-bold text-white">{streak}</p>
+              <p className="text-gray-400 text-xs leading-tight">Jours consécutifs</p>
             </div>
-            <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Trophy size={22} className="text-yellow-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{completedIds.length}</p>
-              <p className="text-gray-400 text-xs">Défis complétés</p>
+            <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Trophy size={18} className="text-yellow-400 mx-auto mb-1" />
+              <p className="text-xl md:text-2xl font-bold text-white">{completedIds.length}</p>
+              <p className="text-gray-400 text-xs leading-tight">Défis complétés</p>
             </div>
-            <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Calendar size={22} className="text-blue-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{history.filter(h => h.correct).length}</p>
-              <p className="text-gray-400 text-xs">Réponses correctes</p>
+            <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Calendar size={18} className="text-blue-400 mx-auto mb-1" />
+              <p className="text-xl md:text-2xl font-bold text-white">{history.filter(h => h.correct).length}</p>
+              <p className="text-gray-400 text-xs leading-tight">Réponses correctes</p>
             </div>
           </div>
         </div>
