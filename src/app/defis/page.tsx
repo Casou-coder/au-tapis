@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Flame, Trophy, Calendar, Lock } from 'lucide-react';
 import { DailyChallengeModal, DailyChallengeCard } from '@/components/DailyChallenge';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
-import { CHALLENGES, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
+import { CHALLENGES, Challenge, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
 import { useProgress } from '@/hooks/useProgress';
 
 const LEVEL_META: Record<ChallengeLevel, { label: string; color: string; emoji: string }> = {
@@ -26,8 +26,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function DefisPage() {
   const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
-  const { isLevelUnlocked } = useProgress();
+  const { isLevelUnlocked, addXp } = useProgress();
   const [modalOpen, setModalOpen] = useState(false);
+  const [practiceChallenge, setPracticeChallenge] = useState<Challenge | null>(null);
   const [activeLevel, setActiveLevel] = useState<ChallengeLevel | 'all'>('all');
   const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
 
@@ -118,7 +119,8 @@ export default function DefisPage() {
                 whileTap={unlocked ? { scale: 0.97 } : {}}
                 whileHover={unlocked ? { y: -2 } : {}}
                 transition={{ delay: i * 0.03, duration: 0.15 }}
-                className="rounded-xl p-4 relative"
+                onClick={unlocked ? () => setPracticeChallenge(c) : undefined}
+                className={`rounded-xl p-4 relative${unlocked ? ' cursor-pointer' : ''}`}
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${done ? meta.color + '30' : 'rgba(255,255,255,0.08)'}` }}
               >
                 {!unlocked && (
@@ -156,13 +158,26 @@ export default function DefisPage() {
         </div>
       </main>
 
-      {/* Modal */}
+      {/* Modal défi du jour */}
       {modalOpen && challenge && (
         <DailyChallengeModal
           challenge={challenge}
           streak={streak}
           onComplete={(correct) => { completeChallenge(correct); }}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {/* Modal entraînement libre */}
+      {practiceChallenge && (
+        <DailyChallengeModal
+          challenge={practiceChallenge}
+          streak={streak}
+          onComplete={(correct) => {
+            if (correct) addXp(Math.round(practiceChallenge.xp * 0.5));
+            setPracticeChallenge(null);
+          }}
+          onClose={() => setPracticeChallenge(null)}
         />
       )}
     </div>
