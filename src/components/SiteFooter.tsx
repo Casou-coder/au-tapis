@@ -26,6 +26,9 @@ export default function SiteFooter() {
                 09 74 75 13 13
               </a>
             </div>
+            <Link href="/mentions-legales" className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
+              Mentions légales
+            </Link>
             <Link href="/cgu" className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
               CGU
             </Link>
