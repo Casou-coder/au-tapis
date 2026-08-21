@@ -15,6 +15,28 @@ interface ProgressData {
 const STORAGE_KEY = 'poker-academy-progress';
 const defaultProgress: ProgressData = { completedModules: {}, completedLevels: {}, quizScores: {}, totalXp: 0, weeklyXp: 0, weekStart: '' };
 
+const XP_HISTORY_KEY = 'poker-xp-history';
+
+export interface XpDayRecord { date: string; earned: number; }
+
+export function loadXpHistory(): XpDayRecord[] {
+  if (typeof window === 'undefined') return [];
+  try { return JSON.parse(localStorage.getItem(XP_HISTORY_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function recordXpEarned(amount: number) {
+  const today = new Date().toISOString().split('T')[0];
+  const history = loadXpHistory();
+  const existing = history.find(h => h.date === today);
+  if (existing) {
+    existing.earned += amount;
+    try { localStorage.setItem(XP_HISTORY_KEY, JSON.stringify(history.slice(-90))); } catch {}
+  } else {
+    try { localStorage.setItem(XP_HISTORY_KEY, JSON.stringify([...history, { date: today, earned: amount }].slice(-90))); } catch {}
+  }
+}
+
 function getWeekStart(): string {
   const d = new Date();
   const day = d.getDay();
@@ -143,6 +165,7 @@ export function useProgress() {
   }, [persist]);
 
   const addXp = useCallback((amount: number) => {
+    recordXpEarned(amount);
     setProgress(prev => {
       const weekStart = getWeekStart();
       const isNewWeek = prev.weekStart !== weekStart;

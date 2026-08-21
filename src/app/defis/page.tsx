@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Flame, Trophy, Calendar, Lock, Shuffle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Flame, Trophy, Calendar, Lock, Shuffle, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { DailyChallengeModal, DailyChallengeCard } from '@/components/DailyChallenge';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
+import { useChallengeStats } from '@/hooks/useChallengeStats';
 import { CHALLENGES, Challenge, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -33,13 +34,18 @@ const DIFF_OPTIONS = [
 ];
 
 const BATCH = 20;
+const STREAK_MILESTONES = [3, 7, 14, 30, 100];
 
 export default function DefisPage() {
   const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
   const { isLevelUnlocked, addXp } = useProgress();
+  const { failedIds, recordAttempt } = useChallengeStats();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [practiceChallenge, setPracticeChallenge] = useState<Challenge | null>(null);
+  const [showRevision, setShowRevision] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+  const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
 
   // Filters
   const [activeLevel, setActiveLevel]     = useState<ChallengeLevel | 'all'>('all');
@@ -49,36 +55,50 @@ export default function DefisPage() {
 
   const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
 
+  // Show streak milestone banner after completing daily challenge
+  useEffect(() => {
+    if (justCompleted && STREAK_MILESTONES.includes(streak)) {
+      setMilestoneStreak(streak);
+      const t = setTimeout(() => { setMilestoneStreak(null); setJustCompleted(false); }, 4500);
+      return () => clearTimeout(t);
+    }
+    if (justCompleted) setJustCompleted(false);
+  }, [justCompleted, streak]);
+
   // Reset batch when filters change
-  useEffect(() => { setVisibleCount(BATCH); }, [activeLevel, activeType, activeDiff]);
+  useEffect(() => { setVisibleCount(BATCH); }, [activeLevel, activeType, activeDiff, showRevision]);
 
-  // Filtered + sorted pool (daily challenge hidden until completed)
-  const pool = CHALLENGES.filter(c => {
-    if (!isCompleted && challenge && c.id === challenge.id) return false;
-    if (activeLevel !== 'all' && c.level !== activeLevel) return false;
-    if (activeType  !== 'all' && c.type  !== activeType)  return false;
-    if (activeDiff  !== 'all' && c.difficulty !== activeDiff) return false;
-    return true;
-  });
+  // Pool computation
+  const basePool = showRevision
+    ? CHALLENGES.filter(c => failedIds.includes(c.id))
+    : CHALLENGES.filter(c => {
+        if (!isCompleted && challenge && c.id === challenge.id) return false;
+        if (activeLevel !== 'all' && c.level !== activeLevel) return false;
+        if (activeType  !== 'all' && c.type  !== activeType)  return false;
+        if (activeDiff  !== 'all' && c.difficulty !== activeDiff) return false;
+        return true;
+      });
 
-  const sorted = [
-    ...pool.filter(c => !completedIds.includes(c.id)),
-    ...pool.filter(c =>  completedIds.includes(c.id)),
-  ];
+  const sorted = showRevision
+    ? basePool
+    : [
+        ...basePool.filter(c => !completedIds.includes(c.id)),
+        ...basePool.filter(c =>  completedIds.includes(c.id)),
+      ];
 
-  const visible  = sorted.slice(0, visibleCount);
-  const hasMore  = sorted.length > visibleCount;
+  const visible = sorted.slice(0, visibleCount);
+  const hasMore = sorted.length > visibleCount;
 
   const pickRandom = useCallback(() => {
-    const eligible = pool.filter(c => {
+    const pool = CHALLENGES.filter(c => {
       const unlocked = c.level === 'debutant' || isLevelUnlocked(c.level);
       return unlocked && !completedIds.includes(c.id);
     });
-    const source = eligible.length > 0 ? eligible : pool.filter(c => c.level === 'debutant' || isLevelUnlocked(c.level));
+    const source = pool.length > 0 ? pool : CHALLENGES.filter(c => c.level === 'debutant' || isLevelUnlocked(c.level));
     if (!source.length) return;
     setPracticeChallenge(source[Math.floor(Math.random() * source.length)]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pool, completedIds, isLevelUnlocked]);
+  }, [CHALLENGES, completedIds, isLevelUnlocked]);
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
@@ -91,6 +111,30 @@ export default function DefisPage() {
           </h1>
           <p className="text-gray-400">Un défi par jour, adapté à ton niveau. Construis ta série et progresse.</p>
         </motion.div>
+
+        {/* Streak milestone banner */}
+        <AnimatePresence>
+          {milestoneStreak !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: -16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="mb-6 rounded-2xl p-4 text-center"
+              style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.18), rgba(239,68,68,0.12))', border: '1px solid rgba(251,146,60,0.35)' }}
+            >
+              <p className="text-2xl mb-1">🔥</p>
+              <p className="text-white font-bold text-lg">{milestoneStreak} jours de suite !</p>
+              <p className="text-orange-300 text-sm mt-0.5">
+                {milestoneStreak >= 100 ? 'Tu es une légende absolue.' :
+                 milestoneStreak >= 30  ? 'Discipline de champion.' :
+                 milestoneStreak >= 14  ? 'Deux semaines sans faillir.' :
+                 milestoneStreak >= 7   ? 'Une semaine complète !' :
+                 'Belle série, continue !'}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Stats + défi du jour */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -125,81 +169,116 @@ export default function DefisPage() {
 
         {/* Library header */}
         <div className="mb-4">
-          <h2 className="text-white font-bold text-lg mb-4">Bibliothèque de défis</h2>
-
-          {/* Filtre niveau */}
-          <div className="flex gap-2 flex-wrap mb-2">
-            {(['all', ...CHALLENGE_LEVEL_ORDER] as const).map(l => {
-              const active = activeLevel === l;
-              const meta = l === 'all' ? null : LEVEL_META[l];
-              return (
-                <button key={l} onClick={() => setActiveLevel(l)}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                  style={{
-                    background: active ? (meta?.color ?? '#c9a84c') + '20' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? (meta?.color ?? '#c9a84c') + '50' : 'rgba(255,255,255,0.1)'}`,
-                    color: active ? (meta?.color ?? '#c9a84c') : '#6b7280',
-                  }}>
-                  {l === 'all' ? 'Tous' : `${meta!.emoji} ${meta!.label}`}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Filtre type */}
-          <div className="flex gap-2 flex-wrap mb-2">
-            {TYPE_OPTIONS.map(t => {
-              const active = activeType === t.id;
-              return (
-                <button key={t.id} onClick={() => setActiveType(t.id)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{
-                    background: active ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${active ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    color: active ? '#a5b4fc' : '#6b7280',
-                  }}>
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Filtre difficulté */}
-          <div className="flex gap-2 flex-wrap mb-4">
-            {DIFF_OPTIONS.map(d => {
-              const active = activeDiff === d.id;
-              return (
-                <button key={String(d.id)} onClick={() => setActiveDiff(d.id as number | 'all')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{
-                    background: active ? 'rgba(251,146,60,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${active ? 'rgba(251,146,60,0.35)' : 'rgba(255,255,255,0.08)'}`,
-                    color: active ? '#fb923c' : '#6b7280',
-                  }}>
-                  {d.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Barre résultats + bouton aléatoire */}
-          <div className="flex items-center justify-between">
-            <p className="text-gray-500 text-sm">
-              {sorted.length} défi{sorted.length > 1 ? 's' : ''}
-              {completedIds.length > 0 && (
-                <span className="text-gray-600"> · {pool.filter(c => completedIds.includes(c.id)).length} fait{pool.filter(c => completedIds.includes(c.id)).length > 1 ? 's' : ''}</span>
-              )}
-            </p>
+          {/* Tabs: Bibliothèque / Révision */}
+          <div className="flex items-center gap-3 mb-5">
             <button
-              onClick={pickRandom}
-              disabled={pool.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40"
-              style={{ background: 'rgba(202,163,60,0.1)', border: '1px solid rgba(202,163,60,0.25)', color: '#c9a84c' }}
+              onClick={() => setShowRevision(false)}
+              className="text-sm font-bold transition-colors"
+              style={{ color: !showRevision ? '#ffffff' : '#6b7280' }}
             >
-              <Shuffle size={13} />
-              Défi aléatoire
+              Bibliothèque de défis
+            </button>
+            <span className="text-gray-700">|</span>
+            <button
+              onClick={() => setShowRevision(true)}
+              className="flex items-center gap-1.5 text-sm font-bold transition-colors"
+              style={{ color: showRevision ? '#f97316' : '#6b7280' }}
+            >
+              <RotateCcw size={13} />
+              Révision
+              {failedIds.length > 0 && (
+                <span className="ml-0.5 text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>
+                  {failedIds.length}
+                </span>
+              )}
             </button>
           </div>
+
+          {showRevision ? (
+            /* Révision mode */
+            failedIds.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle2 size={40} className="text-green-400 mx-auto mb-3" />
+                <p className="text-white font-semibold text-lg mb-1">Tout maîtrisé !</p>
+                <p className="text-gray-500 text-sm">Aucun défi raté à réviser. Continue comme ça.</p>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm mb-4">{failedIds.length} défi{failedIds.length > 1 ? 's' : ''} à revoir · Réponds correctement pour les retirer</p>
+            )
+          ) : (
+            /* Standard library filters */
+            <>
+              <div className="flex gap-2 flex-wrap mb-2">
+                {(['all', ...CHALLENGE_LEVEL_ORDER] as const).map(l => {
+                  const active = activeLevel === l;
+                  const meta = l === 'all' ? null : LEVEL_META[l];
+                  return (
+                    <button key={l} onClick={() => setActiveLevel(l)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                      style={{
+                        background: active ? (meta?.color ?? '#c9a84c') + '20' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${active ? (meta?.color ?? '#c9a84c') + '50' : 'rgba(255,255,255,0.1)'}`,
+                        color: active ? (meta?.color ?? '#c9a84c') : '#6b7280',
+                      }}>
+                      {l === 'all' ? 'Tous' : `${meta!.emoji} ${meta!.label}`}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2 flex-wrap mb-2">
+                {TYPE_OPTIONS.map(t => {
+                  const active = activeType === t.id;
+                  return (
+                    <button key={t.id} onClick={() => setActiveType(t.id)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                      style={{
+                        background: active ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${active ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                        color: active ? '#a5b4fc' : '#6b7280',
+                      }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2 flex-wrap mb-4">
+                {DIFF_OPTIONS.map(d => {
+                  const active = activeDiff === d.id;
+                  return (
+                    <button key={String(d.id)} onClick={() => setActiveDiff(d.id as number | 'all')}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                      style={{
+                        background: active ? 'rgba(251,146,60,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${active ? 'rgba(251,146,60,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                        color: active ? '#fb923c' : '#6b7280',
+                      }}>
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-gray-500 text-sm">
+                  {sorted.length} défi{sorted.length > 1 ? 's' : ''}
+                  {completedIds.length > 0 && (
+                    <span className="text-gray-600"> · {basePool.filter(c => completedIds.includes(c.id)).length} fait{basePool.filter(c => completedIds.includes(c.id)).length > 1 ? 's' : ''}</span>
+                  )}
+                </p>
+                <button
+                  onClick={pickRandom}
+                  disabled={basePool.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40"
+                  style={{ background: 'rgba(202,163,60,0.1)', border: '1px solid rgba(202,163,60,0.25)', color: '#c9a84c' }}
+                >
+                  <Shuffle size={13} />
+                  Défi aléatoire
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Grid */}
@@ -207,6 +286,7 @@ export default function DefisPage() {
           {visible.map((c, i) => {
             const meta = LEVEL_META[c.level];
             const done = completedIds.includes(c.id);
+            const failed = failedIds.includes(c.id);
             const unlocked = c.level === 'debutant' || isLevelUnlocked(c.level);
 
             return (
@@ -218,8 +298,11 @@ export default function DefisPage() {
                 whileHover={unlocked ? { y: -2 } : {}}
                 transition={{ delay: Math.min(i, 10) * 0.03, duration: 0.15 }}
                 onClick={unlocked ? () => setPracticeChallenge(c) : undefined}
-                className={`rounded-xl p-4 relative transition-opacity${unlocked ? ' cursor-pointer' : ''}${done ? ' opacity-50' : ''}`}
-                style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${done ? meta.color + '20' : 'rgba(255,255,255,0.08)'}` }}
+                className={`rounded-xl p-4 relative transition-opacity${unlocked ? ' cursor-pointer' : ''}${done && !showRevision ? ' opacity-50' : ''}`}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${failed ? 'rgba(239,68,68,0.25)' : done ? meta.color + '20' : 'rgba(255,255,255,0.08)'}`,
+                }}
               >
                 {!unlocked && (
                   <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -234,7 +317,8 @@ export default function DefisPage() {
                     {meta.label}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    {done && <span className="text-green-400/70 text-xs font-medium">✓ Fait</span>}
+                    {failed && <span className="text-red-400/70 text-xs font-medium">✗ Raté</span>}
+                    {done && !failed && <span className="text-green-400/70 text-xs font-medium">✓ Fait</span>}
                     <span className="text-gray-500 text-xs">
                       {TYPE_OPTIONS.find(t => t.id === c.type)?.label ?? c.type}
                     </span>
@@ -276,7 +360,11 @@ export default function DefisPage() {
         <DailyChallengeModal
           challenge={challenge}
           streak={streak}
-          onComplete={(correct) => { completeChallenge(correct); }}
+          onComplete={(correct) => {
+            setJustCompleted(true);
+            recordAttempt(challenge, correct);
+            completeChallenge(correct);
+          }}
           onClose={() => setModalOpen(false)}
         />
       )}
@@ -288,6 +376,7 @@ export default function DefisPage() {
           streak={streak}
           onComplete={(correct) => {
             if (correct) addXp(Math.round(practiceChallenge.xp * 0.5));
+            recordAttempt(practiceChallenge, correct);
             setPracticeChallenge(null);
           }}
           onClose={() => setPracticeChallenge(null)}
