@@ -19,8 +19,9 @@ const niveauxLinks = [
 ];
 
 const pratiqueLinks = [
-  { href: '/defis',      label: 'Défis',      color: 'text-orange-400', dot: '#f97316' },
-  { href: '/classement', label: 'Classement', color: 'text-yellow-400', dot: '#eab308' },
+  { href: '/defis',      label: 'Défis',         color: 'text-orange-400', dot: '#f97316' },
+  { href: '/ranges',     label: 'Range Builder',  color: 'text-cyan-400',   dot: '#22d3ee' },
+  { href: '/classement', label: 'Classement',    color: 'text-yellow-400', dot: '#eab308' },
   { href: '/preflop',    label: 'Ranges préflop', color: 'text-gray-300', dot: '#9ca3af' },
   { href: '/glossaire',  label: 'Glossaire',  color: 'text-gray-300',   dot: '#9ca3af' },
   { href: '/outils',     label: 'Outils',     color: 'text-gray-300',   dot: '#9ca3af' },
