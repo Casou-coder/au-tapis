@@ -185,7 +185,7 @@ export default function PreflopPage() {
             <span className="text-xs text-gray-500">6-max Cash · 100BB</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Charts Préflop
+            Ranges Préflop
           </h1>
           <p className="text-gray-400">Ranges d'ouverture GTO par position. Vert = toujours ouvrir, ambre = mixte, noir = fold.</p>
         </motion.div>
