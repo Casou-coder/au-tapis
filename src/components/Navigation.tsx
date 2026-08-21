@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useId } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, Link, useRouter } from '@/i18n/routing';
+import { useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -11,34 +11,37 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 const MotionLink = motion.create(Link);
 
 const niveauxLinks = [
-  { href: '/debutant',      label: 'Débutant',      color: 'text-green-400',  dot: '#22c55e' },
-  { href: '/intermediaire', label: 'Intermédiaire', color: 'text-blue-400',   dot: '#3b82f6' },
-  { href: '/avance',        label: 'Avancé',        color: 'text-purple-400', dot: '#a855f7' },
-  { href: '/expert',        label: 'Expert',        color: 'text-yellow-400', dot: '#eab308' },
-  { href: '/professionnel', label: 'Professionnel', color: 'text-red-400',    dot: '#ef4444' },
-];
+  { href: '/debutant',      labelEn: 'Beginner',      labelFr: 'Débutant',      color: 'text-green-400',  dot: '#22c55e' },
+  { href: '/intermediaire', labelEn: 'Intermediate',  labelFr: 'Intermédiaire', color: 'text-blue-400',   dot: '#3b82f6' },
+  { href: '/avance',        labelEn: 'Advanced',      labelFr: 'Avancé',        color: 'text-purple-400', dot: '#a855f7' },
+  { href: '/expert',        labelEn: 'Expert',        labelFr: 'Expert',        color: 'text-yellow-400', dot: '#eab308' },
+  { href: '/professionnel', labelEn: 'Professional',  labelFr: 'Professionnel', color: 'text-red-400',    dot: '#ef4444' },
+] as const;
 
 const pratiqueLinks = [
-  { href: '/defis',      label: 'Défis',         color: 'text-orange-400', dot: '#f97316' },
-  { href: '/ranges',     label: 'Range Builder',  color: 'text-cyan-400',   dot: '#22d3ee' },
-  { href: '/classement', label: 'Classement',    color: 'text-yellow-400', dot: '#eab308' },
-  { href: '/preflop',    label: 'Ranges préflop', color: 'text-gray-300', dot: '#9ca3af' },
-  { href: '/glossaire',  label: 'Glossaire',  color: 'text-gray-300',   dot: '#9ca3af' },
-  { href: '/outils',     label: 'Outils',     color: 'text-gray-300',   dot: '#9ca3af' },
-];
-
-const navGroups = [
-  { label: 'Niveaux',  links: niveauxLinks  },
-  { label: 'Pratique', links: pratiqueLinks },
-];
+  { href: '/defis',      labelEn: 'Challenges',     labelFr: 'Défis',          color: 'text-orange-400', dot: '#f97316' },
+  { href: '/ranges',     labelEn: 'Range Builder',  labelFr: 'Range Builder',  color: 'text-cyan-400',   dot: '#22d3ee' },
+  { href: '/classement', labelEn: 'Leaderboard',    labelFr: 'Classement',     color: 'text-yellow-400', dot: '#eab308' },
+  { href: '/preflop',    labelEn: 'Preflop Ranges', labelFr: 'Ranges préflop', color: 'text-gray-300',   dot: '#9ca3af' },
+  { href: '/glossaire',  labelEn: 'Glossary',       labelFr: 'Glossaire',      color: 'text-gray-300',   dot: '#9ca3af' },
+  { href: '/outils',     labelEn: 'Tools',          labelFr: 'Outils',         color: 'text-gray-300',   dot: '#9ca3af' },
+] as const;
 
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale() as 'en' | 'fr';
   const [menuOpen, setMenuOpen]       = useState(false);
   const [niveauxOpen, setNiveauxOpen] = useState(false);
   const [user, setUser]               = useState<SupabaseUser | null>(null);
   const menuId      = useId();
   const niveauxRef  = useRef<HTMLDivElement>(null);
+
+  const t = (en: string, fr: string) => locale === 'fr' ? fr : en;
+
+  function switchLocale(newLocale: 'en' | 'fr') {
+    router.replace(pathname, { locale: newLocale });
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -81,7 +84,7 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" aria-label="Forged Poker, Accueil">
+          <Link href="/" className="flex items-center gap-2 group" aria-label="Forged Poker">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-400 flex items-center justify-center text-sm font-bold" aria-hidden="true">
               ♠
             </div>
@@ -105,7 +108,7 @@ export default function Navigation() {
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Niveaux
+                {t('Levels', 'Niveaux')}
                 <ChevronDown size={13} className={`transition-transform duration-200 ${niveauxOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
 
@@ -130,7 +133,7 @@ export default function Navigation() {
                           }`}
                         >
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} aria-hidden="true" />
-                          {link.label}
+                          {t(link.labelEn, link.labelFr)}
                         </Link>
                       );
                     })}
@@ -155,7 +158,7 @@ export default function Navigation() {
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  {link.label}
+                  {t(link.labelEn, link.labelFr)}
                 </MotionLink>
               );
             })}
@@ -163,22 +166,37 @@ export default function Navigation() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {/* Language selector */}
+            <div className="flex items-center border border-white/10 rounded-lg overflow-hidden mr-1">
+              {(['en', 'fr'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => switchLocale(l)}
+                  className={`px-2.5 py-1 text-xs font-bold uppercase transition-all ${
+                    locale === l ? 'bg-yellow-500/15 text-yellow-400' : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
             {user ? (
               <div className="flex items-center gap-1">
                 <Link
                   href="/profil"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all"
-                  aria-label="Mon profil"
+                  aria-label={t('My profile', 'Mon profil')}
                 >
                   <span className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-black text-xs font-bold">
                     {(user.email ?? 'U')[0].toUpperCase()}
                   </span>
-                  <span className="hidden sm:inline text-yellow-400 text-xs font-medium">Profil</span>
+                  <span className="hidden sm:inline text-yellow-400 text-xs font-medium">{t('Profile', 'Profil')}</span>
                 </Link>
                 <button
                   onClick={() => supabase.auth.signOut()}
                   className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                  aria-label="Se déconnecter"
+                  aria-label={t('Sign out', 'Se déconnecter')}
                 >
                   <LogOut size={15} />
                 </button>
@@ -189,7 +207,7 @@ export default function Navigation() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold transition-all text-xs"
               >
                 <User size={13} />
-                <span>Connexion</span>
+                <span>{t('Login', 'Connexion')}</span>
               </Link>
             )}
 
@@ -198,7 +216,7 @@ export default function Navigation() {
               onClick={() => setMenuOpen(o => !o)}
               aria-expanded={menuOpen}
               aria-controls={menuId}
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? t('Close menu', 'Fermer le menu') : t('Open menu', 'Ouvrir le menu')}
               className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
             >
               {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
@@ -228,44 +246,86 @@ export default function Navigation() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               role="dialog"
-              aria-label="Menu de navigation"
+              aria-label={t('Navigation menu', 'Menu de navigation')}
               className="fixed top-16 left-0 right-0 z-40 lg:hidden border-b border-white/10"
               style={{ background: 'rgba(6, 13, 8, 0.98)' }}
             >
-              <nav aria-label="Menu mobile" className="max-w-xl mx-auto px-4 py-5 space-y-6">
-                {navGroups.map(group => (
-                  <div key={group.label}>
-                    <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-3" aria-hidden="true">
-                      {group.label}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2" role="list">
-                      {group.links.map(link => {
-                        const active = pathname.startsWith(link.href);
-                        return (
-                          <MotionLink
-                            key={link.href}
-                            href={link.href}
-                            role="listitem"
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ duration: 0.1 }}
-                            aria-current={active ? 'page' : undefined}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                              active ? 'bg-white/10' : 'hover:bg-white/5'
-                            }`}
-                          >
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} aria-hidden="true" />
-                            <span className={active ? link.color : 'text-gray-300'}>{link.label}</span>
-                          </MotionLink>
-                        );
-                      })}
-                    </div>
+              <nav aria-label={t('Mobile menu', 'Menu mobile')} className="max-w-xl mx-auto px-4 py-5 space-y-6">
+                <div>
+                  <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-3" aria-hidden="true">
+                    {t('Levels', 'Niveaux')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2" role="list">
+                    {niveauxLinks.map(link => {
+                      const active = pathname.startsWith(link.href);
+                      return (
+                        <MotionLink
+                          key={link.href}
+                          href={link.href}
+                          role="listitem"
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ duration: 0.1 }}
+                          aria-current={active ? 'page' : undefined}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            active ? 'bg-white/10' : 'hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} aria-hidden="true" />
+                          <span className={active ? link.color : 'text-gray-300'}>{t(link.labelEn, link.labelFr)}</span>
+                        </MotionLink>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
+
+                <div>
+                  <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-3" aria-hidden="true">
+                    {t('Practice', 'Pratique')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2" role="list">
+                    {pratiqueLinks.map(link => {
+                      const active = pathname.startsWith(link.href);
+                      return (
+                        <MotionLink
+                          key={link.href}
+                          href={link.href}
+                          role="listitem"
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ duration: 0.1 }}
+                          aria-current={active ? 'page' : undefined}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            active ? 'bg-white/10' : 'hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: link.dot }} aria-hidden="true" />
+                          <span className={active ? link.color : 'text-gray-300'}>{t(link.labelEn, link.labelFr)}</span>
+                        </MotionLink>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 <div className="border-t border-white/10 pt-4 space-y-3">
+                  {/* Mobile locale switcher */}
+                  <div className="flex items-center gap-2">
+                    {(['en', 'fr'] as const).map(l => (
+                      <button
+                        key={l}
+                        onClick={() => switchLocale(l)}
+                        className={`px-3 py-1 rounded text-xs font-bold uppercase border transition-all ${
+                          locale === l
+                            ? 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30'
+                            : 'text-gray-500 border-white/10 hover:text-gray-300'
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+
                   <Link href="/jeu-responsable" className="flex items-center gap-1.5 text-gray-600 hover:text-gray-400 text-xs transition-colors">
                     <span className="px-1.5 py-0.5 rounded bg-red-500/15 text-red-400/80 font-bold text-xs">18+</span>
-                    Jeu responsable
+                    {t('Responsible gaming', 'Jeu responsable')}
                   </Link>
                   {user ? (
                     <div className="flex items-center justify-between">
@@ -273,12 +333,12 @@ export default function Navigation() {
                         <User size={15} /> {user.email}
                       </Link>
                       <button onClick={() => supabase.auth.signOut()} className="text-gray-500 hover:text-red-400 text-xs transition-colors">
-                        Déconnexion
+                        {t('Sign out', 'Déconnexion')}
                       </button>
                     </div>
                   ) : (
                     <Link href="/auth" className="flex items-center gap-2 text-yellow-400 text-sm">
-                      <User size={15} /> Connexion / Inscription
+                      <User size={15} /> {t('Login / Register', 'Connexion / Inscription')}
                     </Link>
                   )}
                 </div>
@@ -293,8 +353,8 @@ export default function Navigation() {
 
 export function Breadcrumb({ items }: { items: { label: string; href?: string }[] }) {
   return (
-    <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500 mb-6">
-      <Link href="/" className="hover:text-gray-300 transition-colors">Accueil</Link>
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-gray-500 mb-6">
+      <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-1">
           <ChevronRight size={14} aria-hidden="true" />

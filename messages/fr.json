@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "levels": "Niveaux",
+    "practice": "Pratique",
+    "beginner": "Débutant",
+    "intermediate": "Intermédiaire",
+    "advanced": "Avancé",
+    "expert": "Expert",
+    "professional": "Professionnel",
+    "challenges": "Défis",
+    "rangeBuilder": "Range Builder",
+    "leaderboard": "Classement",
+    "preflopRanges": "Ranges préflop",
+    "glossary": "Glossaire",
+    "tools": "Outils",
+    "login": "Connexion",
+    "profile": "Profil",
+    "logout": "Se déconnecter",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "responsibleGaming": "Jeu responsable",
+    "loginRegister": "Connexion / Inscription",
+    "home": "Accueil",
+    "skipToContent": "Aller au contenu principal"
+  }
+}
