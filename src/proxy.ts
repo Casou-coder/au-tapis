@@ -1,41 +1,45 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const pathname = request.nextUrl.pathname;
 
-  // Sans Supabase configuré, laisser passer sans auth check
-  if (!url || !key) return NextResponse.next({ request });
+  // Auth guard for /(en|fr)/profil
+  if (/^\/(en|fr)\/profil/.test(pathname)) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  let supabaseResponse = NextResponse.next({ request });
+    if (supabaseUrl && supabaseKey) {
+      let response = NextResponse.next({ request });
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          getAll() { return request.cookies.getAll(); },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          },
+        },
+      });
 
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
-        );
-      },
-    },
-  });
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user && request.nextUrl.pathname.startsWith('/profil')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = `/${locale}/login`;
+        return NextResponse.redirect(redirectUrl);
+      }
+      return response;
+    }
   }
 
-  return supabaseResponse;
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ['/profil/:path*'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', '/'],
 };
