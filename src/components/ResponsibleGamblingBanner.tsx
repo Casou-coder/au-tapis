@@ -4,17 +4,20 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, X } from 'lucide-react';
+import { useLocale } from 'next-intl';
 
 const STORAGE_KEY = 'jeu-responsable-banner-dismissed';
 
 export default function ResponsibleGamblingBanner() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     try {
       if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
     } catch {
-      // localStorage non disponible
+      // localStorage unavailable
     }
   }, []);
 
@@ -32,7 +35,7 @@ export default function ResponsibleGamblingBanner() {
           exit={{ opacity: 0, y: 40 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
           role="alertdialog"
-          aria-label="Information jeu responsable"
+          aria-label={isEn ? 'Responsible gambling information' : 'Information jeu responsable'}
           className="fixed bottom-4 left-4 right-4 z-50 max-w-xl mx-auto"
         >
           <div className="rounded-2xl border border-yellow-500/25 bg-[#0d1a0f]/95 backdrop-blur-md shadow-2xl p-4 flex items-start gap-3.5">
@@ -42,19 +45,23 @@ export default function ResponsibleGamblingBanner() {
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-semibold mb-0.5">
                 <span className="mr-2 px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-xs font-bold">18+</span>
-                Jeu d'argent : connaître les risques
+                {isEn ? 'Gambling: know the risks' : "Jeu d'argent : connaître les risques"}
               </p>
               <p className="text-gray-400 text-xs leading-relaxed">
-                Forged Poker est gratuit et sans argent réel. Si tu joues en argent réel ailleurs,{' '}
+                {isEn
+                  ? 'Forged Poker is free and has no real money. If you play for real money elsewhere, '
+                  : "Forged Poker est gratuit et sans argent réel. Si tu joues en argent réel ailleurs, "}
                 <Link href="/jeu-responsable" onClick={dismiss} className="text-yellow-400 underline underline-offset-2 hover:text-yellow-300 transition-colors">
-                  consulte notre guide jeu responsable
+                  {isEn ? 'check our responsible gambling guide' : 'consulte notre guide jeu responsable'}
                 </Link>
-                {' '}(préparation mentale, risques et ressources d'aide).
+                {isEn
+                  ? ' (mental preparation, risks and help resources).'
+                  : " (préparation mentale, risques et ressources d'aide)."}
               </p>
             </div>
             <button
               onClick={dismiss}
-              aria-label="Fermer"
+              aria-label={isEn ? 'Close' : 'Fermer'}
               className="p-1 text-gray-600 hover:text-gray-300 transition-colors shrink-0"
             >
               <X size={16} />

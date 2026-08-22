@@ -10,8 +10,9 @@ import { ALL_HAND_SCRIPTS } from '@/lib/hand-scripts';
 import { OUTS_TABLE, POT_ODDS_TABLE, STARTING_HANDS, QUIZ_QUESTIONS } from '@/lib/poker-data';
 import InlineQuiz from '@/components/InlineQuiz';
 import { useProgress } from '@/hooks/useProgress';
+import { useLocale } from 'next-intl';
 
-const MODULES = [
+const MODULES_FR = [
   { id: 'potodds', title: 'Pot Odds', icon: '📊', desc: 'Calcul de rentabilité des calls' },
   { id: 'ev', title: 'Valeur Attendue (EV)', icon: '🧮', desc: 'Mathématiques du poker' },
   { id: 'outs', title: 'Outs & Équité', icon: '🎲', desc: 'Probabilités de compléter les draws' },
@@ -22,7 +23,22 @@ const MODULES = [
   { id: 'quiz', title: 'Quiz', icon: '🏆', desc: 'Testez vos connaissances' },
 ];
 
+const MODULES_EN = [
+  { id: 'potodds', title: 'Pot Odds', icon: '📊', desc: 'Call profitability calculation' },
+  { id: 'ev', title: 'Expected Value (EV)', icon: '🧮', desc: 'Poker mathematics' },
+  { id: 'outs', title: 'Outs & Equity', icon: '🎲', desc: 'Probability of completing draws' },
+  { id: 'hands', title: 'Hand Selection', icon: '🃏', desc: 'GTO selection chart' },
+  { id: 'cbet', title: 'Continuation Bet', icon: '💥', desc: 'The main postflop weapon' },
+  { id: 'bluff', title: 'Semi-Bluff', icon: '🎭', desc: 'Bluffing with outs' },
+  { id: 'main-guidee', title: 'Guided Hand', icon: '🃏', desc: 'Play a real guided hand' },
+  { id: 'quiz', title: 'Quiz', icon: '🏆', desc: 'Test your knowledge' },
+];
+
 export default function IntermediairePage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const MODULES = isEn ? MODULES_EN : MODULES_FR;
+
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const { progress, completeModule, completeLevel, addXp } = useProgress();
   const [xpToast, setXpToast] = useState<number | null>(null);
@@ -50,7 +66,7 @@ export default function IntermediairePage() {
         <div className="pt-20 pb-16 px-4">
           <div className="max-w-2xl mx-auto">
             <button onClick={() => setActiveModule(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
-              <ChevronLeft size={16} /> Retour aux modules
+              <ChevronLeft size={16} /> {isEn ? 'Back to modules' : 'Retour aux modules'}
             </button>
             <MultiHandPlayer scripts={ALL_HAND_SCRIPTS['intermediaire']} onComplete={(score) => complete(activeModule, 50 + (score >= 4 ? 150 : score >= 3 ? 100 : score >= 2 ? 50 : 0))} onBack={() => setActiveModule(null)} />
           </div>
@@ -67,19 +83,19 @@ export default function IntermediairePage() {
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
             <Link href="/" className="text-blue-400 text-sm flex items-center gap-1 mb-4 hover:text-blue-300">
-              <ChevronLeft size={16} /> Accueil
+              <ChevronLeft size={16} /> {isEn ? 'Home' : 'Accueil'}
             </Link>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-3xl">🎯</span>
               <div>
-                <p className="text-blue-400 text-sm font-medium">Niveau 2</p>
-                <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Intermédiaire</h1>
+                <p className="text-blue-400 text-sm font-medium">{isEn ? 'Level 2' : 'Niveau 2'}</p>
+                <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{isEn ? 'Intermediate' : 'Intermédiaire'}</h1>
               </div>
             </div>
-            <p className="text-gray-400 mt-2">Maîtrisez les mathématiques du poker et la stratégie post-flop.</p>
+            <p className="text-gray-400 mt-2">{isEn ? 'Master poker mathematics and postflop strategy.' : 'Maîtrisez les mathématiques du poker et la stratégie post-flop.'}</p>
             <div className="mt-6">
               <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>{completedCount}/{MODULES.length} modules</span>
+                <span>{completedCount}/{MODULES.length} {isEn ? 'modules' : 'modules'}</span>
                 <span>{Math.round(progressPct)}%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
@@ -107,8 +123,8 @@ export default function IntermediairePage() {
                     </div>
                   </div>
                   <p className="text-gray-500 text-sm">{mod.desc}</p>
-                  {!locked && !done && <div className="flex items-center gap-1 text-blue-400 text-sm mt-2"><span>Commencer</span><ArrowRight size={14} /></div>}
-                  {locked && <p className="text-gray-600 text-sm mt-1">🔒 Module précédent requis</p>}
+                  {!locked && !done && <div className="flex items-center gap-1 text-blue-400 text-sm mt-2"><span>{isEn ? 'Start' : 'Commencer'}</span><ArrowRight size={14} /></div>}
+                  {locked && <p className="text-gray-600 text-sm mt-1">🔒 {isEn ? 'Previous module required' : 'Module précédent requis'}</p>}
                 </motion.button>
               );
             })}
@@ -117,10 +133,10 @@ export default function IntermediairePage() {
           {completedCount === MODULES.length && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-6 rounded-2xl border border-purple-500/40 bg-purple-900/20 text-center">
               <div className="text-4xl mb-3">🔮</div>
-              <h3 className="text-xl font-bold text-white mb-2">Niveau Intermédiaire complété !</h3>
-              <p className="text-gray-400 mb-4">Vous maîtrisez les maths du poker. Cap sur le niveau Avancé !</p>
+              <h3 className="text-xl font-bold text-white mb-2">{isEn ? 'Intermediate level completed!' : 'Niveau Intermédiaire complété !'}</h3>
+              <p className="text-gray-400 mb-4">{isEn ? 'You master poker math. On to the Advanced level!' : 'Vous maîtrisez les maths du poker. Cap sur le niveau Avancé !'}</p>
               <Link href="/avance" className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-700 to-purple-600 text-white font-bold px-6 py-3 rounded-xl">
-                Niveau Avancé <ChevronRight size={18} />
+                {isEn ? 'Advanced Level' : 'Niveau Avancé'} <ChevronRight size={18} />
               </Link>
             </motion.div>
           )}
@@ -133,27 +149,27 @@ export default function IntermediairePage() {
 // ── POT ODDS MODULE ───────────────────────────────────────────────────────────
 
 function PotOddsModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [pot, setPot] = useState(100);
   const [callAmount, setCallAmount] = useState(50);
-
   const potOddsPercent = Math.round((callAmount / (pot + callAmount)) * 100);
 
   return (
-    <LevelModuleLayout title="Pot Odds" icon="📊" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-potodds">
-      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Les Pot Odds</h2>
-      <p className="text-gray-400 text-sm mb-6">Le pot odds est le ratio entre ce que vous risquez et ce que vous pouvez gagner. Si votre équité &gt; pot odds%, le call est rentable.</p>
+    <LevelModuleLayout title="Pot Odds" icon="📊" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-potodds" isEn={isEn}>
+      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>{isEn ? 'Pot Odds' : 'Les Pot Odds'}</h2>
+      <p className="text-gray-400 text-sm mb-6">{isEn ? 'Pot odds is the ratio between what you risk and what you can win. If your equity > pot odds%, the call is profitable.' : 'Le pot odds est le ratio entre ce que vous risquez et ce que vous pouvez gagner. Si votre équité > pot odds%, le call est rentable.'}</p>
 
-      {/* Interactive calculator */}
       <div className="p-5 rounded-2xl bg-blue-900/20 border border-blue-600/30 mb-6">
-        <h3 className="font-bold text-blue-300 mb-4">Calculateur interactif</h3>
+        <h3 className="font-bold text-blue-300 mb-4">{isEn ? 'Interactive calculator' : 'Calculateur interactif'}</h3>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-gray-500 text-xs">Taille du pot (€)</label>
+            <label className="text-gray-500 text-xs">{isEn ? 'Pot size (€)' : 'Taille du pot (€)'}</label>
             <input type="range" min={10} max={500} value={pot} onChange={e => setPot(+e.target.value)} className="w-full mt-1 accent-blue-500" />
             <div className="text-white font-bold text-lg">{pot}€</div>
           </div>
           <div>
-            <label className="text-gray-500 text-xs">Mise à caller (€)</label>
+            <label className="text-gray-500 text-xs">{isEn ? 'Amount to call (€)' : 'Mise à caller (€)'}</label>
             <input type="range" min={5} max={pot} value={Math.min(callAmount, pot)} onChange={e => setCallAmount(+e.target.value)} className="w-full mt-1 accent-blue-500" />
             <div className="text-white font-bold text-lg">{callAmount}€</div>
           </div>
@@ -161,34 +177,39 @@ function PotOddsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
 
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="bg-black/30 rounded-xl p-3">
-            <div className="text-gray-500 text-xs">Pot total si call</div>
+            <div className="text-gray-500 text-xs">{isEn ? 'Total pot if call' : 'Pot total si call'}</div>
             <div className="text-white font-bold">{pot + callAmount}€</div>
           </div>
           <div className="bg-black/30 rounded-xl p-3">
-            <div className="text-gray-500 text-xs">Ratio</div>
+            <div className="text-gray-500 text-xs">{isEn ? 'Ratio' : 'Ratio'}</div>
             <div className="text-white font-bold">{Math.round(pot / callAmount)}:1</div>
           </div>
           <div className="bg-blue-700/30 rounded-xl p-3 border border-blue-500/50">
-            <div className="text-blue-300 text-xs">Équité requise</div>
+            <div className="text-blue-300 text-xs">{isEn ? 'Required equity' : 'Équité requise'}</div>
             <div className="text-blue-200 font-bold text-xl">{potOddsPercent}%</div>
           </div>
         </div>
 
         <div className={`mt-4 p-3 rounded-xl text-sm ${potOddsPercent < 20 ? 'bg-green-900/30 text-green-300 border border-green-700/30' : potOddsPercent < 35 ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/30' : 'bg-red-900/30 text-red-300 border border-red-700/30'}`}>
-          {potOddsPercent < 20 ? '✅ Pot odds très favorables : la plupart des draws sont rentables ici' :
-            potOddsPercent < 35 ? '⚡ Pot odds corrects : flush draw et OESD rentables' :
-              '⚠️ Pot odds défavorables : besoin d\'une main forte ou de très bons draws'}
+          {isEn
+            ? (potOddsPercent < 20 ? '✅ Very favorable pot odds: most draws are profitable here'
+              : potOddsPercent < 35 ? '⚡ Decent pot odds: flush draw and OESD profitable'
+              : '⚠️ Unfavorable pot odds: need a strong hand or very good draws')
+            : (potOddsPercent < 20 ? '✅ Pot odds très favorables : la plupart des draws sont rentables ici'
+              : potOddsPercent < 35 ? '⚡ Pot odds corrects : flush draw et OESD rentables'
+              : '⚠️ Pot odds défavorables : besoin d\'une main forte ou de très bons draws')
+          }
         </div>
       </div>
 
-      <h3 className="font-bold text-white mb-3">Table de référence rapide</h3>
+      <h3 className="font-bold text-white mb-3">{isEn ? 'Quick reference table' : 'Table de référence rapide'}</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-500 border-b border-white/10">
               <th className="text-left py-2 pr-4">Sizing</th>
-              <th className="text-left py-2 pr-4">Équité requise</th>
-              <th className="text-left py-2">Interprétation</th>
+              <th className="text-left py-2 pr-4">{isEn ? 'Required equity' : 'Équité requise'}</th>
+              <th className="text-left py-2">{isEn ? 'Interpretation' : 'Interprétation'}</th>
             </tr>
           </thead>
           <tbody>
@@ -209,31 +230,42 @@ function PotOddsModule({ onComplete, onBack }: { onComplete: () => void; onBack:
 // ── EV MODULE ─────────────────────────────────────────────────────────────────
 
 function EVModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [winProb, setWinProb] = useState(35);
   const [winAmount, setWinAmount] = useState(200);
   const [loseAmount, setLoseAmount] = useState(100);
-
   const ev = (winProb / 100) * winAmount - ((100 - winProb) / 100) * loseAmount;
 
   return (
-    <LevelModuleLayout title="Valeur Attendue (EV)" icon="🧮" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-ev">
+    <LevelModuleLayout title={isEn ? 'Expected Value (EV)' : 'Valeur Attendue (EV)'} icon="🧮" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-ev" isEn={isEn}>
       <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Expected Value (EV)</h2>
       <p className="text-gray-400 text-sm mb-4">
-        L&apos;EV est le gain moyen d&apos;une décision répétée des milliers de fois. <strong className="text-white">EV+ = décision rentable à long terme</strong>.
+        {isEn
+          ? <>{`EV is the average gain of a decision repeated thousands of times. `}<strong className="text-white">EV+ = profitable long-term decision</strong>.</>
+          : <>L&apos;EV est le gain moyen d&apos;une décision répétée des milliers de fois. <strong className="text-white">EV+ = décision rentable à long terme</strong>.</>
+        }
       </p>
 
       <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-5">
-        <code className="text-green-300 text-sm">EV = (P(gagner) × Gain) - (P(perdre) × Perte)</code>
+        <code className="text-green-300 text-sm">EV = (P({isEn ? 'win' : 'gagner'}) × {isEn ? 'Gain' : 'Gain'}) - (P({isEn ? 'lose' : 'perdre'}) × {isEn ? 'Loss' : 'Perte'})</code>
       </div>
 
       <div className="p-5 rounded-2xl bg-blue-900/20 border border-blue-600/30 mb-6">
-        <h3 className="font-bold text-blue-300 mb-4">Simulateur EV</h3>
+        <h3 className="font-bold text-blue-300 mb-4">{isEn ? 'EV Simulator' : 'Simulateur EV'}</h3>
         <div className="space-y-4">
-          {[
-            { label: 'Probabilité de gagner', value: winProb, setter: setWinProb, min: 1, max: 99, suffix: '%', color: '#2ecc71' },
-            { label: 'Gain si victoire (€)', value: winAmount, setter: setWinAmount, min: 10, max: 1000, suffix: '€', color: '#3498db' },
-            { label: 'Perte si défaite (€)', value: loseAmount, setter: setLoseAmount, min: 5, max: 500, suffix: '€', color: '#e74c3c' },
-          ].map((item, i) => (
+          {(isEn
+            ? [
+              { label: 'Win probability', value: winProb, setter: setWinProb, min: 1, max: 99, suffix: '%', color: '#2ecc71' },
+              { label: 'Win amount (€)', value: winAmount, setter: setWinAmount, min: 10, max: 1000, suffix: '€', color: '#3498db' },
+              { label: 'Loss amount (€)', value: loseAmount, setter: setLoseAmount, min: 5, max: 500, suffix: '€', color: '#e74c3c' },
+            ]
+            : [
+              { label: 'Probabilité de gagner', value: winProb, setter: setWinProb, min: 1, max: 99, suffix: '%', color: '#2ecc71' },
+              { label: 'Gain si victoire (€)', value: winAmount, setter: setWinAmount, min: 10, max: 1000, suffix: '€', color: '#3498db' },
+              { label: 'Perte si défaite (€)', value: loseAmount, setter: setLoseAmount, min: 5, max: 500, suffix: '€', color: '#e74c3c' },
+            ]
+          ).map((item, i) => (
             <div key={i}>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-400">{item.label}</span>
@@ -250,18 +282,27 @@ function EVModule({ onComplete, onBack }: { onComplete: () => void; onBack: () =
             {ev > 0 ? '+' : ''}{ev.toFixed(2)}€
           </div>
           <div className="text-gray-500 text-sm mt-1">
-            {ev > 0 ? 'Décision rentable à long terme ✅' : 'Décision perdante à long terme ❌'}
+            {ev > 0
+              ? (isEn ? 'Profitable long-term decision ✅' : 'Décision rentable à long terme ✅')
+              : (isEn ? 'Losing long-term decision ❌' : 'Décision perdante à long terme ❌')}
           </div>
         </div>
       </div>
 
       <div className="space-y-3">
-        <h3 className="font-bold text-white">Exemples concrets</h3>
-        {[
-          { situation: 'Call avec flush draw (pot 100€, call 33€)', ev: '+5.20', positive: true, detail: 'Équité 36% vs pot odds 25% = EV+' },
-          { situation: 'Call top pair face à un all-in sur river', ev: '-12.50', positive: false, detail: 'Adversaire range trop forte, call –EV' },
-          { situation: 'Bluff river avec la meilleure texture', ev: '+18.00', positive: true, detail: 'Fold equity élevé = bluff rentable' },
-        ].map((ex, i) => (
+        <h3 className="font-bold text-white">{isEn ? 'Concrete examples' : 'Exemples concrets'}</h3>
+        {(isEn
+          ? [
+            { situation: 'Call with flush draw (pot €100, call €33)', ev: '+5.20', positive: true, detail: '36% equity vs 25% pot odds = EV+' },
+            { situation: 'Call top pair vs river all-in', ev: '-12.50', positive: false, detail: 'Opponent range too strong, call –EV' },
+            { situation: 'River bluff with best texture', ev: '+18.00', positive: true, detail: 'High fold equity = profitable bluff' },
+          ]
+          : [
+            { situation: 'Call avec flush draw (pot 100€, call 33€)', ev: '+5.20', positive: true, detail: 'Équité 36% vs pot odds 25% = EV+' },
+            { situation: 'Call top pair face à un all-in sur river', ev: '-12.50', positive: false, detail: 'Adversaire range trop forte, call –EV' },
+            { situation: 'Bluff river avec la meilleure texture', ev: '+18.00', positive: true, detail: 'Fold equity élevé = bluff rentable' },
+          ]
+        ).map((ex, i) => (
           <div key={i} className={`p-3 rounded-xl border ${ex.positive ? 'bg-green-900/10 border-green-700/30' : 'bg-red-900/10 border-red-700/30'}`}>
             <div className="flex justify-between items-start">
               <div>
@@ -280,51 +321,66 @@ function EVModule({ onComplete, onBack }: { onComplete: () => void; onBack: () =
 // ── OUTS MODULE ───────────────────────────────────────────────────────────────
 
 function OutsModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [outs, setOuts] = useState(9);
   const selected = OUTS_TABLE.find(r => r.outs === outs) || OUTS_TABLE[8];
 
+  const drawTypes = isEn
+    ? [
+      { draw: 'Gutshot (inside straight)', outs: 4, desc: 'A single card fills your straight' },
+      { draw: 'Open-Ended Straight Draw (OESD)', outs: 8, desc: '2 possible cards to complete the straight' },
+      { draw: 'Flush Draw', outs: 9, desc: '9 cards of the same suit remaining' },
+      { draw: 'OESD + Flush Draw (Combo)', outs: 15, desc: 'The most powerful draw possible' },
+      { draw: 'Overcards (AK on low board)', outs: 6, desc: '3 Aces + 3 Kings = 6 outs for top pair' },
+    ]
+    : [
+      { draw: 'Gutshot (inside straight)', outs: 4, desc: 'Une seule carte comble votre quinte' },
+      { draw: 'Open-Ended Straight Draw (OESD)', outs: 8, desc: '2 cartes possibles pour compléter la quinte' },
+      { draw: 'Flush Draw', outs: 9, desc: '9 cartes de la même couleur restantes' },
+      { draw: 'OESD + Flush Draw (Combo)', outs: 15, desc: 'La draw la plus puissante possible' },
+      { draw: 'Overcards (AK sur board bas)', outs: 6, desc: '3 As + 3 Rois = 6 outs pour paire top' },
+    ];
+
   return (
-    <LevelModuleLayout title="Outs & Équité" icon="🎲" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-outs">
-      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Calculer vos Outs</h2>
+    <LevelModuleLayout title={isEn ? 'Outs & Equity' : 'Outs & Équité'} icon="🎲" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-outs" isEn={isEn}>
+      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>{isEn ? 'Calculate Your Outs' : 'Calculer vos Outs'}</h2>
       <p className="text-gray-400 text-sm mb-4">
-        Un <strong className="text-white">out</strong> est une carte qui améliore votre main pour la rendre gagnante. Connaître vos outs = calculer vos chances.
+        {isEn
+          ? <>An <strong className="text-white">out</strong> is a card that improves your hand to make it a winner. Knowing your outs = calculating your odds.</>
+          : <>Un <strong className="text-white">out</strong> est une carte qui améliore votre main pour la rendre gagnante. Connaître vos outs = calculer vos chances.</>
+        }
       </p>
 
       <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-5">
-        <p className="text-green-300 text-sm font-mono">Règle des 2 et 4 :</p>
-        <p className="text-gray-300 text-sm mt-1">Outs × 4 = équité sur 2 streets (flop → river)</p>
-        <p className="text-gray-300 text-sm">Outs × 2 = équité sur 1 street (turn → river)</p>
+        <p className="text-green-300 text-sm font-mono">{isEn ? 'Rule of 2 and 4:' : 'Règle des 2 et 4 :'}</p>
+        <p className="text-gray-300 text-sm mt-1">{isEn ? 'Outs × 4 = equity over 2 streets (flop → river)' : 'Outs × 4 = équité sur 2 streets (flop → river)'}</p>
+        <p className="text-gray-300 text-sm">{isEn ? 'Outs × 2 = equity over 1 street (turn → river)' : 'Outs × 2 = équité sur 1 street (turn → river)'}</p>
       </div>
 
       <div className="p-5 rounded-2xl bg-blue-900/20 border border-blue-600/30 mb-6">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-blue-300 font-medium">Nombre d&apos;outs : <span className="text-white font-bold text-xl">{outs}</span></span>
+          <span className="text-blue-300 font-medium">{isEn ? 'Number of outs: ' : 'Nombre d\'outs : '}<span className="text-white font-bold text-xl">{outs}</span></span>
           <span className="text-gray-500 text-sm">{selected.note}</span>
         </div>
         <input type="range" min={1} max={17} value={outs} onChange={e => setOuts(+e.target.value)} className="w-full mb-4 accent-blue-500" />
         <div className="grid grid-cols-2 gap-3 text-center">
           <div className="bg-black/30 rounded-xl p-3">
-            <div className="text-gray-500 text-xs">Turn + River</div>
+            <div className="text-gray-500 text-xs">{isEn ? 'Turn + River' : 'Turn + River'}</div>
             <div className="text-blue-400 font-bold text-2xl">{selected.turnAndRiver}</div>
             <div className="text-gray-600 text-xs">({outs} × 4)</div>
           </div>
           <div className="bg-black/30 rounded-xl p-3">
-            <div className="text-gray-500 text-xs">River seulement</div>
+            <div className="text-gray-500 text-xs">{isEn ? 'River only' : 'River seulement'}</div>
             <div className="text-blue-300 font-bold text-2xl">{selected.river}</div>
             <div className="text-gray-600 text-xs">({outs} × 2)</div>
           </div>
         </div>
       </div>
 
-      <h3 className="font-bold text-white mb-3">Types de draws communs</h3>
+      <h3 className="font-bold text-white mb-3">{isEn ? 'Common draw types' : 'Types de draws communs'}</h3>
       <div className="space-y-2">
-        {[
-          { draw: 'Gutshot (inside straight)', outs: 4, desc: 'Une seule carte comble votre quinte' },
-          { draw: 'Open-Ended Straight Draw (OESD)', outs: 8, desc: '2 cartes possibles pour compléter la quinte' },
-          { draw: 'Flush Draw', outs: 9, desc: '9 cartes de la même couleur restantes' },
-          { draw: 'OESD + Flush Draw (Combo)', outs: 15, desc: 'La draw la plus puissante possible' },
-          { draw: 'Overcards (AK sur board bas)', outs: 6, desc: '3 As + 3 Rois = 6 outs pour paire top' },
-        ].map((item, i) => (
+        {drawTypes.map((item, i) => (
           <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
             <div className="w-8 h-8 rounded-full bg-blue-700/30 flex items-center justify-center text-blue-300 font-bold text-sm shrink-0">{item.outs}</div>
             <div>
@@ -342,23 +398,27 @@ function OutsModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
 // ── HANDS MODULE ──────────────────────────────────────────────────────────────
 
 function HandsModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [filter, setFilter] = useState<string>('all');
   const cats = ['all', 'premium', 'strong', 'playable', 'speculative', 'weak'];
   const colors: Record<string, string> = { premium: '#c9a84c', strong: '#27ae60', playable: '#3498db', speculative: '#8e44ad', weak: '#e74c3c' };
-  const labels: Record<string, string> = { premium: 'Premium', strong: 'Forte', playable: 'Jouable', speculative: 'Spéculative', weak: 'Faible' };
+  const labels: Record<string, string> = isEn
+    ? { premium: 'Premium', strong: 'Strong', playable: 'Playable', speculative: 'Speculative', weak: 'Weak' }
+    : { premium: 'Premium', strong: 'Forte', playable: 'Jouable', speculative: 'Spéculative', weak: 'Faible' };
 
   const filtered = filter === 'all' ? STARTING_HANDS : STARTING_HANDS.filter(h => h.category === filter);
 
   return (
-    <LevelModuleLayout title="Hand Selection Chart" icon="🃏" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-hands">
-      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Sélection de Mains</h2>
-      <p className="text-gray-400 text-sm mb-4">Chart de référence pour la sélection de mains pré-flop. Filtrez par catégorie.</p>
+    <LevelModuleLayout title={isEn ? 'Hand Selection Chart' : 'Hand Selection Chart'} icon="🃏" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-hands" isEn={isEn}>
+      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>{isEn ? 'Hand Selection' : 'Sélection de Mains'}</h2>
+      <p className="text-gray-400 text-sm mb-4">{isEn ? 'Preflop hand selection reference chart. Filter by category.' : 'Chart de référence pour la sélection de mains pré-flop. Filtrez par catégorie.'}</p>
 
       <div className="flex flex-wrap gap-2 mb-5">
         {cats.map(c => (
           <button key={c} onClick={() => setFilter(c)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${filter === c ? 'text-white border-transparent' : 'border-white/10 text-gray-400 hover:text-white'}`}
             style={{ background: filter === c ? (c === 'all' ? '#334155' : colors[c]) : 'transparent' }}>
-            {c === 'all' ? 'Toutes' : labels[c]}
+            {c === 'all' ? (isEn ? 'All' : 'Toutes') : labels[c]}
           </button>
         ))}
       </div>
@@ -374,7 +434,7 @@ function HandsModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
               <div className="text-gray-500 text-xs truncate">{hand.note}</div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-500">Équité vs random</div>
+              <div className="text-xs text-gray-500">{isEn ? 'Equity vs random' : 'Équité vs random'}</div>
               <div className="font-bold text-sm" style={{ color: colors[hand.category] }}>{hand.equity}%</div>
             </div>
           </div>
@@ -387,80 +447,154 @@ function HandsModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
 // ── CBET MODULE ───────────────────────────────────────────────────────────────
 
 function CBetModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [step, setStep] = useState(0);
-  const steps = [
-    {
-      title: 'Qu\'est-ce que la Continuation Bet ?',
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-300">La <strong className="text-white">C-bet</strong> (continuation bet) consiste à miser après avoir relancé pré-flop, peu importe si le flop vous aide.</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl bg-green-900/20 border border-green-600/30">
-              <h4 className="font-bold text-green-400 text-sm mb-1">Raisons de C-bet</h4>
-              <ul className="text-gray-400 text-xs space-y-1">
-                <li>✓ Vous avez l&apos;initiative</li><li>✓ Représenter une main forte</li><li>✓ Prendre le pot rapidement</li><li>✓ Protéger vos bonnes mains</li>
-              </ul>
-            </div>
-            <div className="p-3 rounded-xl bg-red-900/20 border border-red-600/30">
-              <h4 className="font-bold text-red-400 text-sm mb-1">Ne pas C-bet si</h4>
-              <ul className="text-gray-400 text-xs space-y-1">
-                <li>✗ Board très favorable à l&apos;adversaire</li><li>✗ Joueurs multiples (multiway)</li><li>✗ Vous avez un bon showdown value</li><li>✗ Adversaire appelle trop</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Taille et fréquence de la C-bet',
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Dry board (K-7-2)', size: '1/3 à 1/2 pot', freq: '~80%', reason: 'Board peu connecté, miss beaucoup l\'adversaire' },
-              { label: 'Wet board (J-T-9)', size: '2/3 à pot', freq: '~40%', reason: 'Board connecté, adverse a beaucoup d\'équité' },
-              { label: 'Monotone board (A♥6♥2♥)', size: '1/3 pot ou check', freq: '~35%', reason: 'Board de flush, difficile à représenter' },
-              { label: 'Paired board (K-K-7)', size: '1/3 à 1/2 pot', freq: '~60%', reason: 'Bon pour blocker + représenter trip K' },
-            ].map((b, i) => (
-              <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <h4 className="text-blue-400 text-xs font-bold mb-1">{b.label}</h4>
-                <div className="text-white text-sm">Taille: <strong>{b.size}</strong></div>
-                <div className="text-white text-sm">Fréquence: <strong>{b.freq}</strong></div>
-                <p className="text-gray-500 text-xs mt-1">{b.reason}</p>
+
+  const steps = isEn
+    ? [
+      {
+        title: 'What is a Continuation Bet?',
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-300">A <strong className="text-white">C-bet</strong> (continuation bet) means betting after having raised preflop, regardless of whether the flop helps you.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-green-900/20 border border-green-600/30">
+                <h4 className="font-bold text-green-400 text-sm mb-1">Reasons to C-bet</h4>
+                <ul className="text-gray-400 text-xs space-y-1">
+                  <li>✓ You have the initiative</li><li>✓ Represent a strong hand</li><li>✓ Take the pot quickly</li><li>✓ Protect your good hands</li>
+                </ul>
               </div>
-            ))}
+              <div className="p-3 rounded-xl bg-red-900/20 border border-red-600/30">
+                <h4 className="font-bold text-red-400 text-sm mb-1">Don&apos;t C-bet if</h4>
+                <ul className="text-gray-400 text-xs space-y-1">
+                  <li>✗ Board very favorable to opponent</li><li>✗ Multiple players (multiway)</li><li>✗ You have good showdown value</li><li>✗ Opponent calls too much</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Check-Raise : La réponse à la C-bet',
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-300 text-sm">Quand votre adversaire C-bet, vous pouvez <strong className="text-white">check-raise</strong> pour reprendre l&apos;initiative.</p>
-          <div className="space-y-3">
-            {[
-              { hand: 'Top pair ou mieux', action: 'Check-raise pour value', icon: '💰' },
-              { hand: 'Draw fort (flush + straight)', action: 'Check-raise semi-bluff', icon: '🎭' },
-              { hand: 'Main faible sans outs', action: 'Généralement fold', icon: '🗑️' },
-              { hand: 'Main moyenne (middle pair)', action: 'Call et réévaluer', icon: '👍' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-xl">{item.icon}</span>
-                <div>
-                  <div className="text-white text-sm font-medium">{item.hand}</div>
-                  <div className="text-gray-400 text-xs">{item.action}</div>
+        ),
+      },
+      {
+        title: 'C-bet Size and Frequency',
+        content: (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Dry board (K-7-2)', size: '1/3 to 1/2 pot', freq: '~80%', reason: 'Disconnected board, opponent misses a lot' },
+                { label: 'Wet board (J-T-9)', size: '2/3 to pot', freq: '~40%', reason: 'Connected board, opponent has lots of equity' },
+                { label: 'Monotone board (A♥6♥2♥)', size: '1/3 pot or check', freq: '~35%', reason: 'Flush board, hard to represent' },
+                { label: 'Paired board (K-K-7)', size: '1/3 to 1/2 pot', freq: '~60%', reason: 'Good to block + represent trip K' },
+              ].map((b, i) => (
+                <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <h4 className="text-blue-400 text-xs font-bold mb-1">{b.label}</h4>
+                  <div className="text-white text-sm">Size: <strong>{b.size}</strong></div>
+                  <div className="text-white text-sm">Frequency: <strong>{b.freq}</strong></div>
+                  <p className="text-gray-500 text-xs mt-1">{b.reason}</p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ),
-    },
-  ];
+        ),
+      },
+      {
+        title: 'Check-Raise: The Response to a C-bet',
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-300 text-sm">When your opponent C-bets, you can <strong className="text-white">check-raise</strong> to retake the initiative.</p>
+            <div className="space-y-3">
+              {[
+                { hand: 'Top pair or better', action: 'Check-raise for value', icon: '💰' },
+                { hand: 'Strong draw (flush + straight)', action: 'Check-raise semi-bluff', icon: '🎭' },
+                { hand: 'Weak hand without outs', action: 'Generally fold', icon: '🗑️' },
+                { hand: 'Medium hand (middle pair)', action: 'Call and reassess', icon: '👍' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-xl">{item.icon}</span>
+                  <div>
+                    <div className="text-white text-sm font-medium">{item.hand}</div>
+                    <div className="text-gray-400 text-xs">{item.action}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+    ]
+    : [
+      {
+        title: 'Qu\'est-ce que la Continuation Bet ?',
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-300">La <strong className="text-white">C-bet</strong> (continuation bet) consiste à miser après avoir relancé pré-flop, peu importe si le flop vous aide.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-green-900/20 border border-green-600/30">
+                <h4 className="font-bold text-green-400 text-sm mb-1">Raisons de C-bet</h4>
+                <ul className="text-gray-400 text-xs space-y-1">
+                  <li>✓ Vous avez l&apos;initiative</li><li>✓ Représenter une main forte</li><li>✓ Prendre le pot rapidement</li><li>✓ Protéger vos bonnes mains</li>
+                </ul>
+              </div>
+              <div className="p-3 rounded-xl bg-red-900/20 border border-red-600/30">
+                <h4 className="font-bold text-red-400 text-sm mb-1">Ne pas C-bet si</h4>
+                <ul className="text-gray-400 text-xs space-y-1">
+                  <li>✗ Board très favorable à l&apos;adversaire</li><li>✗ Joueurs multiples (multiway)</li><li>✗ Vous avez un bon showdown value</li><li>✗ Adversaire appelle trop</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: 'Taille et fréquence de la C-bet',
+        content: (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Dry board (K-7-2)', size: '1/3 à 1/2 pot', freq: '~80%', reason: 'Board peu connecté, miss beaucoup l\'adversaire' },
+                { label: 'Wet board (J-T-9)', size: '2/3 à pot', freq: '~40%', reason: 'Board connecté, adverse a beaucoup d\'équité' },
+                { label: 'Monotone board (A♥6♥2♥)', size: '1/3 pot ou check', freq: '~35%', reason: 'Board de flush, difficile à représenter' },
+                { label: 'Paired board (K-K-7)', size: '1/3 à 1/2 pot', freq: '~60%', reason: 'Bon pour blocker + représenter trip K' },
+              ].map((b, i) => (
+                <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <h4 className="text-blue-400 text-xs font-bold mb-1">{b.label}</h4>
+                  <div className="text-white text-sm">Taille: <strong>{b.size}</strong></div>
+                  <div className="text-white text-sm">Fréquence: <strong>{b.freq}</strong></div>
+                  <p className="text-gray-500 text-xs mt-1">{b.reason}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: 'Check-Raise : La réponse à la C-bet',
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-300 text-sm">Quand votre adversaire C-bet, vous pouvez <strong className="text-white">check-raise</strong> pour reprendre l&apos;initiative.</p>
+            <div className="space-y-3">
+              {[
+                { hand: 'Top pair ou mieux', action: 'Check-raise pour value', icon: '💰' },
+                { hand: 'Draw fort (flush + straight)', action: 'Check-raise semi-bluff', icon: '🎭' },
+                { hand: 'Main faible sans outs', action: 'Généralement fold', icon: '🗑️' },
+                { hand: 'Main moyenne (middle pair)', action: 'Call et réévaluer', icon: '👍' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-xl">{item.icon}</span>
+                  <div>
+                    <div className="text-white text-sm font-medium">{item.hand}</div>
+                    <div className="text-gray-400 text-xs">{item.action}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+    ];
 
   return (
-    <LevelModuleLayout title="Continuation Bet" icon="💥" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-cbet">
+    <LevelModuleLayout title="Continuation Bet" icon="💥" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-cbet" isEn={isEn}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{steps[step].title}</h2>
         <span className="text-gray-500 text-sm">{step + 1}/{steps.length}</span>
@@ -478,7 +612,7 @@ function CBetModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
           <ChevronLeft size={16} />
         </button>
         <button onClick={() => step < steps.length - 1 ? setStep(s => s + 1) : onComplete()} className="flex-1 py-2.5 rounded-xl font-bold text-white transition-all" style={{ background: step === steps.length - 1 ? '#c9a84c' : '#3498db' }}>
-          {step === steps.length - 1 ? '✓ Terminer' : 'Suivant'}
+          {step === steps.length - 1 ? (isEn ? '✓ Complete' : '✓ Terminer') : (isEn ? 'Next' : 'Suivant')}
         </button>
       </div>
     </LevelModuleLayout>
@@ -488,30 +622,43 @@ function CBetModule({ onComplete, onBack }: { onComplete: () => void; onBack: ()
 // ── BLUFF MODULE ──────────────────────────────────────────────────────────────
 
 function BluffModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+
+  const semiBluffItems = isEn
+    ? [
+      { hand: 'Flush draw (9 outs)', equity: '36%', foldEquity: 'High', rating: 5, desc: 'The perfect combo: strong equity + pressure' },
+      { hand: 'OESD + flush draw (15 outs)', equity: '54%', foldEquity: 'Very high', rating: 5, desc: 'Often a FAVORITE against top pair!' },
+      { hand: 'Open-ended straight draw (8 outs)', equity: '32%', foldEquity: 'Good', rating: 4, desc: 'Good semi-bluff, especially heads-up' },
+      { hand: 'Overcards + gutshot (7 outs)', equity: '28%', foldEquity: 'Decent', rating: 3, desc: 'Acceptable if fold equity is high' },
+      { hand: 'Gutshot only (4 outs)', equity: '16%', foldEquity: 'Must be strong', rating: 2, desc: 'Risky semi-bluff, needs fold equity' },
+    ]
+    : [
+      { hand: 'Flush draw (9 outs)', equity: '36%', foldEquity: 'Élevée', rating: 5, desc: 'La combinaison parfaite : forte équité + pression' },
+      { hand: 'OESD + flush draw (15 outs)', equity: '54%', foldEquity: 'Très élevée', rating: 5, desc: 'Souvent FAVORI contre top pair !' },
+      { hand: 'Open-ended straight draw (8 outs)', equity: '32%', foldEquity: 'Bonne', rating: 4, desc: 'Bon semi-bluff, surtout heads-up' },
+      { hand: 'Overcards + gutshot (7 outs)', equity: '28%', foldEquity: 'Correcte', rating: 3, desc: 'Acceptable si fold equity élevée' },
+      { hand: 'Gutshot seul (4 outs)', equity: '16%', foldEquity: 'Doit être forte', rating: 2, desc: 'Semi-bluff risqué, besoin de fold equity' },
+    ];
+
   return (
-    <LevelModuleLayout title="Semi-Bluff" icon="🎭" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-bluff">
-      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>L&apos;Art du Semi-Bluff</h2>
-      <p className="text-gray-400 text-sm mb-5">Le semi-bluff est un bluff avec une main qui peut encore s&apos;améliorer. C&apos;est l&apos;arme la plus puissante du joueur intermédiaire.</p>
+    <LevelModuleLayout title="Semi-Bluff" icon="🎭" color="#3498db" onBack={onBack} onComplete={onComplete} quizKey="intermediaire-bluff" isEn={isEn}>
+      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>{isEn ? 'The Art of the Semi-Bluff' : 'L\'Art du Semi-Bluff'}</h2>
+      <p className="text-gray-400 text-sm mb-5">{isEn ? 'A semi-bluff is a bluff with a hand that can still improve. It\'s the most powerful weapon for the intermediate player.' : 'Le semi-bluff est un bluff avec une main qui peut encore s\'améliorer. C\'est l\'arme la plus puissante du joueur intermédiaire.'}</p>
 
       <div className="p-4 rounded-xl bg-blue-900/20 border border-blue-600/30 mb-5">
-        <p className="text-blue-300 font-medium mb-2">Pourquoi le semi-bluff est meilleur qu&apos;un bluff pur ?</p>
-        <p className="text-gray-300 text-sm">Vous pouvez gagner de <strong className="text-white">deux façons</strong> : en faisant folder maintenant, ou en complétant votre draw. Un bluff pur ne gagne que si l&apos;adversaire fold.</p>
+        <p className="text-blue-300 font-medium mb-2">{isEn ? 'Why is a semi-bluff better than a pure bluff?' : 'Pourquoi le semi-bluff est meilleur qu\'un bluff pur ?'}</p>
+        <p className="text-gray-300 text-sm">{isEn ? <>You can win in <strong className="text-white">two ways</strong>: by making them fold now, or by completing your draw. A pure bluff only wins if the opponent folds.</> : <>Vous pouvez gagner de <strong className="text-white">deux façons</strong> : en faisant folder maintenant, ou en complétant votre draw. Un bluff pur ne gagne que si l&apos;adversaire fold.</>}</p>
       </div>
 
       <div className="space-y-3 mb-5">
-        <h3 className="font-bold text-white">Meilleures situations de semi-bluff</h3>
-        {[
-          { hand: 'Flush draw (9 outs)', equity: '36%', foldEquity: 'Élevée', rating: 5, desc: 'La combinaison parfaite : forte équité + pression' },
-          { hand: 'OESD + flush draw (15 outs)', equity: '54%', foldEquity: 'Très élevée', rating: 5, desc: 'Souvent FAVORI contre top pair !' },
-          { hand: 'Open-ended straight draw (8 outs)', equity: '32%', foldEquity: 'Bonne', rating: 4, desc: 'Bon semi-bluff, surtout heads-up' },
-          { hand: 'Overcards + gutshot (7 outs)', equity: '28%', foldEquity: 'Correcte', rating: 3, desc: 'Acceptable si fold equity élevée' },
-          { hand: 'Gutshot seul (4 outs)', equity: '16%', foldEquity: 'Doit être forte', rating: 2, desc: 'Semi-bluff risqué, besoin de fold equity' },
-        ].map((item, i) => (
+        <h3 className="font-bold text-white">{isEn ? 'Best semi-bluff situations' : 'Meilleures situations de semi-bluff'}</h3>
+        {semiBluffItems.map((item, i) => (
           <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-white text-sm font-medium">{item.hand}</span>
-                <span className="text-gray-500 text-xs">· Équité {item.equity}</span>
+                <span className="text-gray-500 text-xs">· {isEn ? 'Equity' : 'Équité'} {item.equity}</span>
               </div>
               <p className="text-gray-500 text-xs">{item.desc}</p>
             </div>
@@ -525,9 +672,12 @@ function BluffModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
       </div>
 
       <div className="p-4 rounded-xl bg-yellow-900/20 border border-yellow-600/30">
-        <p className="text-yellow-400 font-medium mb-1">💡 Règle d&apos;or</p>
+        <p className="text-yellow-400 font-medium mb-1">💡 {isEn ? 'Golden rule' : 'Règle d\'or'}</p>
         <p className="text-gray-300 text-sm">
-          Ne semi-bluffez jamais sans au moins <strong className="text-white">6 outs</strong>, sauf si la fold equity est exceptionnellement élevée. Et toujours misez un montant cohérent avec la story que vous racontez.
+          {isEn
+            ? <>Never semi-bluff with fewer than <strong className="text-white">6 outs</strong>, unless fold equity is exceptionally high. And always bet an amount consistent with the story you are telling.</>
+            : <>Ne semi-bluffez jamais sans au moins <strong className="text-white">6 outs</strong>, sauf si la fold equity est exceptionnellement élevée. Et toujours misez un montant cohérent avec la story que vous racontez.</>
+          }
         </p>
       </div>
     </LevelModuleLayout>
@@ -537,6 +687,8 @@ function BluffModule({ onComplete, onBack }: { onComplete: () => void; onBack: (
 // ── QUIZ MODULE ───────────────────────────────────────────────────────────────
 
 function IntermQuizModule({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const questions = QUIZ_QUESTIONS.filter(q => q.level === 'intermediaire');
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -557,19 +709,19 @@ function IntermQuizModule({ onComplete, onBack }: { onComplete: () => void; onBa
   };
 
   return (
-    <LevelModuleLayout title="Quiz Intermédiaire" icon="🏆" color="#3498db" onBack={onBack} onComplete={onComplete}>
+    <LevelModuleLayout title={isEn ? 'Intermediate Quiz' : 'Quiz Intermédiaire'} icon="🏆" color="#3498db" onBack={onBack} onComplete={onComplete} isEn={isEn}>
       {finished ? (
         <div className="text-center py-8">
           <div className="text-6xl mb-4">{score === questions.length ? '🏆' : '🎯'}</div>
           <h2 className="text-3xl font-bold text-white mb-2">{score}/{questions.length}</h2>
-          <p className="text-gray-400 mb-6">{score === questions.length ? 'Parfait !' : 'Continuez à pratiquer.'}</p>
+          <p className="text-gray-400 mb-6">{score === questions.length ? (isEn ? 'Perfect!' : 'Parfait !') : (isEn ? 'Keep practicing.' : 'Continuez à pratiquer.')}</p>
           <button onClick={onComplete} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-colors">
-            Terminer le module ✓
+            {isEn ? 'Complete module ✓' : 'Terminer le module ✓'}
           </button>
         </div>
       ) : (
         <div>
-          <div className="text-sm text-gray-500 mb-3">Question {current + 1}/{questions.length}</div>
+          <div className="text-sm text-gray-500 mb-3">{isEn ? 'Question' : 'Question'} {current + 1}/{questions.length}</div>
           <h2 className="text-lg font-bold text-white mb-5">{q.question}</h2>
           <div className="space-y-3 mb-5">
             {q.options.map((opt, i) => {
@@ -591,7 +743,7 @@ function IntermQuizModule({ onComplete, onBack }: { onComplete: () => void; onBa
           )}
           {selected !== null && (
             <button onClick={next} className="w-full py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors">
-              {current === questions.length - 1 ? 'Voir les résultats' : 'Question suivante'}
+              {current === questions.length - 1 ? (isEn ? 'See results' : 'Voir les résultats') : (isEn ? 'Next question' : 'Question suivante')}
             </button>
           )}
         </div>
@@ -602,9 +754,9 @@ function IntermQuizModule({ onComplete, onBack }: { onComplete: () => void; onBa
 
 // ── SHARED LAYOUT ─────────────────────────────────────────────────────────────
 
-function LevelModuleLayout({ children, title, icon, color, onBack, onComplete, quizKey }: {
+function LevelModuleLayout({ children, title, icon, color, onBack, onComplete, quizKey, isEn }: {
   children: React.ReactNode; title: string; icon: string; color: string;
-  onBack: () => void; onComplete: () => void; quizKey?: string;
+  onBack: () => void; onComplete: () => void; quizKey?: string; isEn?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-[#060d08]">
@@ -612,7 +764,7 @@ function LevelModuleLayout({ children, title, icon, color, onBack, onComplete, q
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <button onClick={onBack} className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
-              <ChevronLeft size={16} /> Retour
+              <ChevronLeft size={16} /> {isEn ? 'Back' : 'Retour'}
             </button>
             <div className="flex items-center gap-2 mb-6">
               <span className="text-2xl">{icon}</span>
@@ -623,7 +775,7 @@ function LevelModuleLayout({ children, title, icon, color, onBack, onComplete, q
               {quizKey && <InlineQuiz moduleKey={quizKey} />}
             </div>
             <button onClick={onComplete} className="w-full py-3 rounded-xl font-bold text-white transition-all" style={{ background: color }}>
-              ✓ Module terminé
+              {isEn ? '✓ Module complete' : '✓ Module terminé'}
             </button>
           </motion.div>
         </div>

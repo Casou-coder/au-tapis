@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { useProgress, getXpTitle, XP_TITLES, loadXpHistory, XpDayRecord } from '@/hooks/useProgress';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 import { useChallengeStats, TypeStat } from '@/hooks/useChallengeStats';
 import { CHALLENGES } from '@/lib/challenges-data';
 
-const LEVELS = [
+const LEVELS_FR = [
   { id: 'debutant', label: 'Débutant', emoji: '🟢', color: 'text-green-400', total: 8 },
   { id: 'intermediaire', label: 'Intermédiaire', emoji: '🔵', color: 'text-blue-400', total: 8 },
   { id: 'avance', label: 'Avancé', emoji: '🟣', color: 'text-purple-400', total: 9 },
@@ -16,7 +17,15 @@ const LEVELS = [
   { id: 'professionnel', label: 'Professionnel', emoji: '🔴', color: 'text-red-400', total: 7 },
 ];
 
-const TYPE_META: { id: string; label: string; color: string }[] = [
+const LEVELS_EN = [
+  { id: 'debutant', label: 'Beginner', emoji: '🟢', color: 'text-green-400', total: 8 },
+  { id: 'intermediaire', label: 'Intermediate', emoji: '🔵', color: 'text-blue-400', total: 8 },
+  { id: 'avance', label: 'Advanced', emoji: '🟣', color: 'text-purple-400', total: 9 },
+  { id: 'expert', label: 'Expert', emoji: '🟡', color: 'text-yellow-400', total: 9 },
+  { id: 'professionnel', label: 'Professional', emoji: '🔴', color: 'text-red-400', total: 7 },
+];
+
+const TYPE_META_FR: { id: string; label: string; color: string }[] = [
   { id: 'decision',    label: '🎯 Décision',    color: '#3b82f6' },
   { id: 'calculation', label: '🔢 Calcul',       color: '#8b5cf6' },
   { id: 'reads',       label: '👁 Read',          color: '#22c55e' },
@@ -24,11 +33,19 @@ const TYPE_META: { id: string; label: string; color: string }[] = [
   { id: 'icm',         label: '💰 ICM',           color: '#f97316' },
 ];
 
+const TYPE_META_EN: { id: string; label: string; color: string }[] = [
+  { id: 'decision',    label: '🎯 Decision',    color: '#3b82f6' },
+  { id: 'calculation', label: '🔢 Calculation', color: '#8b5cf6' },
+  { id: 'reads',       label: '👁 Reading',      color: '#22c55e' },
+  { id: 'gto',         label: '🤖 GTO',          color: '#eab308' },
+  { id: 'icm',         label: '💰 ICM',          color: '#f97316' },
+];
+
 function XpChart({ history }: { history: XpDayRecord[] }) {
   if (history.length === 0) {
     return (
       <div className="flex items-center justify-center h-20 text-gray-600 text-sm">
-        Complète des défis pour voir ta progression
+        {/* Translated in parent where locale is available */}
       </div>
     );
   }
@@ -72,6 +89,11 @@ function XpChart({ history }: { history: XpDayRecord[] }) {
 }
 
 export default function ProfilPage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const LEVELS = isEn ? LEVELS_EN : LEVELS_FR;
+  const TYPE_META = isEn ? TYPE_META_EN : TYPE_META_FR;
+
   const { progress, getLevelProgress, resetProgress, isLevelUnlocked } = useProgress();
   const { history, streak } = useDailyChallenge();
   const { typeStats } = useChallengeStats();
@@ -114,22 +136,22 @@ export default function ProfilPage() {
             ♠
           </div>
           <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Ma Progression
+            {isEn ? 'My Progress' : 'Ma Progression'}
           </h1>
 
           <div className="mt-4 inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-4 py-1.5">
             <span className="text-yellow-400 font-bold">{totalCompleted}</span>
-            <span className="text-gray-400 text-sm">/ {totalModules} modules terminés</span>
+            <span className="text-gray-400 text-sm">/ {totalModules} {isEn ? 'modules completed' : 'modules terminés'}</span>
           </div>
 
-          {/* XP & titre */}
+          {/* XP & title */}
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
             className="mt-5 w-full max-w-xs mx-auto"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-lg font-bold text-white">{currentTitle.emoji} {currentTitle.label}</span>
-              <span className="text-yellow-400 font-bold text-sm">⚡ {totalXp.toLocaleString('fr-FR')} XP</span>
+              <span className="text-yellow-400 font-bold text-sm">⚡ {totalXp.toLocaleString(isEn ? 'en-US' : 'fr-FR')} XP</span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <motion.div
@@ -141,14 +163,14 @@ export default function ProfilPage() {
               />
             </div>
             {nextTitle ? (
-              <p className="text-gray-500 text-xs mt-1 text-right">{xpToNextTitle} XP avant {nextTitle.emoji} {nextTitle.label}</p>
+              <p className="text-gray-500 text-xs mt-1 text-right">{xpToNextTitle} XP {isEn ? 'until' : 'avant'} {nextTitle.emoji} {nextTitle.label}</p>
             ) : (
-              <p className="text-yellow-400 text-xs mt-1 text-center font-medium">Rang maximum atteint 👑</p>
+              <p className="text-yellow-400 text-xs mt-1 text-center font-medium">{isEn ? 'Maximum rank reached 👑' : 'Rang maximum atteint 👑'}</p>
             )}
           </motion.div>
         </motion.div>
 
-        {/* XP sur 30 jours */}
+        {/* XP over 30 days */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -156,21 +178,27 @@ export default function ProfilPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-white text-sm">XP gagnée — 30 derniers jours</h2>
+            <h2 className="font-bold text-white text-sm">{isEn ? 'XP earned — last 30 days' : 'XP gagnée — 30 derniers jours'}</h2>
             {xpHistory.length > 0 && (
               <span className="text-yellow-400 text-xs font-medium">
-                +{xpHistory.slice(-30).reduce((s, d) => s + d.earned, 0).toLocaleString('fr-FR')} XP
+                +{xpHistory.slice(-30).reduce((s, d) => s + d.earned, 0).toLocaleString(isEn ? 'en-US' : 'fr-FR')} XP
               </span>
             )}
           </div>
-          <XpChart history={xpHistory} />
+          {xpHistory.length === 0 ? (
+            <div className="flex items-center justify-center h-20 text-gray-600 text-sm">
+              {isEn ? 'Complete challenges to see your progress' : 'Complète des défis pour voir ta progression'}
+            </div>
+          ) : (
+            <XpChart history={xpHistory} />
+          )}
           <div className="flex justify-between text-gray-600 text-xs mt-1">
-            <span>il y a 30j</span>
-            <span>aujourd&apos;hui</span>
+            <span>{isEn ? '30 days ago' : 'il y a 30j'}</span>
+            <span>{isEn ? 'today' : "aujourd'hui"}</span>
           </div>
         </motion.div>
 
-        {/* Barre globale */}
+        {/* Global progress bar */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -178,7 +206,7 @@ export default function ProfilPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
         >
           <div className="flex justify-between text-sm text-gray-400 mb-2">
-            <span>Progression globale</span>
+            <span>{isEn ? 'Overall progress' : 'Progression globale'}</span>
             <span>{Math.round((totalCompleted / totalModules) * 100)}%</span>
           </div>
           <div
@@ -187,7 +215,7 @@ export default function ProfilPage() {
             aria-valuenow={Math.round((totalCompleted / totalModules) * 100)}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="Progression globale"
+            aria-label={isEn ? 'Overall progress' : 'Progression globale'}
           >
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400"
@@ -198,7 +226,7 @@ export default function ProfilPage() {
           </div>
         </motion.div>
 
-        {/* Progression par niveau */}
+        {/* Level progress */}
         <div className="space-y-3 mb-8">
           {LEVELS.map((level, i) => {
             const prog = getLevelProgress(level.id, level.total);
@@ -216,13 +244,13 @@ export default function ProfilPage() {
                   <div className="flex items-center gap-2">
                     <span aria-hidden="true">{level.emoji}</span>
                     <span className={`font-semibold text-sm ${level.color}`}>{level.label}</span>
-                    {!unlocked && <span className="text-xs text-gray-500">🔒 Verrouillé</span>}
+                    {!unlocked && <span className="text-xs text-gray-500">🔒 {isEn ? 'Locked' : 'Verrouillé'}</span>}
                     {prog.completed === prog.total && unlocked && (
-                      <span className="text-xs text-green-400 font-medium">✓ Terminé</span>
+                      <span className="text-xs text-green-400 font-medium">✓ {isEn ? 'Done' : 'Terminé'}</span>
                     )}
                   </div>
                   <span className="text-xs text-gray-500">
-                    {prog.completed}/{prog.total} modules
+                    {prog.completed}/{prog.total} {isEn ? 'modules' : 'modules'}
                   </span>
                 </div>
                 <div
@@ -231,7 +259,7 @@ export default function ProfilPage() {
                   aria-valuenow={prog.percentage}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={`Progression ${level.label}`}
+                  aria-label={`${isEn ? 'Progress' : 'Progression'} ${level.label}`}
                 >
                   <div
                     className="h-full rounded-full transition-all duration-700"
@@ -243,7 +271,7 @@ export default function ProfilPage() {
           })}
         </div>
 
-        {/* Défis */}
+        {/* Daily challenges */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -251,8 +279,8 @@ export default function ProfilPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-white">Défis quotidiens</h2>
-            <Link href="/defis" className="text-xs text-orange-400 hover:text-orange-300 transition-colors">Voir les défis →</Link>
+            <h2 className="font-bold text-white">{isEn ? 'Daily challenges' : 'Défis quotidiens'}</h2>
+            <Link href="/defis" className="text-xs text-orange-400 hover:text-orange-300 transition-colors">{isEn ? 'See challenges →' : 'Voir les défis →'}</Link>
           </div>
 
           <div className="grid grid-cols-3 gap-3 mb-4">
@@ -262,16 +290,16 @@ export default function ProfilPage() {
             </div>
             <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-white">{completedDefis}</div>
-              <div className="text-gray-500 text-xs mt-0.5">complétés</div>
+              <div className="text-gray-500 text-xs mt-0.5">{isEn ? 'completed' : 'complétés'}</div>
             </div>
             <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-green-400">{successRate}%</div>
-              <div className="text-gray-500 text-xs mt-0.5">réussite</div>
+              <div className="text-gray-500 text-xs mt-0.5">{isEn ? 'success rate' : 'réussite'}</div>
             </div>
           </div>
 
           <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-            <span>{completedDefis}/{totalDefis} défis explorés</span>
+            <span>{completedDefis}/{totalDefis} {isEn ? 'challenges explored' : 'défis explorés'}</span>
             <span>{defiPct}%</span>
           </div>
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -284,7 +312,7 @@ export default function ProfilPage() {
           </div>
         </motion.div>
 
-        {/* Statistiques par type */}
+        {/* Stats by type */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -292,14 +320,14 @@ export default function ProfilPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-white">Statistiques par type</h2>
+            <h2 className="font-bold text-white">{isEn ? 'Stats by type' : 'Statistiques par type'}</h2>
             {hasTypeStats && (
-              <span className="text-gray-500 text-xs">{totalAttempts} tentative{totalAttempts > 1 ? 's' : ''}</span>
+              <span className="text-gray-500 text-xs">{totalAttempts} {isEn ? (totalAttempts > 1 ? 'attempts' : 'attempt') : ('tentative' + (totalAttempts > 1 ? 's' : ''))}</span>
             )}
           </div>
 
           {!hasTypeStats ? (
-            <p className="text-gray-600 text-sm text-center py-4">Complète des défis pour voir tes stats par type</p>
+            <p className="text-gray-600 text-sm text-center py-4">{isEn ? 'Complete challenges to see your stats by type' : 'Complète des défis pour voir tes stats par type'}</p>
           ) : (
             <div className="space-y-3">
               {TYPE_META.map(meta => {
@@ -337,13 +365,15 @@ export default function ProfilPage() {
         {/* Reset */}
         <button
           onClick={() => {
-            if (confirm('Réinitialiser toute votre progression ? Cette action est irréversible.')) {
+            if (confirm(isEn
+              ? 'Reset all your progress? This action is irreversible.'
+              : 'Réinitialiser toute votre progression ? Cette action est irréversible.')) {
               resetProgress();
             }
           }}
           className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium"
         >
-          Réinitialiser la progression
+          {isEn ? 'Reset progress' : 'Réinitialiser la progression'}
         </button>
       </main>
     </div>

@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cookie, X } from 'lucide-react';
+import { useLocale } from 'next-intl';
 
 const STORAGE_KEY = 'cookie-consent-v1';
 
 export default function CookieConsent() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function CookieConsent() {
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
           role="dialog"
-          aria-label="Consentement aux cookies"
+          aria-label={isEn ? 'Cookie consent' : 'Consentement aux cookies'}
           aria-modal="false"
           className="fixed bottom-20 left-4 right-4 z-40 max-w-lg mx-auto sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm"
         >
@@ -48,15 +51,18 @@ export default function CookieConsent() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-semibold mb-1">Cookies essentiels</p>
+                <p className="text-white text-sm font-semibold mb-1">
+                  {isEn ? 'Essential cookies' : 'Cookies essentiels'}
+                </p>
                 <p className="text-gray-400 text-xs leading-relaxed">
-                  Nous utilisons uniquement des cookies nécessaires au fonctionnement du site
-                  (authentification, sauvegarde de progression). Aucun cookie publicitaire.{' '}
+                  {isEn
+                    ? 'We only use cookies necessary for the site to function (authentication, progress saving). No advertising cookies.'
+                    : 'Nous utilisons uniquement des cookies nécessaires au fonctionnement du site (authentification, sauvegarde de progression). Aucun cookie publicitaire.'}{' '}
                   <Link
                     href="/politique-confidentialite"
                     className="text-yellow-400 underline underline-offset-2 hover:text-yellow-300 transition-colors"
                   >
-                    En savoir plus
+                    {isEn ? 'Learn more' : 'En savoir plus'}
                   </Link>
                 </p>
 
@@ -65,20 +71,20 @@ export default function CookieConsent() {
                     onClick={accept}
                     className="px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-semibold transition-colors"
                   >
-                    Accepter
+                    {isEn ? 'Accept' : 'Accepter'}
                   </button>
                   <button
                     onClick={dismiss}
                     className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 text-gray-400 hover:text-white text-xs transition-colors"
                   >
-                    Continuer sans accepter
+                    {isEn ? 'Continue without accepting' : 'Continuer sans accepter'}
                   </button>
                 </div>
               </div>
 
               <button
                 onClick={dismiss}
-                aria-label="Fermer"
+                aria-label={isEn ? 'Close' : 'Fermer'}
                 className="p-1 text-gray-600 hover:text-gray-300 transition-colors shrink-0"
               >
                 <X size={14} />

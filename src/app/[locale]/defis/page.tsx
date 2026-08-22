@@ -6,37 +6,43 @@ import { Flame, Trophy, Calendar, Lock, Shuffle, RotateCcw, CheckCircle2 } from 
 import { DailyChallengeModal, DailyChallengeCard } from '@/components/DailyChallenge';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 import { useChallengeStats } from '@/hooks/useChallengeStats';
-import { CHALLENGES, Challenge, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
+import { CHALLENGES as CHALLENGES_FR, Challenge, ChallengeLevel, CHALLENGE_LEVEL_ORDER } from '@/lib/challenges-data';
+import { CHALLENGES as CHALLENGES_EN } from '@/lib/challenges-data.en';
 import { useProgress } from '@/hooks/useProgress';
-
-const LEVEL_META: Record<ChallengeLevel, { label: string; color: string; emoji: string }> = {
-  debutant:     { label: 'Débutant',      color: '#22c55e', emoji: '🟢' },
-  intermediaire:{ label: 'Intermédiaire', color: '#3b82f6', emoji: '🔵' },
-  avance:       { label: 'Avancé',        color: '#a855f7', emoji: '🟣' },
-  expert:       { label: 'Expert',        color: '#eab308', emoji: '🟡' },
-  professionnel:{ label: 'Professionnel', color: '#ef4444', emoji: '🔴' },
-};
-
-const TYPE_OPTIONS = [
-  { id: 'all',         label: 'Tous' },
-  { id: 'decision',    label: '🎯 Décision' },
-  { id: 'calculation', label: '🔢 Calcul' },
-  { id: 'reads',       label: '👁 Read' },
-  { id: 'gto',         label: '🤖 GTO' },
-  { id: 'icm',         label: '💰 ICM' },
-];
-
-const DIFF_OPTIONS = [
-  { id: 'all', label: 'Toutes' },
-  { id: 1,     label: '● Facile' },
-  { id: 2,     label: '●● Moyen' },
-  { id: 3,     label: '●●● Difficile' },
-];
+import { useLocale } from 'next-intl';
 
 const BATCH = 20;
 const STREAK_MILESTONES = [3, 7, 14, 30, 100];
 
 export default function DefisPage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const CHALLENGES = isEn ? CHALLENGES_EN : CHALLENGES_FR;
+
+  const LEVEL_META: Record<ChallengeLevel, { label: string; color: string; emoji: string }> = {
+    debutant:     { label: isEn ? 'Beginner'     : 'Débutant',      color: '#22c55e', emoji: '🟢' },
+    intermediaire:{ label: isEn ? 'Intermediate' : 'Intermédiaire', color: '#3b82f6', emoji: '🔵' },
+    avance:       { label: isEn ? 'Advanced'     : 'Avancé',        color: '#a855f7', emoji: '🟣' },
+    expert:       { label: 'Expert',                                  color: '#eab308', emoji: '🟡' },
+    professionnel:{ label: isEn ? 'Professional' : 'Professionnel', color: '#ef4444', emoji: '🔴' },
+  };
+
+  const TYPE_OPTIONS = [
+    { id: 'all',         label: isEn ? 'All'          : 'Tous' },
+    { id: 'decision',    label: isEn ? '🎯 Decision'  : '🎯 Décision' },
+    { id: 'calculation', label: isEn ? '🔢 Calc'      : '🔢 Calcul' },
+    { id: 'reads',       label: '👁 Read' },
+    { id: 'gto',         label: '🤖 GTO' },
+    { id: 'icm',         label: '💰 ICM' },
+  ];
+
+  const DIFF_OPTIONS = [
+    { id: 'all', label: isEn ? 'All'         : 'Toutes' },
+    { id: 1,     label: isEn ? '● Easy'      : '● Facile' },
+    { id: 2,     label: isEn ? '●● Medium'   : '●● Moyen' },
+    { id: 3,     label: isEn ? '●●● Hard'    : '●●● Difficile' },
+  ];
+
   const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
   const { isLevelUnlocked, addXp } = useProgress();
   const { failedIds, recordAttempt } = useChallengeStats();
@@ -55,7 +61,6 @@ export default function DefisPage() {
 
   const completedIds = history.filter(h => h.completed).map(h => h.challengeId);
 
-  // Show streak milestone banner after completing daily challenge
   useEffect(() => {
     if (justCompleted && STREAK_MILESTONES.includes(streak)) {
       setMilestoneStreak(streak);
@@ -65,10 +70,8 @@ export default function DefisPage() {
     if (justCompleted) setJustCompleted(false);
   }, [justCompleted, streak]);
 
-  // Reset batch when filters change
   useEffect(() => { setVisibleCount(BATCH); }, [activeLevel, activeType, activeDiff, showRevision]);
 
-  // Pool computation
   const basePool = showRevision
     ? CHALLENGES.filter(c => failedIds.includes(c.id))
     : CHALLENGES.filter(c => {
@@ -100,6 +103,10 @@ export default function DefisPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [CHALLENGES, completedIds, isLevelUnlocked]);
 
+  const streakMessage = (n: number) => isEn
+    ? (n >= 100 ? 'You are an absolute legend.' : n >= 30 ? 'Champion discipline.' : n >= 14 ? 'Two full weeks without missing.' : n >= 7 ? 'A full week!' : 'Great streak, keep going!')
+    : (n >= 100 ? 'Tu es une légende absolue.' : n >= 30 ? 'Discipline de champion.' : n >= 14 ? 'Deux semaines sans faillir.' : n >= 7 ? 'Une semaine complète !' : 'Belle série, continue !');
+
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
       <main className="max-w-4xl mx-auto px-4 pt-28 pb-16">
@@ -107,9 +114,13 @@ export default function DefisPage() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Défis Quotidiens
+            {isEn ? 'Daily Challenges' : 'Défis Quotidiens'}
           </h1>
-          <p className="text-gray-400">Un défi par jour, adapté à ton niveau. Construis ta série et progresse.</p>
+          <p className="text-gray-400">
+            {isEn
+              ? 'One challenge per day, tailored to your level. Build your streak and improve.'
+              : 'Un défi par jour, adapté à ton niveau. Construis ta série et progresse.'}
+          </p>
         </motion.div>
 
         {/* Streak milestone banner */}
@@ -124,19 +135,15 @@ export default function DefisPage() {
               style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.18), rgba(239,68,68,0.12))', border: '1px solid rgba(251,146,60,0.35)' }}
             >
               <p className="text-2xl mb-1">🔥</p>
-              <p className="text-white font-bold text-lg">{milestoneStreak} jours de suite !</p>
-              <p className="text-orange-300 text-sm mt-0.5">
-                {milestoneStreak >= 100 ? 'Tu es une légende absolue.' :
-                 milestoneStreak >= 30  ? 'Discipline de champion.' :
-                 milestoneStreak >= 14  ? 'Deux semaines sans faillir.' :
-                 milestoneStreak >= 7   ? 'Une semaine complète !' :
-                 'Belle série, continue !'}
+              <p className="text-white font-bold text-lg">
+                {isEn ? `${milestoneStreak} days in a row!` : `${milestoneStreak} jours de suite !`}
               </p>
+              <p className="text-orange-300 text-sm mt-0.5">{streakMessage(milestoneStreak)}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Stats + défi du jour */}
+        {/* Stats + daily challenge */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="md:col-span-2">
             <DailyChallengeCard
@@ -152,31 +159,31 @@ export default function DefisPage() {
             <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <Flame size={18} className="text-orange-400 mx-auto mb-1" />
               <p className="text-xl md:text-2xl font-bold text-white">{streak}</p>
-              <p className="text-gray-400 text-xs leading-tight">Jours consécutifs</p>
+              <p className="text-gray-400 text-xs leading-tight">{isEn ? 'Consecutive Days' : 'Jours consécutifs'}</p>
             </div>
             <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <Trophy size={18} className="text-yellow-400 mx-auto mb-1" />
               <p className="text-xl md:text-2xl font-bold text-white">{completedIds.length}</p>
-              <p className="text-gray-400 text-xs leading-tight">Défis complétés</p>
+              <p className="text-gray-400 text-xs leading-tight">{isEn ? 'Challenges Done' : 'Défis complétés'}</p>
             </div>
             <div className="rounded-xl p-3 md:p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <Calendar size={18} className="text-blue-400 mx-auto mb-1" />
               <p className="text-xl md:text-2xl font-bold text-white">{history.filter(h => h.correct).length}</p>
-              <p className="text-gray-400 text-xs leading-tight">Réponses correctes</p>
+              <p className="text-gray-400 text-xs leading-tight">{isEn ? 'Correct Answers' : 'Réponses correctes'}</p>
             </div>
           </div>
         </div>
 
         {/* Library header */}
         <div className="mb-4">
-          {/* Tabs: Bibliothèque / Révision */}
+          {/* Tabs */}
           <div className="flex items-center gap-3 mb-5">
             <button
               onClick={() => setShowRevision(false)}
               className="text-sm font-bold transition-colors"
               style={{ color: !showRevision ? '#ffffff' : '#6b7280' }}
             >
-              Bibliothèque de défis
+              {isEn ? 'Challenge Library' : 'Bibliothèque de défis'}
             </button>
             <span className="text-gray-700">|</span>
             <button
@@ -185,7 +192,7 @@ export default function DefisPage() {
               style={{ color: showRevision ? '#f97316' : '#6b7280' }}
             >
               <RotateCcw size={13} />
-              Révision
+              {isEn ? 'Review' : 'Révision'}
               {failedIds.length > 0 && (
                 <span className="ml-0.5 text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>
                   {failedIds.length}
@@ -195,18 +202,20 @@ export default function DefisPage() {
           </div>
 
           {showRevision ? (
-            /* Révision mode */
             failedIds.length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 size={40} className="text-green-400 mx-auto mb-3" />
-                <p className="text-white font-semibold text-lg mb-1">Tout maîtrisé !</p>
-                <p className="text-gray-500 text-sm">Aucun défi raté à réviser. Continue comme ça.</p>
+                <p className="text-white font-semibold text-lg mb-1">{isEn ? 'All mastered!' : 'Tout maîtrisé !'}</p>
+                <p className="text-gray-500 text-sm">{isEn ? 'No failed challenges to review. Keep it up.' : 'Aucun défi raté à réviser. Continue comme ça.'}</p>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm mb-4">{failedIds.length} défi{failedIds.length > 1 ? 's' : ''} à revoir · Réponds correctement pour les retirer</p>
+              <p className="text-gray-500 text-sm mb-4">
+                {isEn
+                  ? `${failedIds.length} challenge${failedIds.length > 1 ? 's' : ''} to review · Answer correctly to remove them`
+                  : `${failedIds.length} défi${failedIds.length > 1 ? 's' : ''} à revoir · Réponds correctement pour les retirer`}
+              </p>
             )
           ) : (
-            /* Standard library filters */
             <>
               <div className="flex gap-2 flex-wrap mb-2">
                 {(['all', ...CHALLENGE_LEVEL_ORDER] as const).map(l => {
@@ -220,7 +229,7 @@ export default function DefisPage() {
                         border: `1px solid ${active ? (meta?.color ?? '#c9a84c') + '50' : 'rgba(255,255,255,0.1)'}`,
                         color: active ? (meta?.color ?? '#c9a84c') : '#6b7280',
                       }}>
-                      {l === 'all' ? 'Tous' : `${meta!.emoji} ${meta!.label}`}
+                      {l === 'all' ? (isEn ? 'All' : 'Tous') : `${meta!.emoji} ${meta!.label}`}
                     </button>
                   );
                 })}
@@ -262,9 +271,15 @@ export default function DefisPage() {
 
               <div className="flex items-center justify-between">
                 <p className="text-gray-500 text-sm">
-                  {sorted.length} défi{sorted.length > 1 ? 's' : ''}
+                  {isEn
+                    ? `${sorted.length} challenge${sorted.length > 1 ? 's' : ''}`
+                    : `${sorted.length} défi${sorted.length > 1 ? 's' : ''}`}
                   {completedIds.length > 0 && (
-                    <span className="text-gray-600"> · {basePool.filter(c => completedIds.includes(c.id)).length} fait{basePool.filter(c => completedIds.includes(c.id)).length > 1 ? 's' : ''}</span>
+                    <span className="text-gray-600">
+                      {isEn
+                        ? ` · ${basePool.filter(c => completedIds.includes(c.id)).length} done`
+                        : ` · ${basePool.filter(c => completedIds.includes(c.id)).length} fait${basePool.filter(c => completedIds.includes(c.id)).length > 1 ? 's' : ''}`}
+                    </span>
                   )}
                 </p>
                 <button
@@ -274,7 +289,7 @@ export default function DefisPage() {
                   style={{ background: 'rgba(202,163,60,0.1)', border: '1px solid rgba(202,163,60,0.25)', color: '#c9a84c' }}
                 >
                   <Shuffle size={13} />
-                  Défi aléatoire
+                  {isEn ? 'Random Challenge' : 'Défi aléatoire'}
                 </button>
               </div>
             </>
@@ -308,7 +323,7 @@ export default function DefisPage() {
                   <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.6)' }}>
                     <div className="text-center">
                       <Lock size={20} className="text-gray-500 mx-auto mb-1" />
-                      <p className="text-gray-500 text-xs">Terminer le niveau précédent</p>
+                      <p className="text-gray-500 text-xs">{isEn ? 'Complete previous level' : 'Terminer le niveau précédent'}</p>
                     </div>
                   </div>
                 )}
@@ -317,8 +332,8 @@ export default function DefisPage() {
                     {meta.label}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    {failed && <span className="text-red-400/70 text-xs font-medium">✗ Raté</span>}
-                    {done && !failed && <span className="text-green-400/70 text-xs font-medium">✓ Fait</span>}
+                    {failed && <span className="text-red-400/70 text-xs font-medium">{isEn ? '✗ Failed' : '✗ Raté'}</span>}
+                    {done && !failed && <span className="text-green-400/70 text-xs font-medium">{isEn ? '✓ Done' : '✓ Fait'}</span>}
                     <span className="text-gray-500 text-xs">
                       {TYPE_OPTIONS.find(t => t.id === c.type)?.label ?? c.type}
                     </span>
@@ -341,7 +356,7 @@ export default function DefisPage() {
           })}
         </div>
 
-        {/* Voir plus */}
+        {/* Load more */}
         {hasMore && (
           <div className="text-center mt-6">
             <button
@@ -349,13 +364,15 @@ export default function DefisPage() {
               className="px-6 py-2.5 rounded-xl text-sm font-medium transition-all"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
             >
-              Voir plus · {sorted.length - visibleCount} restants
+              {isEn
+                ? `See more · ${sorted.length - visibleCount} remaining`
+                : `Voir plus · ${sorted.length - visibleCount} restants`}
             </button>
           </div>
         )}
       </main>
 
-      {/* Modal défi du jour */}
+      {/* Daily challenge modal */}
       {modalOpen && challenge && (
         <DailyChallengeModal
           challenge={challenge}
@@ -369,7 +386,7 @@ export default function DefisPage() {
         />
       )}
 
-      {/* Modal entraînement libre */}
+      {/* Practice modal */}
       {practiceChallenge && (
         <DailyChallengeModal
           challenge={practiceChallenge}

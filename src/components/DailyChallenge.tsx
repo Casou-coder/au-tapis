@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, Trophy, ChevronRight, Brain, Lightbulb } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import type { Challenge } from '@/lib/challenges-data';
 import { CHALLENGE_HINTS } from '@/lib/challenge-hints';
 import { useProgress } from '@/hooks/useProgress';
@@ -63,10 +64,26 @@ const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
   professionnel: { label: 'Professionnel', color: '#ef4444' },
 };
 
+const LEVEL_LABELS_EN: Record<string, { label: string; color: string }> = {
+  debutant: { label: 'Beginner', color: '#22c55e' },
+  intermediaire: { label: 'Intermediate', color: '#3b82f6' },
+  avance: { label: 'Advanced', color: '#a855f7' },
+  expert: { label: 'Expert', color: '#eab308' },
+  professionnel: { label: 'Professional', color: '#ef4444' },
+};
+
 const TYPE_LABELS: Record<string, string> = {
   decision: '🎯 Décision',
   calculation: '🔢 Calcul',
   reads: '👁 Read',
+  gto: '🤖 GTO',
+  icm: '💰 ICM',
+};
+
+const TYPE_LABELS_EN: Record<string, string> = {
+  decision: '🎯 Decision',
+  calculation: '🔢 Calculation',
+  reads: '👁 Reading',
   gto: '🤖 GTO',
   icm: '💰 ICM',
 };
@@ -79,6 +96,11 @@ interface DailyChallengeProps {
 }
 
 export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: DailyChallengeProps) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const levelLabels = isEn ? LEVEL_LABELS_EN : LEVEL_LABELS;
+  const typeLabels = isEn ? TYPE_LABELS_EN : TYPE_LABELS;
+
   const [screen, setScreen] = useState<Screen>('briefing');
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -86,7 +108,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
   const [earnedXp, setEarnedXp] = useState(0);
   const { addXp } = useProgress();
   const hint = CHALLENGE_HINTS[challenge.id];
-  const levelMeta = LEVEL_LABELS[challenge.level];
+  const levelMeta = levelLabels[challenge.level];
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -135,7 +157,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
         {/* ── Sticky header ── */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 sticky top-0 bg-[#0d1f0d] z-10">
           <div className="flex items-center gap-2">
-            <span id="challenge-title" className="text-yellow-400 font-bold text-sm">Défi du Jour</span>
+            <span id="challenge-title" className="text-yellow-400 font-bold text-sm">{isEn ? 'Daily Challenge' : 'Défi du Jour'}</span>
             {streak > 0 && (
               <div className="flex items-center gap-1 bg-orange-500/20 border border-orange-500/30 rounded-full px-2 py-0.5">
                 <Flame size={12} className="text-orange-400" />
@@ -145,12 +167,12 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
             <span className="hidden md:inline text-xs px-2.5 py-1 rounded-full font-medium ml-1" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
               {levelMeta.label}
             </span>
-            <span className="hidden md:inline text-xs text-gray-500">{TYPE_LABELS[challenge.type]}</span>
+            <span className="hidden md:inline text-xs text-gray-500">{typeLabels[challenge.type]}</span>
           </div>
           <button
             ref={closeRef}
             onClick={onClose}
-            aria-label="Fermer le défi"
+            aria-label={isEn ? 'Close challenge' : 'Fermer le défi'}
             className="text-gray-500 hover:text-white transition-colors p-1"
           >
             <X size={18} aria-hidden="true" />
@@ -176,10 +198,10 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
                       {STREET_LABELS[challenge.context.street]}
                     </span>
-                    <span className="text-xs text-gray-500">{TYPE_LABELS[challenge.type]}</span>
+                    <span className="text-xs text-gray-500">{typeLabels[challenge.type]}</span>
                   </div>
 
-                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">Votre adversaire</p>
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">{isEn ? 'Your opponent' : 'Votre adversaire'}</p>
 
                   <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="flex items-center gap-3 mb-3">
@@ -200,24 +222,24 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
 
                 {/* RIGHT, Situation + CTA */}
                 <div className="p-5 flex flex-col border-t border-white/10 md:border-t-0">
-                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">La situation</p>
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">{isEn ? 'The situation' : 'La situation'}</p>
 
                   {/* Context table */}
                   <div className="rounded-xl p-3 space-y-2 text-xs mb-4" style={{ background: '#1a4a2e33', border: '1px solid #1a4a2e' }}>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Format</span>
-                      <span className="text-white">{challenge.context.gameType === 'cash' ? '💵 Cash' : '🏆 Tournoi'} · {challenge.context.blinds}</span>
+                      <span className="text-gray-400">{isEn ? 'Format' : 'Format'}</span>
+                      <span className="text-white">{challenge.context.gameType === 'cash' ? (isEn ? '💵 Cash' : '💵 Cash') : (isEn ? '🏆 Tournament' : '🏆 Tournoi')} · {challenge.context.blinds}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Position</span>
+                      <span className="text-gray-400">{isEn ? 'Position' : 'Position'}</span>
                       <span className="text-white">{challenge.context.position}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Stacks</span>
+                      <span className="text-gray-400">{isEn ? 'Stacks' : 'Stacks'}</span>
                       <span className="text-white">{challenge.context.effectiveStack}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Street</span>
+                      <span className="text-gray-400">{isEn ? 'Street' : 'Street'}</span>
                       <span className="text-white">{STREET_LABELS[challenge.context.street] ?? challenge.context.street}</span>
                     </div>
                   </div>
@@ -231,7 +253,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     className="w-full py-3 rounded-xl font-bold text-sm text-black flex items-center justify-center gap-2"
                     style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}
                   >
-                    Relever le défi <ChevronRight size={16} />
+                    {isEn ? 'Take the challenge' : 'Relever le défi'} <ChevronRight size={16} />
                   </motion.button>
                 </div>
               </motion.div>
@@ -247,19 +269,19 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
               >
                 {/* LEFT, Table visuelle */}
                 <div className="p-5">
-                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">La table</p>
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">{isEn ? 'The table' : 'La table'}</p>
 
                   {/* Cards */}
                   <div className="rounded-xl p-4 mb-4" style={{ background: '#1a4a2e55', border: '1px solid #1a4a2e' }}>
                     <div className="flex flex-wrap items-start gap-4">
                       <div>
-                        <p className="text-gray-400 text-xs mb-2">Votre main</p>
+                        <p className="text-gray-400 text-xs mb-2">{isEn ? 'Your hand' : 'Votre main'}</p>
                         <div className="flex gap-1.5">
                           {challenge.context.heroHand.map((c, i) => <PokerCardSmall key={i} value={c} />)}
                         </div>
                       </div>
                       <div>
-                        <p className="text-gray-400 text-xs mb-2">{challenge.context.board.length > 0 ? `Board : ${STREET_LABELS[challenge.context.street] ?? challenge.context.street}` : 'Préflop'}</p>
+                        <p className="text-gray-400 text-xs mb-2">{challenge.context.board.length > 0 ? `Board : ${STREET_LABELS[challenge.context.street] ?? challenge.context.street}` : (isEn ? 'Preflop' : 'Préflop')}</p>
                         <div className="flex gap-1.5 flex-wrap">
                           {challenge.context.board.length > 0
                             ? challenge.context.board.map((c, i) => <PokerCardSmall key={i} value={c} />)
@@ -270,7 +292,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     </div>
 
                     <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3 text-xs text-gray-400">
-                      <span>Pot : <span className="text-white font-mono">{challenge.context.pot}</span></span>
+                      <span>{isEn ? 'Pot:' : 'Pot :'} <span className="text-white font-mono">{challenge.context.pot}</span></span>
                       <span>·</span>
                       <span>{challenge.context.position}</span>
                     </div>
@@ -298,7 +320,9 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                         className="flex items-center gap-1.5 text-xs text-yellow-500/70 hover:text-yellow-400 transition-colors"
                       >
                         <Lightbulb size={13} />
-                        {hintVisible ? 'Masquer l\'aide' : 'Voir l\'aide (-40 XP)'}
+                        {hintVisible
+                          ? (isEn ? 'Hide hint' : "Masquer l'aide")
+                          : (isEn ? 'Show hint (-40 XP)' : "Voir l'aide (-40 XP)")}
                       </button>
                       <AnimatePresence>
                         {hintVisible && (
@@ -354,7 +378,9 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                       color: selected !== null ? '#000' : '#6b7280',
                     }}
                   >
-                    {confirmed ? (isCorrect ? '✓ Correct !' : '✗ Incorrect') : 'Valider ma réponse'}
+                    {confirmed
+                      ? (isCorrect ? (isEn ? '✓ Correct!' : '✓ Correct !') : (isEn ? '✗ Incorrect' : '✗ Incorrect'))
+                      : (isEn ? 'Confirm my answer' : 'Valider ma réponse')}
                   </motion.button>
                 </div>
               </motion.div>
@@ -379,7 +405,9 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                       {isCorrect ? '✅' : '❌'}
                     </motion.div>
                     <p className={`font-bold text-base text-center ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                      {isCorrect ? 'Bonne réponse !' : 'Pas tout à fait…'}
+                      {isCorrect
+                        ? (isEn ? 'Correct answer!' : 'Bonne réponse !')
+                        : (isEn ? 'Not quite right…' : 'Pas tout à fait…')}
                     </p>
                     {earnedXp > 0 && (
                       <div className="mt-2 flex items-center justify-center gap-1.5">
@@ -396,7 +424,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     className="w-full py-3 rounded-xl font-bold text-sm text-black mt-4 md:hidden"
                     style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}
                   >
-                    Fermer
+                    {isEn ? 'Close' : 'Fermer'}
                   </motion.button>
                 </div>
 
@@ -404,14 +432,14 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                 <div className="p-5 flex flex-col border-t border-white/10 md:border-t-0">
                   {selected !== null && (
                     <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <p className="text-xs text-gray-400 mb-1">Ta réponse : {challenge.options[selected].label}</p>
+                      <p className="text-xs text-gray-400 mb-1">{isEn ? 'Your answer:' : 'Ta réponse :'} {challenge.options[selected].label}</p>
                       <p className="text-gray-300 text-sm leading-relaxed">{challenge.options[selected].explanation}</p>
                     </div>
                   )}
 
                   {challenge.mathNote && (
                     <div className="rounded-xl p-3 mb-3 bg-blue-500/10 border border-blue-500/20">
-                      <p className="text-blue-400 text-xs font-medium mb-1">🔢 Le calcul</p>
+                      <p className="text-blue-400 text-xs font-medium mb-1">🔢 {isEn ? 'The calculation' : 'Le calcul'}</p>
                       <p className="text-gray-300 text-sm leading-relaxed">{challenge.mathNote}</p>
                     </div>
                   )}
@@ -419,7 +447,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                   <div className="rounded-xl p-3 mb-4 bg-yellow-500/10 border border-yellow-500/20 flex-1">
                     <div className="flex items-center gap-1 mb-1.5">
                       <Brain size={12} className="text-yellow-400" />
-                      <p className="text-yellow-400 text-xs font-medium">Leçon clé</p>
+                      <p className="text-yellow-400 text-xs font-medium">{isEn ? 'Key lesson' : 'Leçon clé'}</p>
                     </div>
                     <p className="text-gray-200 text-sm leading-relaxed">{challenge.lesson}</p>
                   </div>
@@ -431,7 +459,7 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     className="w-full py-3 rounded-xl font-bold text-sm text-black hidden md:block"
                     style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}
                   >
-                    Fermer
+                    {isEn ? 'Close' : 'Fermer'}
                   </motion.button>
                 </div>
               </motion.div>
@@ -456,8 +484,13 @@ interface DailyChallengeCardProps {
 }
 
 export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak, loading, onOpen }: DailyChallengeCardProps) {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const levelLabels = isEn ? LEVEL_LABELS_EN : LEVEL_LABELS;
+  const typeLabels = isEn ? TYPE_LABELS_EN : TYPE_LABELS;
+
   if (loading || !challenge) return null;
-  const levelMeta = LEVEL_LABELS[challenge.level];
+  const levelMeta = levelLabels[challenge.level];
 
   return (
     <motion.div
@@ -474,16 +507,16 @@ export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak,
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-base">🎯</div>
             <div>
-              <p className="text-yellow-400 font-bold text-sm">Défi du Jour</p>
+              <p className="text-yellow-400 font-bold text-sm">{isEn ? 'Daily Challenge' : 'Défi du Jour'}</p>
               <p className="text-gray-500 text-xs">
-                {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date().toLocaleDateString(isEn ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
             </div>
           </div>
           {streak > 0 && (
             <div className="flex items-center gap-1 bg-orange-500/20 border border-orange-500/30 rounded-full px-2.5 py-1">
               <Flame size={13} className="text-orange-400" />
-              <span className="text-orange-400 text-xs font-bold">{streak} jours</span>
+              <span className="text-orange-400 text-xs font-bold">{streak} {isEn ? (streak > 1 ? 'days' : 'day') : 'jours'}</span>
             </div>
           )}
         </div>
@@ -492,9 +525,11 @@ export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak,
           <div className={`rounded-xl p-3 text-center ${wasCorrect ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
             <p className="text-lg mb-1">{wasCorrect ? '✅' : '❌'}</p>
             <p className={`text-sm font-semibold ${wasCorrect ? 'text-green-400' : 'text-red-400'}`}>
-              {wasCorrect ? 'Bravo ! Défi du jour réussi.' : 'Défi tenté, reviens demain !'}
+              {wasCorrect
+                ? (isEn ? 'Well done! Daily challenge completed.' : 'Bravo ! Défi du jour réussi.')
+                : (isEn ? 'Challenge attempted, come back tomorrow!' : 'Défi tenté, reviens demain !')}
             </p>
-            {wasCorrect && <p className="text-yellow-400 text-xs mt-1">+XP gagnés ⚡</p>}
+            {wasCorrect && <p className="text-yellow-400 text-xs mt-1">{isEn ? '+XP earned ⚡' : '+XP gagnés ⚡'}</p>}
           </div>
         ) : (
           <>
@@ -502,7 +537,7 @@ export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak,
               <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: levelMeta.color + '20', color: levelMeta.color }}>
                 {levelMeta.label}
               </span>
-              <span className="text-gray-500 text-xs">{TYPE_LABELS[challenge.type]}</span>
+              <span className="text-gray-500 text-xs">{typeLabels[challenge.type]}</span>
               <span className="text-gray-600 text-xs">· {STREET_LABELS[challenge.context.street] ?? challenge.context.street}</span>
             </div>
             <div className="flex items-center gap-2 mb-3">
@@ -524,7 +559,7 @@ export function DailyChallengeCard({ challenge, isCompleted, wasCorrect, streak,
               )}
               <div className="ml-auto">
                 <div className="px-3 py-1.5 rounded-lg text-xs font-bold text-black" style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}>
-                  Jouer →
+                  {isEn ? 'Play →' : 'Jouer →'}
                 </div>
               </div>
             </div>

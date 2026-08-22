@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Grid3x3, Coins, Brain, Target, TrendingUp, ChevronRight, AlertTriangle, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -20,64 +21,131 @@ interface Tool {
   howTo: string[];
 }
 
-const TOOLS: Tool[] = [
-  {
-    id: 'texture', title: 'Texture de Board', description: 'Analysez n\'importe quel flop : sécheresse, draws possibles, avantage de range.',
-    icon: <Grid3x3 size={20} />, category: 'Équité', tag: 'Nouveau',
-    howTo: [
-      'Cliquez sur une valeur (A, K, Q…) puis choisissez la couleur pour ajouter une carte.',
-      'Ajoutez 3 à 5 cartes pour obtenir l\'analyse complète du board.',
-      'Cliquez sur une carte pour la retirer. Cliquez "Réinitialiser" pour repartir de zéro.',
-    ],
-  },
-  {
-    id: 'equity-quiz', title: 'Estimateur d\'Équité', description: 'Entraînez votre intuition en estimant l\'équité de matchups classiques.',
-    icon: <Target size={20} />, category: 'Équité',
-    howTo: [
-      'Un matchup (Hero vs Villain) est affiché. Déplacez le curseur pour estimer l\'équité de Hero en %.',
-      'Cliquez "Révéler" pour voir la vraie valeur et votre score (0-100 pts selon l\'écart).',
-      'Enchaînez les matchups pour améliorer votre sens de l\'équité. Visez 80+ pts de moyenne.',
-    ],
-  },
-  {
-    id: 'bounty', title: 'Convertisseur Bounty KO', description: 'Calculez la valeur réelle d\'une prime en tournoi PKO et son impact sur vos décisions.',
-    icon: <Coins size={20} />, category: 'Tournoi',
-    howTo: [
-      'Entrez votre stack, le stack de l\'adversaire et le montant de la prime (bounty).',
-      'L\'outil calcule la valeur ICM réelle de la prime selon votre probabilité de l\'emporter.',
-      'Utilisez le résultat pour ajuster votre seuil de call en all-in face à un joueur avec prime.',
-    ],
-  },
-  {
-    id: 'ranges', title: 'Constructeur de Range', description: 'Construisez et visualisez vos ranges preflop sur la grille 13×13.',
-    icon: <Grid3x3 size={20} />, category: 'Ranges',
-    howTo: [
-      'Cliquez sur une case de la grille pour ajouter ou retirer une main de votre range.',
-      'Les cases de la diagonale sont les paires (AA, KK…), au-dessus suited (AKs), en-dessous offsuit (AKo).',
-      'Utilisez les boutons de présélection pour charger des ranges standards (BTN open, BB défense…).',
-    ],
-  },
-  {
-    id: 'bankroll', title: 'Calculateur de Bankroll', description: 'Trouvez la limite adaptée à votre bankroll et votre profil de risque.',
-    icon: <TrendingUp size={20} />, category: 'Mental & Gestion',
-    howTo: [
-      'Entrez votre bankroll totale disponible pour le poker (en €).',
-      'Choisissez votre profil de risque : conservateur (30 buy-ins), standard (20), agressif (15).',
-      'L\'outil recommande la limite maximale à jouer et projette le temps pour monter de palier.',
-    ],
-  },
-  {
-    id: 'objectifs', title: 'Mes Objectifs Poker', description: 'Définissez vos objectifs et générez un plan de progression personnalisé.',
-    icon: <Brain size={20} />, category: 'Mental & Gestion',
-    howTo: [
-      'Renseignez votre niveau actuel, votre objectif et le temps hebdomadaire disponible.',
-      'L\'outil génère un plan structuré avec les étapes clés et une estimation de durée.',
-      'Revenez régulièrement ajuster vos paramètres selon votre progression réelle.',
-    ],
-  },
-];
-
-const CATEGORIES = ['Tous', 'Équité', 'Tournoi', 'Ranges', 'Mental & Gestion'];
+function getTools(isEn: boolean): Tool[] {
+  return [
+    {
+      id: 'texture',
+      title: isEn ? 'Board Texture' : 'Texture de Board',
+      description: isEn
+        ? 'Analyze any flop: dryness, possible draws, range advantage.'
+        : 'Analysez n\'importe quel flop : sécheresse, draws possibles, avantage de range.',
+      icon: <Grid3x3 size={20} />,
+      category: isEn ? 'Equity' : 'Équité',
+      tag: isEn ? 'New' : 'Nouveau',
+      howTo: isEn
+        ? [
+          'Click a rank (A, K, Q…) then choose a suit to add a card.',
+          'Add 3 to 5 cards to get the full board analysis.',
+          'Click a card to remove it. Click "Reset" to start over.',
+        ]
+        : [
+          'Cliquez sur une valeur (A, K, Q…) puis choisissez la couleur pour ajouter une carte.',
+          'Ajoutez 3 à 5 cartes pour obtenir l\'analyse complète du board.',
+          'Cliquez sur une carte pour la retirer. Cliquez "Réinitialiser" pour repartir de zéro.',
+        ],
+    },
+    {
+      id: 'equity-quiz',
+      title: isEn ? 'Equity Estimator' : 'Estimateur d\'Équité',
+      description: isEn
+        ? 'Train your intuition by estimating equity in classic matchups.'
+        : 'Entraînez votre intuition en estimant l\'équité de matchups classiques.',
+      icon: <Target size={20} />,
+      category: isEn ? 'Equity' : 'Équité',
+      howTo: isEn
+        ? [
+          'A matchup (Hero vs Villain) is shown. Move the slider to estimate Hero\'s equity in %.',
+          'Click "Reveal" to see the real value and your score (0-100 pts based on the gap).',
+          'Chain matchups to sharpen your equity sense. Aim for 80+ average pts.',
+        ]
+        : [
+          'Un matchup (Hero vs Villain) est affiché. Déplacez le curseur pour estimer l\'équité de Hero en %.',
+          'Cliquez "Révéler" pour voir la vraie valeur et votre score (0-100 pts selon l\'écart).',
+          'Enchaînez les matchups pour améliorer votre sens de l\'équité. Visez 80+ pts de moyenne.',
+        ],
+    },
+    {
+      id: 'bounty',
+      title: isEn ? 'Bounty KO Converter' : 'Convertisseur Bounty KO',
+      description: isEn
+        ? 'Calculate the real value of a PKO bounty and its impact on your decisions.'
+        : 'Calculez la valeur réelle d\'une prime en tournoi PKO et son impact sur vos décisions.',
+      icon: <Coins size={20} />,
+      category: isEn ? 'Tournament' : 'Tournoi',
+      howTo: isEn
+        ? [
+          'Enter your stack, the opponent\'s stack and the bounty amount.',
+          'The tool calculates the real ICM value of the bounty based on your probability of winning it.',
+          'Use the result to adjust your all-in call threshold against a bounty player.',
+        ]
+        : [
+          'Entrez votre stack, le stack de l\'adversaire et le montant de la prime (bounty).',
+          'L\'outil calcule la valeur ICM réelle de la prime selon votre probabilité de l\'emporter.',
+          'Utilisez le résultat pour ajuster votre seuil de call en all-in face à un joueur avec prime.',
+        ],
+    },
+    {
+      id: 'ranges',
+      title: isEn ? 'Range Builder' : 'Constructeur de Range',
+      description: isEn
+        ? 'Build and visualize your preflop ranges on the 13×13 grid.'
+        : 'Construisez et visualisez vos ranges preflop sur la grille 13×13.',
+      icon: <Grid3x3 size={20} />,
+      category: 'Ranges',
+      howTo: isEn
+        ? [
+          'Click a cell in the grid to add or remove a hand from your range.',
+          'Diagonal cells are pairs (AA, KK…), above diagonal is suited (AKs), below is offsuit (AKo).',
+          'Use the preset buttons to load standard ranges (BTN open, BB defense…).',
+        ]
+        : [
+          'Cliquez sur une case de la grille pour ajouter ou retirer une main de votre range.',
+          'Les cases de la diagonale sont les paires (AA, KK…), au-dessus suited (AKs), en-dessous offsuit (AKo).',
+          'Utilisez les boutons de présélection pour charger des ranges standards (BTN open, BB défense…).',
+        ],
+    },
+    {
+      id: 'bankroll',
+      title: isEn ? 'Bankroll Calculator' : 'Calculateur de Bankroll',
+      description: isEn
+        ? 'Find the right stake for your bankroll and risk profile.'
+        : 'Trouvez la limite adaptée à votre bankroll et votre profil de risque.',
+      icon: <TrendingUp size={20} />,
+      category: isEn ? 'Mental & Management' : 'Mental & Gestion',
+      howTo: isEn
+        ? [
+          'Enter your total poker bankroll (in €).',
+          'Choose your risk profile: conservative (30 buy-ins), standard (20), aggressive (15).',
+          'The tool recommends the max stake to play and projects how long to move up.',
+        ]
+        : [
+          'Entrez votre bankroll totale disponible pour le poker (en €).',
+          'Choisissez votre profil de risque : conservateur (30 buy-ins), standard (20), agressif (15).',
+          'L\'outil recommande la limite maximale à jouer et projette le temps pour monter de palier.',
+        ],
+    },
+    {
+      id: 'objectifs',
+      title: isEn ? 'My Poker Goals' : 'Mes Objectifs Poker',
+      description: isEn
+        ? 'Set your goals and generate a personalized progression plan.'
+        : 'Définissez vos objectifs et générez un plan de progression personnalisé.',
+      icon: <Brain size={20} />,
+      category: isEn ? 'Mental & Management' : 'Mental & Gestion',
+      howTo: isEn
+        ? [
+          'Enter your current level, your goal, and the weekly hours available.',
+          'The tool generates a structured plan with key steps and a time estimate.',
+          'Come back regularly to adjust parameters based on your real progress.',
+        ]
+        : [
+          'Renseignez votre niveau actuel, votre objectif et le temps hebdomadaire disponible.',
+          'L\'outil génère un plan structuré avec les étapes clés et une estimation de durée.',
+          'Revenez régulièrement ajuster vos paramètres selon votre progression réelle.',
+        ],
+    },
+  ];
+}
 
 // ─── Board Texture Tool ──────────────────────────────────────────────────────
 
@@ -97,7 +165,7 @@ function BoardCard({ value, onRemove }: { value: string; onRemove: () => void })
   );
 }
 
-function analyzeBoard(cards: string[]) {
+function analyzeBoard(cards: string[], isEn: boolean) {
   if (cards.length < 3) return null;
   const suits = cards.map(c => c.slice(-1));
   const ranks = cards.map(c => {
@@ -111,11 +179,10 @@ function analyzeBoard(cards: string[]) {
 
   const sortedRanks = [...ranks].sort((a, b) => a - b);
   const gaps = sortedRanks.slice(1).map((r, i) => r - sortedRanks[i]);
-  const maxGap = Math.max(...gaps);
   const hasConnected = gaps.some(g => g === 1);
   const hasOneGap = gaps.some(g => g === 2);
 
-  const highCards = ranks.filter(r => r <= 3).length; // A, K, Q, J
+  const highCards = ranks.filter(r => r <= 3).length;
 
   let wetness = 0;
   if (maxSuit >= 2) wetness += 2;
@@ -124,23 +191,36 @@ function analyzeBoard(cards: string[]) {
   if (hasOneGap) wetness += 1;
   if (highCards === 0) wetness += 1;
 
-  const texture = wetness >= 6 ? 'Très humide' : wetness >= 4 ? 'Humide' : wetness >= 2 ? 'Moyen' : 'Sec';
+  const texture = isEn
+    ? (wetness >= 6 ? 'Very Wet' : wetness >= 4 ? 'Wet' : wetness >= 2 ? 'Medium' : 'Dry')
+    : (wetness >= 6 ? 'Très humide' : wetness >= 4 ? 'Humide' : wetness >= 2 ? 'Moyen' : 'Sec');
   const textureColor = wetness >= 6 ? '#ef4444' : wetness >= 4 ? '#f97316' : wetness >= 2 ? '#eab308' : '#22c55e';
 
-  const flushDraw = maxSuit === 2 ? 'Bicolore (flush draw possible)' : maxSuit === 3 ? 'Tricolore (flush draw fort)' : 'Rainbow (pas de flush draw)';
-  const straightDraw = hasConnected ? 'OE Straight Draw possible' : hasOneGap ? 'Gutshot draw possible' : maxGap <= 4 ? 'Quelques draws' : 'Pas de draw direct';
+  const flushDraw = isEn
+    ? (maxSuit === 2 ? 'Two-tone (flush draw possible)' : maxSuit === 3 ? 'Monotone (strong flush draw)' : 'Rainbow (no flush draw)')
+    : (maxSuit === 2 ? 'Bicolore (flush draw possible)' : maxSuit === 3 ? 'Tricolore (flush draw fort)' : 'Rainbow (pas de flush draw)');
+
+  const straightDraw = isEn
+    ? (hasConnected ? 'OESD possible' : hasOneGap ? 'Gutshot draw possible' : Math.max(...(gaps.length ? gaps : [0])) <= 4 ? 'Some draws' : 'No direct draw')
+    : (hasConnected ? 'OE Straight Draw possible' : hasOneGap ? 'Gutshot draw possible' : Math.max(...(gaps.length ? gaps : [0])) <= 4 ? 'Quelques draws' : 'Pas de draw direct');
 
   const topRankIdx = Math.min(...ranks);
   const topRank = RANKS[topRankIdx];
 
-  const rangeAdvantage = highCards >= 2 ? 'Avantage pour le 3-betteur (plus de broadways)' :
-    ranks.some(r => r >= 8) ? 'Avantage pour le défenseur de blind (plus de paires connectées)' :
-    'Advantage modéré, dépend des positions';
+  const rangeAdvantage = isEn
+    ? (highCards >= 2 ? 'Advantage for the 3-bettor (more broadways)' :
+      ranks.some(r => r >= 8) ? 'Advantage for the blind defender (more connected pairs)' :
+      'Moderate advantage, depends on positions')
+    : (highCards >= 2 ? 'Avantage pour le 3-betteur (plus de broadways)' :
+      ranks.some(r => r >= 8) ? 'Avantage pour le défenseur de blind (plus de paires connectées)' :
+      'Advantage modéré, dépend des positions');
 
   return { texture, textureColor, wetness, flushDraw, straightDraw, topRank, rangeAdvantage, highCards };
 }
 
 function BoardTextureTool() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [board, setBoard] = useState<string[]>([]);
   const [pickRank, setPickRank] = useState<string | null>(null);
   const usedCards = new Set(board);
@@ -153,13 +233,12 @@ function BoardTextureTool() {
     setPickRank(null);
   }
 
-  const analysis = analyzeBoard(board);
+  const analysis = analyzeBoard(board, isEn);
 
   return (
     <div className="space-y-5">
-      {/* Board display */}
       <div>
-        <p className="text-gray-400 text-sm mb-2">Board (3 à 5 cartes), cliquez pour retirer</p>
+        <p className="text-gray-400 text-sm mb-2">{isEn ? 'Board (3 to 5 cards), click to remove' : 'Board (3 à 5 cartes), cliquez pour retirer'}</p>
         <div className="flex gap-2 items-center min-h-[56px] flex-wrap">
           {board.map((c, i) => <BoardCard key={i} value={c} onRemove={() => setBoard(prev => prev.filter((_, j) => j !== i))} />)}
           {board.length < 5 && (
@@ -170,12 +249,11 @@ function BoardTextureTool() {
         </div>
       </div>
 
-      {/* Card picker */}
       {board.length < 5 && (
         <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {!pickRank ? (
             <>
-              <p className="text-gray-400 text-xs mb-2">1. Choisissez une valeur</p>
+              <p className="text-gray-400 text-xs mb-2">{isEn ? '1. Choose a rank' : '1. Choisissez une valeur'}</p>
               <div className="flex flex-wrap gap-1.5">
                 {RANKS.map(r => (
                   <button key={r} onClick={() => setPickRank(r)}
@@ -187,7 +265,7 @@ function BoardTextureTool() {
             </>
           ) : (
             <>
-              <p className="text-gray-400 text-xs mb-2">2. Choisissez une couleur pour le <strong className="text-white">{pickRank}</strong></p>
+              <p className="text-gray-400 text-xs mb-2">{isEn ? '2. Choose a suit for the ' : '2. Choisissez une couleur pour le '}<strong className="text-white">{pickRank}</strong></p>
               <div className="flex gap-3">
                 {SUITS.map(s => {
                   const card = pickRank + s;
@@ -202,18 +280,19 @@ function BoardTextureTool() {
                   );
                 })}
               </div>
-              <button onClick={() => setPickRank(null)} className="mt-2 text-gray-500 text-xs hover:text-gray-300 transition-colors">← Annuler</button>
+              <button onClick={() => setPickRank(null)} className="mt-2 text-gray-500 text-xs hover:text-gray-300 transition-colors">
+                {isEn ? '← Cancel' : '← Annuler'}
+              </button>
             </>
           )}
         </div>
       )}
 
-      {/* Analysis */}
       {analysis && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
           <div className="rounded-xl p-4" style={{ background: analysis.textureColor + '15', border: `1px solid ${analysis.textureColor}30` }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-bold">Texture : {analysis.texture}</span>
+              <span className="text-white font-bold">{isEn ? 'Texture: ' : 'Texture : '}{analysis.texture}</span>
               <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="w-3 h-3 rounded-sm" style={{ background: i < analysis.wetness / 2 ? analysis.textureColor : 'rgba(255,255,255,0.1)' }} />
@@ -223,10 +302,10 @@ function BoardTextureTool() {
           </div>
 
           {[
-            { label: 'Top Pair', value: analysis.topRank },
+            { label: isEn ? 'Top Pair' : 'Top Pair', value: analysis.topRank },
             { label: 'Flush Draw', value: analysis.flushDraw },
             { label: 'Straight Draw', value: analysis.straightDraw },
-            { label: 'Range Advantage', value: analysis.rangeAdvantage },
+            { label: isEn ? 'Range Advantage' : 'Range Advantage', value: analysis.rangeAdvantage },
           ].map(({ label, value }) => (
             <div key={label} className="flex justify-between items-start text-sm py-2 border-b border-white/5">
               <span className="text-gray-400 w-36 shrink-0">{label}</span>
@@ -236,7 +315,7 @@ function BoardTextureTool() {
 
           <button onClick={() => { setBoard([]); setPickRank(null); }}
             className="text-gray-500 text-sm hover:text-gray-300 transition-colors">
-            Réinitialiser
+            {isEn ? 'Reset' : 'Réinitialiser'}
           </button>
         </motion.div>
       )}
@@ -272,6 +351,8 @@ function CardSmall({ v }: { v: string }) {
 }
 
 function EquityQuizTool() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [idx, setIdx] = useState(() => Math.floor(Math.random() * EQUITY_MATCHUPS.length));
   const [guess, setGuess] = useState(50);
   const [revealed, setRevealed] = useState(false);
@@ -287,9 +368,9 @@ function EquityQuizTool() {
   }
 
   function next() {
-    let next = Math.floor(Math.random() * EQUITY_MATCHUPS.length);
-    while (next === idx) next = Math.floor(Math.random() * EQUITY_MATCHUPS.length);
-    setIdx(next);
+    let nextIdx = Math.floor(Math.random() * EQUITY_MATCHUPS.length);
+    while (nextIdx === idx) nextIdx = Math.floor(Math.random() * EQUITY_MATCHUPS.length);
+    setIdx(nextIdx);
     setGuess(50);
     setRevealed(false);
   }
@@ -298,13 +379,13 @@ function EquityQuizTool() {
     <div className="space-y-5">
       {score.count > 0 && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400">Score moyen</span>
+          <span className="text-gray-400">{isEn ? 'Average score' : 'Score moyen'}</span>
           <span className="text-yellow-400 font-bold">{Math.round(score.total / score.count)}/100</span>
         </div>
       )}
 
       <div className="rounded-xl p-5 text-center" style={{ background: '#1a4a2e55', border: '1px solid #1a4a2e' }}>
-        <p className="text-gray-400 text-xs mb-4">Estimez l'équité de HERO preflop</p>
+        <p className="text-gray-400 text-xs mb-4">{isEn ? 'Estimate HERO\'s preflop equity' : 'Estimez l\'équité de HERO preflop'}</p>
         <div className="flex items-center justify-center gap-8">
           <div>
             <p className="text-green-400 text-xs mb-2">HERO</p>
@@ -322,7 +403,7 @@ function EquityQuizTool() {
         <>
           <div>
             <div className="flex justify-between text-sm text-gray-400 mb-2">
-              <span>Votre estimation</span>
+              <span>{isEn ? 'Your estimate' : 'Votre estimation'}</span>
               <span className="text-white font-bold">{guess}%</span>
             </div>
             <input type="range" min={0} max={100} value={guess} onChange={e => setGuess(Number(e.target.value))}
@@ -332,27 +413,27 @@ function EquityQuizTool() {
           <button onClick={reveal}
             className="w-full py-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}>
-            Révéler l'équité réelle
+            {isEn ? 'Reveal real equity' : 'Révéler l\'équité réelle'}
           </button>
         </>
       ) : (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
           <div className="rounded-xl p-4" style={{ background: pts >= 80 ? '#22c55e15' : pts >= 50 ? '#eab30815' : '#ef444415', border: `1px solid ${pts >= 80 ? '#22c55e30' : pts >= 50 ? '#eab30830' : '#ef444430'}` }}>
             <div className="flex justify-between mb-2">
-              <span className="text-gray-300">Équité réelle : <strong className="text-white">{matchup.equity}%</strong></span>
-              <span className="text-gray-300">Votre estimation : <strong className="text-white">{guess}%</strong></span>
+              <span className="text-gray-300">{isEn ? 'Real equity: ' : 'Équité réelle : '}<strong className="text-white">{matchup.equity}%</strong></span>
+              <span className="text-gray-300">{isEn ? 'Your estimate: ' : 'Votre estimation : '}<strong className="text-white">{guess}%</strong></span>
             </div>
             <div className="h-2 rounded-full bg-white/10 mb-2">
               <div className="h-full rounded-full" style={{ width: `${matchup.equity}%`, background: '#22c55e' }} />
             </div>
             <p className={`text-sm font-bold ${pts >= 80 ? 'text-green-400' : pts >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
-              {pts >= 80 ? '🎯 Excellent !' : pts >= 50 ? '👍 Pas mal !' : '📚 À travailler'} : {pts}/100 pts (écart : {diff}%)
+              {pts >= 80 ? '🎯 Excellent!' : pts >= 50 ? '👍 Not bad!' : '📚 Keep working'} : {pts}/100 {isEn ? 'pts (gap: ' : 'pts (écart : '}{diff}%)
             </p>
           </div>
           <button onClick={next}
             className="w-full py-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'linear-gradient(to right, #ca8a04, #eab308)' }}>
-            Prochain matchup →
+            {isEn ? 'Next matchup →' : 'Prochain matchup →'}
           </button>
         </motion.div>
       )}
@@ -363,6 +444,8 @@ function EquityQuizTool() {
 // ─── KO Bounty Calculator ────────────────────────────────────────────────────
 
 function BountyTool() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [buyin, setBuyin] = useState(50);
   const [bounty, setBounty] = useState(25);
   const [stacksBB, setStacksBB] = useState(30);
@@ -374,15 +457,21 @@ function BountyTool() {
 
   const bountyInBB = (effectiveBounty / buyin) * 100;
   const callThreshold = bountyInBB / stacksBB;
-  const expandedRange = callThreshold > 0.3 ? 'Large (55+, A9o+, KTo+)' : callThreshold > 0.15 ? 'Normale (+10% combos)' : 'Peu modifiée';
+  const expandedRange = isEn
+    ? (callThreshold > 0.3 ? 'Wide (55+, A9o+, KTo+)' : callThreshold > 0.15 ? 'Normal (+10% combos)' : 'Barely changed')
+    : (callThreshold > 0.3 ? 'Large (55+, A9o+, KTo+)' : callThreshold > 0.15 ? 'Normale (+10% combos)' : 'Peu modifiée');
+
+  const labels = isEn
+    ? ['Total buy-in (€)', 'Base bounty (€)', 'Stack size (BB)', 'Bounties already collected']
+    : ['Buy-in total (€)', 'Prime de base (€)', 'Taille des stacks (BB)', 'Primes déjà collectées'];
 
   return (
     <div className="space-y-4">
       {[
-        { label: 'Buy-in total (€)', value: buyin, set: setBuyin, min: 5, max: 5000, step: 5 },
-        { label: 'Prime de base (€)', value: bounty, set: setBounty, min: 1, max: 2500, step: 5 },
-        { label: 'Taille des stacks (BB)', value: stacksBB, set: setStacksBB, min: 5, max: 200, step: 5 },
-        { label: 'Primes déjà collectées', value: bountyCollected, set: setBountyCollected, min: 0, max: 10, step: 1 },
+        { label: labels[0], value: buyin, set: setBuyin, min: 5, max: 5000, step: 5 },
+        { label: labels[1], value: bounty, set: setBounty, min: 1, max: 2500, step: 5 },
+        { label: labels[2], value: stacksBB, set: setStacksBB, min: 5, max: 200, step: 5 },
+        { label: labels[3], value: bountyCollected, set: setBountyCollected, min: 0, max: 10, step: 1 },
       ].map(({ label, value, set, min, max, step }) => (
         <div key={label}>
           <div className="flex justify-between text-sm mb-1">
@@ -395,12 +484,12 @@ function BountyTool() {
       ))}
 
       <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <h4 className="text-white font-semibold text-sm mb-3">Résultats</h4>
+        <h4 className="text-white font-semibold text-sm mb-3">{isEn ? 'Results' : 'Résultats'}</h4>
         {[
-          { label: 'Prime effective', value: `${effectiveBounty.toFixed(2)}€`, note: bountyCollected > 0 ? '(progressive)' : '' },
-          { label: 'Prime en BB', value: `${bountyInBB.toFixed(1)} BB`, note: 'valeur lors d\'un all-in' },
-          { label: 'Impact sur call range', value: expandedRange, note: '' },
-          { label: 'Seuil de profitabilité', value: `${(callThreshold * 100).toFixed(0)}% equity min.`, note: 'pour appeler un push' },
+          { label: isEn ? 'Effective bounty' : 'Prime effective', value: `${effectiveBounty.toFixed(2)}€`, note: bountyCollected > 0 ? (isEn ? '(progressive)' : '(progressive)') : '' },
+          { label: isEn ? 'Bounty in BB' : 'Prime en BB', value: `${bountyInBB.toFixed(1)} BB`, note: isEn ? 'value in an all-in' : 'valeur lors d\'un all-in' },
+          { label: isEn ? 'Impact on call range' : 'Impact sur call range', value: expandedRange, note: '' },
+          { label: isEn ? 'Profitability threshold' : 'Seuil de profitabilité', value: `${(callThreshold * 100).toFixed(0)}% equity min.`, note: isEn ? 'to call a push' : 'pour appeler un push' },
         ].map(({ label, value, note }) => (
           <div key={label} className="flex justify-between items-start text-sm py-1.5 border-b border-white/5 last:border-0">
             <span className="text-gray-400">{label}</span>
@@ -413,7 +502,9 @@ function BountyTool() {
       </div>
 
       <div className="rounded-xl p-3 bg-yellow-500/10 border border-yellow-500/20 text-xs text-gray-300">
-        💡 En PKO progressif, la prime double à chaque élimination. Appeler un push devient profitable plus tôt quand la prime est élevée.
+        💡 {isEn
+          ? 'In a progressive PKO, the bounty doubles with each elimination. Calling a push becomes profitable earlier when the bounty is high.'
+          : 'En PKO progressif, la prime double à chaque élimination. Appeler un push devient profitable plus tôt quand la prime est élevée.'}
       </div>
     </div>
   );
@@ -425,15 +516,17 @@ const RANGE_RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3',
 const COMBOS: Record<string, number> = {};
 RANGE_RANKS.forEach((r1, i) => {
   RANGE_RANKS.forEach((r2, j) => {
-    if (i === j) COMBOS[r1 + r2] = 6; // paires
-    else if (i < j) COMBOS[r1 + r2 + 's'] = 4; // suited
-    else COMBOS[r2 + r1 + 'o'] = 12; // offsuit
+    if (i === j) COMBOS[r1 + r2] = 6;
+    else if (i < j) COMBOS[r1 + r2 + 's'] = 4;
+    else COMBOS[r2 + r1 + 'o'] = 12;
   });
 });
 
 const TOTAL_COMBOS = 1326;
 
 function RangeBuilder() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dragging, setDragging] = useState(false);
 
@@ -469,7 +562,7 @@ function RangeBuilder() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-gray-400 text-xs">Preset :</span>
+        <span className="text-gray-400 text-xs">{isEn ? 'Preset:' : 'Preset :'}</span>
         {['UTG', 'BTN', '3-bet'].map(p => (
           <button key={p} onClick={() => loadPreset(p)}
             className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-xs hover:bg-white/10 transition-colors">
@@ -512,7 +605,7 @@ function RangeBuilder() {
       </div>
 
       <div className="flex gap-3 text-xs text-gray-400">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: '#eab308', display: 'inline-block' }} />Paires</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: '#eab308', display: 'inline-block' }} />{isEn ? 'Pairs' : 'Paires'}</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: '#3b82f6', display: 'inline-block' }} />Suited</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: '#6b7280', display: 'inline-block' }} />Offsuit</span>
       </div>
@@ -522,21 +615,26 @@ function RangeBuilder() {
 
 // ─── Bankroll Calculator ─────────────────────────────────────────────────────
 
-const STAKES = [
-  { label: 'NL2 (0.01/0.02€)', bi: 2, level: 'Grand Débutant' },
-  { label: 'NL5 (0.02/0.05€)', bi: 5, level: 'Débutant' },
-  { label: 'NL10 (0.05/0.10€)', bi: 10, level: 'Intermédiaire' },
-  { label: 'NL25 (0.10/0.25€)', bi: 25, level: 'Intermédiaire+' },
-  { label: 'NL50 (0.25/0.50€)', bi: 50, level: 'Avancé' },
-  { label: 'NL100 (0.50/1€)', bi: 100, level: 'Expert' },
-  { label: 'NL200 (1/2€)', bi: 200, level: 'Semi-Pro' },
-];
+function getStakes(isEn: boolean) {
+  return [
+    { label: 'NL2 (0.01/0.02€)', bi: 2, level: isEn ? 'Complete Beginner' : 'Grand Débutant' },
+    { label: 'NL5 (0.02/0.05€)', bi: 5, level: isEn ? 'Beginner' : 'Débutant' },
+    { label: 'NL10 (0.05/0.10€)', bi: 10, level: isEn ? 'Intermediate' : 'Intermédiaire' },
+    { label: 'NL25 (0.10/0.25€)', bi: 25, level: isEn ? 'Intermediate+' : 'Intermédiaire+' },
+    { label: 'NL50 (0.25/0.50€)', bi: 50, level: isEn ? 'Advanced' : 'Avancé' },
+    { label: 'NL100 (0.50/1€)', bi: 100, level: isEn ? 'Expert' : 'Expert' },
+    { label: 'NL200 (1/2€)', bi: 200, level: isEn ? 'Semi-Pro' : 'Semi-Pro' },
+  ];
+}
 
 function BankrollTool() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [bankroll, setBankroll] = useState(200);
   const [risk, setRisk] = useState<'safe' | 'normal' | 'agg'>('normal');
   const [winrate, setWinrate] = useState(5);
 
+  const STAKES = getStakes(isEn);
   const biNeeded = risk === 'safe' ? 40 : risk === 'normal' ? 25 : 15;
 
   const recommended = STAKES.filter(s => bankroll >= s.bi * biNeeded);
@@ -547,20 +645,24 @@ function BankrollTool() {
     ? Math.round(((moveUp.bi * biNeeded - bankroll) / (winrate / 100 * (current?.bi ?? 10) * 100)) * 100) / 100
     : null;
 
+  const riskProfiles = isEn
+    ? [['safe', '🛡 Conservative', '40 BI'], ['normal', '⚖ Standard', '25 BI'], ['agg', '🔥 Aggressive', '15 BI']] as const
+    : [['safe', '🛡 Conservateur', '40 BI'], ['normal', '⚖ Normal', '25 BI'], ['agg', '🔥 Agressif', '15 BI']] as const;
+
   return (
     <div className="space-y-4">
       <div>
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-400">Ma bankroll</span>
+          <span className="text-gray-400">{isEn ? 'My bankroll' : 'Ma bankroll'}</span>
           <span className="text-white font-mono">{bankroll}€</span>
         </div>
         <input type="range" min={20} max={10000} step={20} value={bankroll} onChange={e => setBankroll(Number(e.target.value))} className="w-full accent-yellow-500" />
       </div>
 
       <div>
-        <p className="text-gray-400 text-sm mb-2">Profil de risque</p>
+        <p className="text-gray-400 text-sm mb-2">{isEn ? 'Risk profile' : 'Profil de risque'}</p>
         <div className="flex gap-2">
-          {([['safe', '🛡 Conservateur', '40 BI'], ['normal', '⚖ Normal', '25 BI'], ['agg', '🔥 Agressif', '15 BI']] as const).map(([val, label, bi]) => (
+          {riskProfiles.map(([val, label, bi]) => (
             <button key={val} onClick={() => setRisk(val)}
               className="flex-1 py-2 rounded-xl text-xs font-medium transition-all"
               style={{ background: risk === val ? '#c9a84c20' : 'rgba(255,255,255,0.05)', border: `1px solid ${risk === val ? '#c9a84c50' : 'rgba(255,255,255,0.1)'}`, color: risk === val ? '#c9a84c' : '#6b7280' }}>
@@ -572,7 +674,7 @@ function BankrollTool() {
 
       <div>
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-400">Win rate estimé</span>
+          <span className="text-gray-400">{isEn ? 'Estimated win rate' : 'Win rate estimé'}</span>
           <span className="text-white font-mono">{winrate} BB/100</span>
         </div>
         <input type="range" min={0} max={20} step={1} value={winrate} onChange={e => setWinrate(Number(e.target.value))} className="w-full accent-yellow-500" />
@@ -580,12 +682,12 @@ function BankrollTool() {
 
       {current && (
         <div className="rounded-xl p-4 space-y-2" style={{ background: '#c9a84c15', border: '1px solid #c9a84c30' }}>
-          <p className="text-yellow-400 font-bold text-sm">✅ Limite recommandée</p>
+          <p className="text-yellow-400 font-bold text-sm">{isEn ? '✅ Recommended stake' : '✅ Limite recommandée'}</p>
           <p className="text-white font-bold">{current.label}</p>
-          <p className="text-gray-400 text-xs">Niveau : {current.level}, {biNeeded} buy-ins minimum</p>
-          {moveUp && <p className="text-gray-300 text-xs mt-1">Prochain palier : {moveUp.label} à {moveUp.bi * biNeeded}€ de bankroll</p>}
+          <p className="text-gray-400 text-xs">{isEn ? 'Level: ' : 'Niveau : '}{current.level}, {biNeeded} {isEn ? 'buy-ins minimum' : 'buy-ins minimum'}</p>
+          {moveUp && <p className="text-gray-300 text-xs mt-1">{isEn ? 'Next stake: ' : 'Prochain palier : '}{moveUp.label} {isEn ? 'at' : 'à'} {moveUp.bi * biNeeded}€ {isEn ? 'bankroll' : 'de bankroll'}</p>}
           {hoursToMoveUp && winrate > 0 && (
-            <p className="text-gray-400 text-xs">Environ {hoursToMoveUp}h de jeu pour monter (à {winrate} BB/100)</p>
+            <p className="text-gray-400 text-xs">{isEn ? `About ${hoursToMoveUp}h of play to move up (at ${winrate} BB/100)` : `Environ ${hoursToMoveUp}h de jeu pour monter (à ${winrate} BB/100)`}</p>
           )}
         </div>
       )}
@@ -596,18 +698,35 @@ function BankrollTool() {
 // ─── Objectifs ───────────────────────────────────────────────────────────────
 
 function ObjectifsTool() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
 
-  const questions = [
-    { key: 'level', label: 'Ton niveau actuel ?', options: ['Grand débutant', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'] },
-    { key: 'goal', label: 'Ton objectif principal ?', options: ['Battre mes amis', 'Être profitable en cash game', 'Finir ITM en tournoi', 'Devenir semi-pro', 'WSOP / EPT'] },
-    { key: 'time', label: 'Heures d\'étude par semaine ?', options: ['< 1h', '1-3h', '3-7h', '7h+'] },
-    { key: 'weakness', label: 'Ta plus grande faiblesse ?', options: ['Calculs de pot odds', 'Lecture des adversaires', 'Gestion du tilt', 'Stratégie post-flop', 'Sélection de mains'] },
-  ];
+  const questions = isEn
+    ? [
+      { key: 'level', label: 'Your current level?', options: ['Complete Beginner', 'Beginner', 'Intermediate', 'Advanced', 'Expert'] },
+      { key: 'goal', label: 'Your main goal?', options: ['Beat my friends', 'Be profitable in cash game', 'Finish ITM in tournaments', 'Go semi-pro', 'WSOP / EPT'] },
+      { key: 'time', label: 'Study hours per week?', options: ['< 1h', '1-3h', '3-7h', '7h+'] },
+      { key: 'weakness', label: 'Your biggest weakness?', options: ['Pot odds calculations', 'Reading opponents', 'Tilt management', 'Postflop strategy', 'Hand selection'] },
+    ]
+    : [
+      { key: 'level', label: 'Ton niveau actuel ?', options: ['Grand débutant', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'] },
+      { key: 'goal', label: 'Ton objectif principal ?', options: ['Battre mes amis', 'Être profitable en cash game', 'Finir ITM en tournoi', 'Devenir semi-pro', 'WSOP / EPT'] },
+      { key: 'time', label: 'Heures d\'étude par semaine ?', options: ['< 1h', '1-3h', '3-7h', '7h+'] },
+      { key: 'weakness', label: 'Ta plus grande faiblesse ?', options: ['Calculs de pot odds', 'Lecture des adversaires', 'Gestion du tilt', 'Stratégie post-flop', 'Sélection de mains'] },
+    ];
 
-  const plans: Record<string, string[]> = {
+  const plansEn: Record<string, string[]> = {
+    'Complete Beginner': ['Master the 10 hand rankings', 'Play only the best preflop hands (top 15%)', 'Learn basic pot odds'],
+    'Beginner': ['Complete the Beginner level on Forged Poker', 'Play 5000 hands at NL2', 'Study positions and hand selection'],
+    'Intermediate': ['Integrate EV calculations into every decision', 'Review 3 sessions per week', 'Work on c-bet selectivity'],
+    'Advanced': ['Start solver analysis', 'Study GTO preflop ranges', 'Work on ICM spots in tournaments'],
+    'Expert': ['Run It Once Elite membership', 'Session review with a tracker (HM3/PT4)', 'Study GTO Wizard every day'],
+  };
+
+  const plansFr: Record<string, string[]> = {
     'Grand débutant': ['Maîtriser les 10 forces de mains', 'Jouer uniquement les meilleures mains preflop (top 15%)', 'Apprendre les pot odds basiques'],
     'Débutant': ['Finir le niveau Débutant de Forged Poker', 'Faire 5000 mains en NL2', 'Étudier les positions et la sélection de mains'],
     'Intermédiaire': ['Intégrer les calculs EV dans chaque décision', 'Analyser 3 sessions par semaine', 'Travailler la c-bet selectivité'],
@@ -615,12 +734,14 @@ function ObjectifsTool() {
     'Expert': ['Run It Once Elite membership', 'Review de sessions avec un tracker (HM3/PT4)', 'Étudier GTO Wizard tous les jours'],
   };
 
+  const plans = isEn ? plansEn : plansFr;
+
   if (done) {
     const plan = plans[answers.level] ?? [];
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
         <div className="rounded-xl p-4" style={{ background: '#1a4a2e55', border: '1px solid #1a4a2e' }}>
-          <p className="text-green-400 font-bold mb-3">🎯 Ton plan personnalisé</p>
+          <p className="text-green-400 font-bold mb-3">🎯 {isEn ? 'Your personalized plan' : 'Ton plan personnalisé'}</p>
           <div className="space-y-2">
             {plan.map((item, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">
@@ -631,12 +752,12 @@ function ObjectifsTool() {
           </div>
         </div>
         <div className="text-xs text-gray-400 space-y-1">
-          <p>Objectif : <span className="text-white">{answers.goal}</span></p>
-          <p>Faiblesse : <span className="text-white">{answers.weakness}</span></p>
-          <p>Temps : <span className="text-white">{answers.time} d'étude/semaine</span></p>
+          <p>{isEn ? 'Goal: ' : 'Objectif : '}<span className="text-white">{answers.goal}</span></p>
+          <p>{isEn ? 'Weakness: ' : 'Faiblesse : '}<span className="text-white">{answers.weakness}</span></p>
+          <p>{isEn ? 'Time: ' : 'Temps : '}<span className="text-white">{answers.time} {isEn ? 'study/week' : 'd\'étude/semaine'}</span></p>
         </div>
         <button onClick={() => { setStep(0); setAnswers({}); setDone(false); }} className="text-gray-500 text-sm hover:text-gray-300 transition-colors">
-          Recommencer
+          {isEn ? 'Start over' : 'Recommencer'}
         </button>
       </motion.div>
     );
@@ -671,7 +792,7 @@ function ObjectifsTool() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TOOL_COMPONENTS: Record<ToolId, React.ReactNode> = {
+const TOOL_COMPONENT_MAP: Record<ToolId, React.ReactNode> = {
   texture: <BoardTextureTool />,
   'equity-quiz': <EquityQuizTool />,
   bounty: <BountyTool />,
@@ -681,9 +802,16 @@ const TOOL_COMPONENTS: Record<ToolId, React.ReactNode> = {
 };
 
 function OutilsContent() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState('Tous');
+  const [activeCategory, setActiveCategory] = useState(isEn ? 'All' : 'Tous');
+
+  const TOOLS = getTools(isEn);
+  const CATEGORIES = isEn
+    ? ['All', 'Equity', 'Tournament', 'Ranges', 'Mental & Management']
+    : ['Tous', 'Équité', 'Tournoi', 'Ranges', 'Mental & Gestion'];
 
   const activeTool = (searchParams.get('t') as ToolId | null) ?? null;
   const validTool = TOOLS.find(t => t.id === activeTool) ? activeTool : null;
@@ -692,26 +820,34 @@ function OutilsContent() {
   function openTool(id: ToolId) { router.push(`/outils?t=${id}`); }
   function closeTool() { router.push('/outils'); }
 
-  const filtered = activeCategory === 'Tous' ? TOOLS : TOOLS.filter(t => t.category === activeCategory);
+  const allKey = isEn ? 'All' : 'Tous';
+  const filtered = activeCategory === allKey ? TOOLS : TOOLS.filter(t => t.category === activeCategory);
+
+  const externalLinks = isEn
+    ? [
+      { href: '/calculateur', icon: <Calculator size={16} />, title: 'Equity Calculator', desc: 'Simulate equity for two hands (Monte Carlo)' },
+      { href: '/erreurs', icon: <AlertTriangle size={16} />, title: 'Common Mistakes', desc: 'Most frequent errors by level' },
+      { href: '/session', icon: <Clock size={16} />, title: 'Session Tracker', desc: 'Track your results and analyze your ROI' },
+    ]
+    : [
+      { href: '/calculateur', icon: <Calculator size={16} />, title: 'Calculatrice Équité', desc: 'Simulez l\'équité de deux mains (Monte Carlo)' },
+      { href: '/erreurs', icon: <AlertTriangle size={16} />, title: 'Erreurs Communes', desc: 'Les fautes les plus fréquentes par niveau' },
+      { href: '/session', icon: <Clock size={16} />, title: 'Tracker de Sessions', desc: 'Suivez vos résultats et analysez votre ROI' },
+    ];
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
-
       <main className="max-w-5xl mx-auto px-4 pt-28 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Outils Poker
+            {isEn ? 'Poker Tools' : 'Outils Poker'}
           </h1>
-          <p className="text-gray-400">Calculateurs, analyseurs et entraîneurs pour améliorer votre jeu, directement dans le navigateur.</p>
+          <p className="text-gray-400">{isEn ? 'Calculators, analyzers and trainers to improve your game, directly in the browser.' : 'Calculateurs, analyseurs et entraîneurs pour améliorer votre jeu, directement dans le navigateur.'}</p>
         </motion.div>
 
-        {/* Ressources externes */}
+        {/* External resources */}
         <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { href: '/calculateur', icon: <Calculator size={16} />, title: 'Calculatrice Équité', desc: 'Simulez l\'équité de deux mains (Monte Carlo)' },
-            { href: '/erreurs', icon: <AlertTriangle size={16} />, title: 'Erreurs Communes', desc: 'Les fautes les plus fréquentes par niveau' },
-            { href: '/session', icon: <Clock size={16} />, title: 'Tracker de Sessions', desc: 'Suivez vos résultats et analysez votre ROI' },
-          ].map(({ href, icon, title, desc }) => (
+          {externalLinks.map(({ href, icon, title, desc }) => (
             <Link
               key={href}
               href={href}
@@ -766,7 +902,7 @@ function OutilsContent() {
                 <p className="text-white font-semibold text-sm mb-1 group-hover:text-yellow-400 transition-colors">{tool.title}</p>
                 <p className="text-gray-500 text-xs leading-relaxed">{tool.description}</p>
                 <div className="flex items-center gap-1 mt-3 text-yellow-500/60 text-xs group-hover:text-yellow-400 transition-colors">
-                  Ouvrir <ChevronRight size={12} />
+                  {isEn ? 'Open' : 'Ouvrir'} <ChevronRight size={12} />
                 </div>
               </motion.button>
             ))}
@@ -775,7 +911,7 @@ function OutilsContent() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-3 mb-5">
               <button onClick={closeTool} className="text-gray-400 hover:text-white transition-colors text-sm">
-                ← Retour
+                {isEn ? '← Back' : '← Retour'}
               </button>
               <span className="text-gray-600">/</span>
               <span className="text-white font-semibold text-sm">{activeMeta?.title}</span>
@@ -792,10 +928,9 @@ function OutilsContent() {
                 </div>
               </div>
 
-              {/* How to use */}
               {activeMeta?.howTo && (
                 <div className="rounded-xl p-4 mb-6" style={{ background: '#1a3a8f15', border: '1px solid #3b82f620' }}>
-                  <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">Comment utiliser</p>
+                  <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">{isEn ? 'How to use' : 'Comment utiliser'}</p>
                   <ol className="space-y-1.5">
                     {activeMeta.howTo.map((step, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300 leading-relaxed">
@@ -807,7 +942,7 @@ function OutilsContent() {
                 </div>
               )}
 
-              {validTool && TOOL_COMPONENTS[validTool]}
+              {validTool && TOOL_COMPONENT_MAP[validTool]}
             </div>
           </motion.div>
         )}

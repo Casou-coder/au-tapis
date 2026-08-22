@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Zap, Target, Trophy, Medal, Lock } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { useLeaderboard, LeaderboardEntry } from '@/hooks/useLeaderboard';
 import { useProgress } from '@/hooks/useProgress';
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
@@ -11,14 +12,7 @@ import Link from 'next/link';
 
 type Tab = 'streak' | 'weekly' | 'hard';
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode; desc: string }[] = [
-  { id: 'streak', label: 'Série', icon: <Flame size={16} />, desc: 'Jours consécutifs de défis complétés' },
-  { id: 'weekly', label: 'XP Semaine', icon: <Zap size={16} />, desc: 'XP accumulés depuis lundi' },
-  { id: 'hard', label: 'Précision', icon: <Target size={16} />, desc: 'Taux de réussite sur questions difficiles (min. 5 tentées)' },
-];
-
 const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
-const MEDAL_LABELS = ['1er', '2e', '3e'];
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank <= 3) {
@@ -44,20 +38,22 @@ function EntryRow({
   rank,
   isMe,
   tab,
+  isEn,
 }: {
   entry: LeaderboardEntry;
   rank: number;
   isMe: boolean;
   tab: Tab;
+  isEn: boolean;
 }) {
   const value = tab === 'streak'
-    ? `${entry.streak} jour${entry.streak > 1 ? 's' : ''}`
+    ? `${entry.streak} ${isEn ? (entry.streak > 1 ? 'days' : 'day') : ('jour' + (entry.streak > 1 ? 's' : ''))}`
     : tab === 'weekly'
     ? `${entry.weekly_xp} XP`
     : `${entry.hard_accuracy}%`;
 
   const subValue = tab === 'hard'
-    ? `${entry.hard_correct}/${entry.hard_total} correctes`
+    ? `${entry.hard_correct}/${entry.hard_total} ${isEn ? 'correct' : 'correctes'}`
     : null;
 
   return (
@@ -84,7 +80,7 @@ function EntryRow({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate" style={{ color: isMe ? '#c9a84c' : 'white' }}>
           {entry.display_name}
-          {isMe && <span className="ml-2 text-xs text-yellow-500/60">(vous)</span>}
+          {isMe && <span className="ml-2 text-xs text-yellow-500/60">{isEn ? '(you)' : '(vous)'}</span>}
         </p>
         {subValue && <p className="text-xs text-gray-500 mt-0.5">{subValue}</p>}
       </div>
@@ -98,7 +94,7 @@ function EntryRow({
   );
 }
 
-function EmptyState({ tab }: { tab: Tab }) {
+function EmptyState({ tab, isEn }: { tab: Tab; isEn: boolean }) {
   return (
     <div className="text-center py-12 text-gray-500">
       <p className="text-4xl mb-3">
@@ -106,14 +102,27 @@ function EmptyState({ tab }: { tab: Tab }) {
       </p>
       <p className="text-sm">
         {tab === 'hard'
-          ? 'Pas encore assez de données. Complétez 5 défis difficiles pour apparaître ici.'
-          : 'Aucun joueur classé pour l\'instant. Soyez le premier !'}
+          ? (isEn
+              ? 'Not enough data yet. Complete 5 hard challenges to appear here.'
+              : 'Pas encore assez de données. Complétez 5 défis difficiles pour apparaître ici.')
+          : (isEn
+              ? 'No ranked players yet. Be the first!'
+              : "Aucun joueur classé pour l'instant. Soyez le premier !")}
       </p>
     </div>
   );
 }
 
 export default function ClassementPage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+
+  const TABS: { id: Tab; label: string; icon: React.ReactNode; desc: string }[] = [
+    { id: 'streak', label: isEn ? 'Streak' : 'Série', icon: <Flame size={16} />, desc: isEn ? 'Consecutive days of completed challenges' : 'Jours consécutifs de défis complétés' },
+    { id: 'weekly', label: isEn ? 'Weekly XP' : 'XP Semaine', icon: <Zap size={16} />, desc: isEn ? 'XP accumulated since Monday' : 'XP accumulés depuis lundi' },
+    { id: 'hard', label: isEn ? 'Accuracy' : 'Précision', icon: <Target size={16} />, desc: isEn ? 'Success rate on hard questions (min. 5 attempted)' : 'Taux de réussite sur questions difficiles (min. 5 tentées)' },
+  ];
+
   const [tab, setTab] = useState<Tab>('streak');
   const { streakBoard, weeklyXpBoard, hardBoard, myUserId, loading, sync } = useLeaderboard();
   const { progress } = useProgress();
@@ -155,11 +164,13 @@ export default function ClassementPage() {
               <Trophy size={20} className="text-yellow-400" />
             </div>
             <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
-              Classement
+              {isEn ? 'Leaderboard' : 'Classement'}
             </h1>
           </div>
           <p className="text-gray-400 text-sm">
-            Les meilleurs joueurs de la semaine. Réinitialisé chaque lundi.
+            {isEn
+              ? 'The best players of the week. Reset every Monday.'
+              : 'Les meilleurs joueurs de la semaine. Réinitialisé chaque lundi.'}
           </p>
         </motion.div>
 
@@ -192,7 +203,7 @@ export default function ClassementPage() {
               <div key={i} className="h-14 rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.04)' }} />
             ))
           ) : current.length === 0 ? (
-            <EmptyState tab={tab} />
+            <EmptyState tab={tab} isEn={isEn} />
           ) : (
             current.map((entry, i) => (
               <EntryRow
@@ -201,12 +212,13 @@ export default function ClassementPage() {
                 rank={i + 1}
                 isMe={entry.user_id === myUserId}
                 tab={tab}
+                isEn={isEn}
               />
             ))
           )}
         </div>
 
-        {/* CTA si non connecté */}
+        {/* CTA if not logged in */}
         {!myUserId && !loading && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -217,20 +229,24 @@ export default function ClassementPage() {
           >
             <Lock size={20} className="text-yellow-500/60 mx-auto mb-2" />
             <p className="text-sm text-gray-400 mb-3">
-              Connectez-vous pour apparaître dans le classement et suivre votre progression.
+              {isEn
+                ? 'Log in to appear on the leaderboard and track your progress.'
+                : 'Connectez-vous pour apparaître dans le classement et suivre votre progression.'}
             </p>
             <Link
               href="/auth"
               className="inline-block px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-semibold transition-all"
             >
-              Se connecter
+              {isEn ? 'Log in' : 'Se connecter'}
             </Link>
           </motion.div>
         )}
 
-        {/* Info semaine */}
+        {/* Weekly info */}
         <p className="text-center text-gray-600 text-xs mt-8">
-          XP Semaine remis à zéro chaque lundi · Précision calculée sur les 90 derniers jours
+          {isEn
+            ? 'Weekly XP reset every Monday · Accuracy calculated over the last 90 days'
+            : 'XP Semaine remis à zéro chaque lundi · Précision calculée sur les 90 derniers jours'}
         </p>
       </main>
     </div>

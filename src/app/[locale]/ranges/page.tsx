@@ -3,14 +3,20 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { useLocale } from 'next-intl';
 import { RANGE_CHALLENGES, type RangeChallenge } from '@/lib/range-challenges';
 
 const RangeGrid = dynamic(() => import('@/components/RangeGrid'), { ssr: false });
 
-const DIFF_LABEL: Record<number, string> = { 1: 'Débutant', 2: 'Intermédiaire', 3: 'Avancé' };
+const DIFF_LABEL_FR: Record<number, string> = { 1: 'Débutant', 2: 'Intermédiaire', 3: 'Avancé' };
+const DIFF_LABEL_EN: Record<number, string> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
 const DIFF_COLOR: Record<number, string> = { 1: '#22c55e', 2: '#3b82f6', 3: '#a855f7' };
 
 export default function RangesPage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const DIFF_LABEL = isEn ? DIFF_LABEL_EN : DIFF_LABEL_FR;
+
   const [active, setActive]   = useState<RangeChallenge>(RANGE_CHALLENGES[0]);
   const [resetKey, setResetKey] = useState(0);
 
@@ -29,7 +35,9 @@ export default function RangesPage() {
             Range Builder
           </h1>
           <p className="text-gray-400 max-w-xl">
-            Construis la range GTO pour chaque scénario, puis compare à la réponse. Clique les mains à inclure sur la grille.
+            {isEn
+              ? 'Build the GTO range for each scenario, then compare to the answer. Click hands to include on the grid.'
+              : 'Construis la range GTO pour chaque scénario, puis compare à la réponse. Clique les mains à inclure sur la grille.'}
           </p>
         </motion.div>
 
@@ -37,7 +45,7 @@ export default function RangesPage() {
 
           {/* Scenario selector */}
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Scénarios</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{isEn ? 'Scenarios' : 'Scénarios'}</p>
             {RANGE_CHALLENGES.map((c, i) => {
               const isActive = c.id === active.id;
               return (
@@ -71,19 +79,19 @@ export default function RangesPage() {
 
             {/* Legend */}
             <div className="rounded-xl p-4 mt-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Lire la grille</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{isEn ? 'Read the grid' : 'Lire la grille'}</p>
               <div className="space-y-1.5 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-4 rounded-sm flex items-center justify-center font-bold text-white/60" style={{ background: 'rgba(255,255,255,0.07)', fontSize: 9 }}>AA</div>
-                  <span>Diagonale = paires</span>
+                  <span>{isEn ? 'Diagonal = pairs' : 'Diagonale = paires'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-4 rounded-sm flex items-center justify-center font-mono text-white/40" style={{ background: 'rgba(255,255,255,0.04)', fontSize: 8 }}>AK<span style={{fontSize:6}}>s</span></div>
-                  <span>Triangle haut = suited</span>
+                  <span>{isEn ? 'Upper triangle = suited' : 'Triangle haut = suited'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-4 rounded-sm flex items-center justify-center font-mono text-white/30" style={{ background: 'rgba(255,255,255,0.025)', fontSize: 8 }}>AK<span style={{fontSize:6}}>o</span></div>
-                  <span>Triangle bas = offsuit</span>
+                  <span>{isEn ? 'Lower triangle = offsuit' : 'Triangle bas = offsuit'}</span>
                 </div>
               </div>
             </div>

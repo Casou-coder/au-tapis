@@ -3,10 +3,11 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useLocale } from 'next-intl';
 
 const MotionLink = motion.create(Link);
 import { Lock, ChevronRight, Star, Zap, Trophy, Target, BookOpen, Play } from 'lucide-react';
-import { LEVELS } from '@/lib/levels';
+import { getLevels } from '@/lib/levels';
 import { useProgress } from '@/hooks/useProgress';
 import { useRef } from 'react';
 
@@ -61,14 +62,18 @@ const floatingCards = [
   { suit: '♣', delay: 0.5, x: '60%', y: '85%', size: 65 },
 ];
 
-const statsData = [
-  { icon: BookOpen, value: '35+', label: 'Modules de cours' },
-  { icon: Play, value: '50+', label: 'Mains interactives' },
-  { icon: Trophy, value: '6', label: 'Mains légendaires' },
-  { icon: Star, value: '5', label: 'Niveaux de maîtrise' },
-];
-
 export default function HomePage() {
+  const locale = useLocale();
+  const isEn = locale === 'en';
+  const LEVELS = getLevels(locale);
+
+  const statsData = [
+    { icon: BookOpen, value: '35+', label: isEn ? 'Course Modules' : 'Modules de cours' },
+    { icon: Play, value: '50+', label: isEn ? 'Interactive Hands' : 'Mains interactives' },
+    { icon: Trophy, value: '6', label: isEn ? 'Legendary Hands' : 'Mains légendaires' },
+    { icon: Star, value: '5', label: isEn ? 'Mastery Levels' : 'Niveaux de maîtrise' },
+  ];
+
   const { isLevelUnlocked, getLevelProgress, progress } = useProgress();
   const isNewVisitor = progress.totalXp === 0 && Object.keys(progress.completedModules).length === 0;
   const heroRef = useRef<HTMLDivElement>(null);
@@ -76,10 +81,26 @@ export default function HomePage() {
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+  const whyItems = isEn ? [
+    { icon: '🎯', title: 'Progressive & Structured', desc: 'Each level builds on the previous. No unnecessary jargon — only what you need at each step.' },
+    { icon: '🧮', title: 'Math-Based', desc: 'Learn to calculate pot odds, equity, EV. Poker is a game of mathematical decisions in the long run.' },
+    { icon: '🎮', title: 'Interactive & Practical', desc: 'Play real hands, answer quizzes, analyze iconic situations from the greatest pros.' },
+    { icon: '🏆', title: 'Legendary Hands', desc: "Study extraordinary plays by Phil Ivey, Moneymaker, Isildur1. Understand the why behind each decision." },
+    { icon: '🔒', title: 'Free & No Money', desc: 'No real money bets. Learn peacefully, risk-free, purely to master the game.' },
+    { icon: '🧠', title: 'GTO & Psychology', desc: 'From game theory optimal to elite mental game — all aspects of a high-level player.' },
+  ] : [
+    { icon: '🎯', title: 'Progressif & Structuré', desc: 'Chaque niveau s\'appuie sur le précédent. Pas de jargon inutile, uniquement ce dont vous avez besoin à chaque étape.' },
+    { icon: '🧮', title: 'Basé sur les Maths', desc: 'Apprenez à calculer les pot odds, l\'équité, l\'EV. Le poker est un jeu de décisions mathématiques à long terme.' },
+    { icon: '🎮', title: 'Interactif & Pratique', desc: 'Jouez des mains réelles, répondez à des quiz, analysez des situations emblématiques des plus grands pros.' },
+    { icon: '🏆', title: 'Mains Légendaires', desc: 'Étudiez les coups extraordinaires de Phil Ivey, Moneymaker, Isildur1. Comprenez le pourquoi de chaque décision.' },
+    { icon: '🔒', title: 'Gratuit & Sans Argent', desc: 'Aucune mise d\'argent réelle. Apprenez en toute sérénité, sans risque, uniquement pour la maîtrise du jeu.' },
+    { icon: '🧠', title: 'GTO & Psychologie', desc: 'Du game theory optimal au mental game de champion, tous les aspects d\'un joueur de haut niveau.' },
+  ];
+
   return (
     <main id="main-content" className="min-h-screen bg-[#060d08] overflow-hidden">
       {/* HERO */}
-      <section ref={heroRef} aria-label="Introduction" className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+      <section ref={heroRef} aria-label={isEn ? 'Introduction' : 'Introduction'} className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(26,74,46,0.4)_0%,transparent_70%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(201,168,76,0.08)_0%,transparent_50%)]" />
         {floatingCards.map((c, i) => <FloatingCard key={i} {...c} />)}
@@ -92,7 +113,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 bg-yellow-900/30 border border-yellow-600/30 rounded-full px-4 py-2 text-yellow-400 text-sm font-medium mb-8"
           >
             <Zap size={14} />
-            Du débutant au niveau professionnel
+            {isEn ? 'From beginner to professional level' : 'Du débutant au niveau professionnel'}
           </motion.div>
 
           <motion.h1
@@ -111,7 +132,7 @@ export default function HomePage() {
             className="text-2xl md:text-3xl text-white/60 font-light mb-4"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            Maîtrisez le poker.
+            {isEn ? 'Master poker.' : 'Maîtrisez le poker.'}
           </motion.p>
 
           <motion.p
@@ -120,8 +141,9 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.45 }}
             className="text-gray-400 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed"
           >
-            De la première main jusqu&apos;aux stratégies des champions du monde.
-            5 niveaux, des cours interactifs, des mains légendaires.
+            {isEn
+              ? 'From your first hand to world champion strategies. 5 levels, interactive courses, legendary hands.'
+              : 'De la première main jusqu\'aux stratégies des champions du monde. 5 niveaux, des cours interactifs, des mains légendaires.'}
           </motion.p>
 
           <motion.div
@@ -136,7 +158,7 @@ export default function HomePage() {
               transition={{ duration: 0.12 }}
               className="group flex items-center justify-center gap-2 bg-gradient-to-r from-green-700 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-bold px-8 py-4 rounded-xl transition-all glow-green"
             >
-              Commencer à apprendre
+              {isEn ? 'Start learning' : 'Commencer à apprendre'}
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </motion.button>
           </motion.div>
@@ -154,7 +176,7 @@ export default function HomePage() {
       </section>
 
       {/* STATS */}
-      <section id="stats" aria-label="Statistiques" className="py-16 border-y border-white/5 bg-black/30">
+      <section id="stats" aria-label={isEn ? 'Statistics' : 'Statistiques'} className="py-16 border-y border-white/5 bg-black/30">
         <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {statsData.map((stat, i) => (
             <motion.div
@@ -173,7 +195,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* DÉFI DU JOUR */}
+      {/* DAILY CHALLENGE */}
       <section id="defi" className="py-12 px-4">
         <div className="max-w-2xl mx-auto">
           <DailyChallengeSection />
@@ -190,10 +212,12 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>
-              Votre parcours
+              {isEn ? 'Your journey' : 'Votre parcours'}
             </h2>
             <p className="text-gray-400 text-lg max-w-xl mx-auto">
-              5 niveaux progressifs pour transformer un débutant en joueur de haut niveau.
+              {isEn
+                ? '5 progressive levels to transform a beginner into a high-level player.'
+                : '5 niveaux progressifs pour transformer un débutant en joueur de haut niveau.'}
             </p>
           </motion.div>
 
@@ -212,8 +236,8 @@ export default function HomePage() {
                 className="inline-flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 hover:border-yellow-500/60 rounded-2xl px-6 py-3 text-sm transition-all group"
               >
                 <span className="text-xl">🎯</span>
-                <span className="text-gray-300">Nouveau joueur ? Découvrez votre niveau recommandé</span>
-                <span className="text-yellow-400 font-semibold group-hover:translate-x-1 transition-transform">Quiz →</span>
+                <span className="text-gray-300">{isEn ? 'New player? Discover your recommended level' : 'Nouveau joueur ? Découvrez votre niveau recommandé'}</span>
+                <span className="text-yellow-400 font-semibold group-hover:translate-x-1 transition-transform">{isEn ? 'Quiz →' : 'Quiz →'}</span>
               </MotionLink>
             </motion.div>
           )}
@@ -231,7 +255,7 @@ export default function HomePage() {
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={i === 4 ? 'md:col-span-2 lg:col-span-1 lg:col-start-2' : ''}
                 >
-                  <LevelCard level={level} unlocked={unlocked} index={i} levelProgress={levelProgress} />
+                  <LevelCard level={level} unlocked={unlocked} index={i} levelProgress={levelProgress} isEn={isEn} />
                 </motion.div>
               );
             })}
@@ -249,17 +273,10 @@ export default function HomePage() {
             className="text-4xl font-bold text-center text-white mb-16"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            Pourquoi Forged Poker ?
+            {isEn ? 'Why Forged Poker?' : 'Pourquoi Forged Poker ?'}
           </motion.h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: '🎯', title: 'Progressif & Structuré', desc: 'Chaque niveau s\'appuie sur le précédent. Pas de jargon inutile, uniquement ce dont vous avez besoin à chaque étape.' },
-              { icon: '🧮', title: 'Basé sur les Maths', desc: 'Apprenez à calculer les pot odds, l\'équité, l\'EV. Le poker est un jeu de décisions mathématiques à long terme.' },
-              { icon: '🎮', title: 'Interactif & Pratique', desc: 'Jouez des mains réelles, répondez à des quiz, analysez des situations emblématiques des plus grands pros.' },
-              { icon: '🏆', title: 'Mains Légendaires', desc: 'Étudiez les coups extraordinaires de Phil Ivey, Moneymaker, Isildur1. Comprenez le pourquoi de chaque décision.' },
-              { icon: '🔒', title: 'Gratuit & Sans Argent', desc: 'Aucune mise d\'argent réelle. Apprenez en toute sérénité, sans risque, uniquement pour la maîtrise du jeu.' },
-              { icon: '🧠', title: 'GTO & Psychologie', desc: 'Du game theory optimal au mental game de champion, tous les aspects d\'un joueur de haut niveau.' },
-            ].map((item, i) => (
+            {whyItems.map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -289,10 +306,12 @@ export default function HomePage() {
         >
           <div className="text-5xl mb-6">♠ ♥ ♦ ♣</div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Prêt à jouer ?
+            {isEn ? 'Ready to play?' : 'Prêt à jouer ?'}
           </h2>
           <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-            Cours gratuits, quiz interactifs, mains légendaires. Progressez à votre rythme, du débutant au niveau pro.
+            {isEn
+              ? 'Free courses, interactive quizzes, legendary hands. Progress at your own pace, from beginner to pro.'
+              : 'Cours gratuits, quiz interactifs, mains légendaires. Progressez à votre rythme, du débutant au niveau pro.'}
           </p>
           <MotionLink
             href="/debutant"
@@ -300,7 +319,7 @@ export default function HomePage() {
             transition={{ duration: 0.12 }}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-700 to-yellow-500 hover:from-yellow-600 hover:to-yellow-400 text-white font-bold px-10 py-5 rounded-xl text-lg transition-all pulse-gold"
           >
-            Démarrer le niveau Débutant
+            {isEn ? 'Start Beginner level' : 'Démarrer le niveau Débutant'}
             <ChevronRight size={22} />
           </MotionLink>
         </motion.div>
@@ -308,17 +327,20 @@ export default function HomePage() {
 
       <footer className="border-t border-white/10 py-8 text-center text-gray-600 text-sm">
         <p className="mb-1 font-medium text-gray-500">Forged Poker ♠ forgedpoker.com</p>
-        <p>Apprenez le jeu, pas l&apos;addiction. Pas de jeux d&apos;argent réels.</p>
+        <p>{isEn ? 'Learn the game, not the addiction. No real money gambling.' : 'Apprenez le jeu, pas l\'addiction. Pas de jeux d\'argent réels.'}</p>
       </footer>
     </main>
   );
 }
 
-function LevelCard({ level, unlocked, index, levelProgress }: {
-  level: typeof LEVELS[0];
+type LevelType = ReturnType<typeof getLevels>[0];
+
+function LevelCard({ level, unlocked, index, levelProgress, isEn }: {
+  level: LevelType;
   unlocked: boolean;
   index: number;
   levelProgress: { completed: number; total: number; percentage: number };
+  isEn: boolean;
 }) {
   const hasStarted = levelProgress.completed > 0;
   const isComplete = levelProgress.completed >= levelProgress.total;
@@ -341,7 +363,7 @@ function LevelCard({ level, unlocked, index, levelProgress }: {
       {!unlocked && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
           <Lock size={32} className="text-gray-400 mb-2" />
-          <p className="text-gray-400 text-sm font-medium">Terminez Expert pour débloquer</p>
+          <p className="text-gray-400 text-sm font-medium">{isEn ? 'Complete Expert to unlock' : 'Terminez Expert pour débloquer'}</p>
         </div>
       )}
       <div className="relative p-6">
@@ -350,10 +372,10 @@ function LevelCard({ level, unlocked, index, levelProgress }: {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-2xl">{level.icon}</span>
               <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: level.color + '20', color: level.color }}>
-                Niveau {index + 1}
+                {isEn ? `Level ${index + 1}` : `Niveau ${index + 1}`}
               </span>
               {isComplete && (
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/10 text-white">✓ Terminé</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/10 text-white">{isEn ? '✓ Done' : '✓ Terminé'}</span>
               )}
             </div>
             <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{level.name}</h3>
@@ -365,13 +387,13 @@ function LevelCard({ level, unlocked, index, levelProgress }: {
           {level.topics.slice(0, 3).map((topic) => (
             <span key={topic} className="text-xs bg-white/5 border border-white/10 rounded-full px-2 py-0.5 text-gray-400">{topic}</span>
           ))}
-          {level.topics.length > 3 && <span className="text-xs text-gray-500">+{level.topics.length - 3} autres</span>}
+          {level.topics.length > 3 && <span className="text-xs text-gray-500">+{level.topics.length - 3} {isEn ? 'more' : 'autres'}</span>}
         </div>
 
         {unlocked && (
           <div className="mb-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-              <span>{levelProgress.completed}/{levelProgress.total} modules</span>
+              <span>{levelProgress.completed}/{levelProgress.total} {isEn ? 'modules' : 'modules'}</span>
               {levelProgress.percentage > 0 && <span>{levelProgress.percentage}%</span>}
             </div>
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -393,7 +415,11 @@ function LevelCard({ level, unlocked, index, levelProgress }: {
           </div>
           {unlocked && (
             <div className="flex items-center gap-1 text-sm font-medium group-hover:gap-2 transition-all" style={{ color: isComplete ? '#22c55e' : level.color }}>
-              {isComplete ? 'Revoir' : hasStarted ? 'Continuer' : 'Commencer'}
+              {isComplete
+                ? (isEn ? 'Review' : 'Revoir')
+                : hasStarted
+                  ? (isEn ? 'Continue' : 'Continuer')
+                  : (isEn ? 'Start' : 'Commencer')}
               <ChevronRight size={16} />
             </div>
           )}
