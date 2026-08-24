@@ -33,9 +33,11 @@ export default function Navigation() {
   const locale = useLocale() as 'en' | 'fr';
   const [menuOpen, setMenuOpen]       = useState(false);
   const [niveauxOpen, setNiveauxOpen] = useState(false);
+  const [langOpen, setLangOpen]       = useState(false);
   const [user, setUser]               = useState<SupabaseUser | null>(null);
   const menuId      = useId();
   const niveauxRef  = useRef<HTMLDivElement>(null);
+  const langRef     = useRef<HTMLDivElement>(null);
 
   const t = (en: string, fr: string) => locale === 'fr' ? fr : en;
 
@@ -57,7 +59,7 @@ export default function Navigation() {
     return () => window.removeEventListener('keydown', handler);
   }, [menuOpen]);
 
-  // Close dropdown on click outside
+  // Close dropdowns on click outside
   useEffect(() => {
     if (!niveauxOpen) return;
     const handler = (e: MouseEvent) => {
@@ -67,8 +69,17 @@ export default function Navigation() {
     return () => document.removeEventListener('mousedown', handler);
   }, [niveauxOpen]);
 
+  useEffect(() => {
+    if (!langOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [langOpen]);
+
   // Close everything on navigation
-  useEffect(() => { setMenuOpen(false); setNiveauxOpen(false); }, [pathname]);
+  useEffect(() => { setMenuOpen(false); setNiveauxOpen(false); setLangOpen(false); }, [pathname]);
 
   const isNiveauxActive = niveauxLinks.some(l => pathname.startsWith(l.href));
 
@@ -166,19 +177,52 @@ export default function Navigation() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Language selector */}
-            <div className="flex items-center border border-white/10 rounded-lg overflow-hidden mr-1">
-              {(['en', 'fr'] as const).map(l => (
-                <button
-                  key={l}
-                  onClick={() => switchLocale(l)}
-                  className={`px-2.5 py-1 text-xs font-bold uppercase transition-all ${
-                    locale === l ? 'bg-yellow-500/15 text-yellow-400' : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
+            {/* Language selector dropdown */}
+            <div ref={langRef} className="relative mr-1">
+              <button
+                onClick={() => setLangOpen(o => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={langOpen}
+                aria-label={t('Select language', 'Sélectionner la langue')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs font-semibold text-gray-300 hover:text-white"
+              >
+                <span aria-hidden="true">{locale === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+                <span className="uppercase">{locale}</span>
+                <ChevronDown size={11} className={`transition-transform duration-200 text-gray-500 ${langOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </button>
+              <AnimatePresence>
+                {langOpen && (
+                  <motion.ul
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                    transition={{ duration: 0.13 }}
+                    role="listbox"
+                    aria-label={t('Language', 'Langue')}
+                    className="absolute top-full right-0 mt-2 w-32 rounded-xl overflow-hidden z-50"
+                    style={{ background: 'rgba(8,12,8,0.98)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+                  >
+                    {([
+                      { code: 'en', flag: '🇬🇧', label: 'EN' },
+                      { code: 'fr', flag: '🇫🇷', label: 'FR' },
+                    ] as const).map(({ code, flag, label }) => (
+                      <li key={code} role="option" aria-selected={locale === code}>
+                        <button
+                          onClick={() => { switchLocale(code); setLangOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-all ${
+                            locale === code
+                              ? 'text-yellow-400 bg-yellow-500/10'
+                              : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <span aria-hidden="true">{flag}</span>
+                          <span className="font-semibold">{label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
             </div>
 
             {user ? (
@@ -308,17 +352,21 @@ export default function Navigation() {
                 <div className="border-t border-white/10 pt-4 space-y-3">
                   {/* Mobile locale switcher */}
                   <div className="flex items-center gap-2">
-                    {(['en', 'fr'] as const).map(l => (
+                    {([
+                      { code: 'en', flag: '🇬🇧', label: 'EN' },
+                      { code: 'fr', flag: '🇫🇷', label: 'FR' },
+                    ] as const).map(({ code, flag, label }) => (
                       <button
-                        key={l}
-                        onClick={() => switchLocale(l)}
-                        className={`px-3 py-1 rounded text-xs font-bold uppercase border transition-all ${
-                          locale === l
+                        key={code}
+                        onClick={() => switchLocale(code)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                          locale === code
                             ? 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30'
                             : 'text-gray-500 border-white/10 hover:text-gray-300'
                         }`}
                       >
-                        {l}
+                        <span aria-hidden="true">{flag}</span>
+                        <span>{label}</span>
                       </button>
                     ))}
                   </div>
