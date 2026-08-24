@@ -10,6 +10,34 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MotionLink = motion.create(Link);
 
+function FlagGB({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 30" className={className} aria-hidden="true">
+      <rect width="60" height="30" fill="#012169" rx="1.5"/>
+      {/* White saltire */}
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+      {/* Red saltire (St Patrick, simplified) */}
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="3.5"/>
+      {/* White cross */}
+      <rect x="0" y="12" width="60" height="6" fill="#fff"/>
+      <rect x="27" y="0" width="6" height="30" fill="#fff"/>
+      {/* Red cross */}
+      <rect x="0" y="13" width="60" height="4" fill="#C8102E"/>
+      <rect x="28" y="0" width="4" height="30" fill="#C8102E"/>
+    </svg>
+  );
+}
+
+function FlagFR({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 3 2" className={className} aria-hidden="true">
+      <rect width="1" height="2" fill="#002395"/>
+      <rect x="1" width="1" height="2" fill="#EDEDED"/>
+      <rect x="2" width="1" height="2" fill="#ED2939"/>
+    </svg>
+  );
+}
+
 const niveauxLinks = [
   { href: '/debutant',      labelEn: 'Beginner',      labelFr: 'Débutant',      color: 'text-green-400',  dot: '#22c55e' },
   { href: '/intermediaire', labelEn: 'Intermediate',  labelFr: 'Intermédiaire', color: 'text-blue-400',   dot: '#3b82f6' },
@@ -186,7 +214,7 @@ export default function Navigation() {
                 aria-label={t('Select language', 'Sélectionner la langue')}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs font-semibold text-gray-300 hover:text-white"
               >
-                <span aria-hidden="true">{locale === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+                {locale === 'fr' ? <FlagFR className="w-5 h-auto rounded-[2px]" /> : <FlagGB className="w-5 h-auto rounded-[2px]" />}
                 <span className="uppercase">{locale}</span>
                 <ChevronDown size={11} className={`transition-transform duration-200 text-gray-500 ${langOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
@@ -203,9 +231,9 @@ export default function Navigation() {
                     style={{ background: 'rgba(8,12,8,0.98)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
                   >
                     {([
-                      { code: 'en', flag: '🇬🇧', label: 'EN' },
-                      { code: 'fr', flag: '🇫🇷', label: 'FR' },
-                    ] as const).map(({ code, flag, label }) => (
+                      { code: 'en', Flag: FlagGB, label: 'EN' },
+                      { code: 'fr', Flag: FlagFR, label: 'FR' },
+                    ] as const).map(({ code, Flag, label }) => (
                       <li key={code} role="option" aria-selected={locale === code}>
                         <button
                           onClick={() => { switchLocale(code); setLangOpen(false); }}
@@ -215,7 +243,7 @@ export default function Navigation() {
                               : 'text-gray-400 hover:text-white hover:bg-white/5'
                           }`}
                         >
-                          <span aria-hidden="true">{flag}</span>
+                          <Flag className="w-5 h-auto rounded-[2px] shrink-0" />
                           <span className="font-semibold">{label}</span>
                         </button>
                       </li>
@@ -353,9 +381,9 @@ export default function Navigation() {
                   {/* Mobile locale switcher */}
                   <div className="flex items-center gap-2">
                     {([
-                      { code: 'en', flag: '🇬🇧', label: 'EN' },
-                      { code: 'fr', flag: '🇫🇷', label: 'FR' },
-                    ] as const).map(({ code, flag, label }) => (
+                      { code: 'en', Flag: FlagGB, label: 'EN' },
+                      { code: 'fr', Flag: FlagFR, label: 'FR' },
+                    ] as const).map(({ code, Flag, label }) => (
                       <button
                         key={code}
                         onClick={() => switchLocale(code)}
@@ -365,7 +393,7 @@ export default function Navigation() {
                             : 'text-gray-500 border-white/10 hover:text-gray-300'
                         }`}
                       >
-                        <span aria-hidden="true">{flag}</span>
+                        <Flag className="w-5 h-auto rounded-[2px]" />
                         <span>{label}</span>
                       </button>
                     ))}
