@@ -347,10 +347,12 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                     {challenge.options.map((opt, i) => {
                       let style = 'border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:border-yellow-500/50';
                       if (selected === i && !confirmed) style = 'border border-yellow-500 bg-yellow-500/10 text-white';
-                      if (confirmed && selected === i) {
-                        style = opt.isCorrect
-                          ? 'border border-green-500 bg-green-500/15 text-green-300'
-                          : 'border border-red-500 bg-red-500/15 text-red-300';
+                      if (confirmed) {
+                        if (opt.isCorrect) {
+                          style = 'border border-green-500 bg-green-500/15 text-green-300';
+                        } else if (selected === i) {
+                          style = 'border border-red-500 bg-red-500/15 text-red-300';
+                        }
                       }
                       return (
                         <motion.button
@@ -431,11 +433,32 @@ export function DailyChallengeModal({ challenge, streak, onComplete, onClose }: 
                 {/* RIGHT, Explanations */}
                 <div className="p-5 flex flex-col border-t border-white/10 md:border-t-0">
                   {selected !== null && (
-                    <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <p className="text-xs text-gray-400 mb-1">{isEn ? 'Your answer:' : 'Ta réponse :'} {challenge.options[selected].label}</p>
+                    <div
+                      className="rounded-xl p-3 mb-3"
+                      style={isCorrect
+                        ? { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }
+                        : { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }
+                      }
+                    >
+                      <p className={`text-xs mb-1 ${isCorrect ? 'text-gray-400' : 'text-red-400'}`}>
+                        {isCorrect ? (isEn ? '✓ Your answer:' : '✓ Ta réponse :') : (isEn ? '✗ Your answer:' : '✗ Ta réponse :')} {challenge.options[selected].label}
+                      </p>
                       <p className="text-gray-300 text-sm leading-relaxed">{challenge.options[selected].explanation}</p>
                     </div>
                   )}
+
+                  {!isCorrect && (() => {
+                    const correct = challenge.options.find(o => o.isCorrect);
+                    return correct ? (
+                      <div className="rounded-xl p-3 mb-3 bg-green-500/10 border border-green-500/25">
+                        <p className="text-green-400 text-xs font-semibold mb-1">
+                          ✓ {isEn ? 'The correct answer:' : 'La bonne réponse :'}
+                        </p>
+                        <p className="text-green-200 text-sm font-medium mb-1">{correct.label}</p>
+                        <p className="text-gray-400 text-xs leading-relaxed">{correct.explanation}</p>
+                      </div>
+                    ) : null;
+                  })()}
 
                   {challenge.mathNote && (
                     <div className="rounded-xl p-3 mb-3 bg-blue-500/10 border border-blue-500/20">
