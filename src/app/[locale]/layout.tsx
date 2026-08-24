@@ -62,6 +62,22 @@ export async function generateMetadata({
       locale: isFr ? 'fr_FR' : 'en_US',
       url: `${BASE_URL}/${locale}`,
       siteName: 'Forged Poker',
+      title: isFr
+        ? "Forged Poker : Apprenez le Poker Texas Hold'em en Français"
+        : "Forged Poker — Learn Texas Hold'em Poker",
+      description: isFr
+        ? "Cours interactifs du débutant au pro. Défis quotidiens, outils GTO et calculateur d'équité. Gratuit."
+        : 'Interactive courses from beginner to pro. Daily challenges, GTO tools and equity calculator. Free.',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@ForgedPoker',
+      title: isFr
+        ? "Forged Poker : Apprenez le Poker Texas Hold'em en Français"
+        : "Forged Poker — Learn Texas Hold'em Poker",
+      description: isFr
+        ? "Cours interactifs du débutant au pro. Défis quotidiens, outils GTO et calculateur d'équité. Gratuit."
+        : 'Interactive courses from beginner to pro. Daily challenges, GTO tools and equity calculator. Free.',
     },
     alternates: {
       canonical: `${BASE_URL}/${locale}`,
