@@ -43,7 +43,11 @@ export default function DefisPage() {
     { id: 3,     label: isEn ? '●●● Hard'    : '●●● Difficile' },
   ];
 
-  const { challenge, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
+  const { challenge: challengeRaw, isCompleted, wasCorrect, streak, loading, completeChallenge, history } = useDailyChallenge();
+  // Resolve daily challenge to the correct locale (hook always returns FR data internally)
+  const challenge = challengeRaw
+    ? (isEn ? (CHALLENGES_EN.find(c => c.id === challengeRaw.id) ?? challengeRaw) : challengeRaw)
+    : null;
   const { isLevelUnlocked, addXp } = useProgress();
   const { failedIds, recordAttempt } = useChallengeStats();
 
