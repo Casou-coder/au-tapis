@@ -10,20 +10,24 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MotionLink = motion.create(Link);
 
-function FlagGB({ className }: { className?: string }) {
+function FlagUS({ className }: { className?: string }) {
+  // Official US flag ratio 19:10, 13 stripes, blue canton top-left
+  const sh = 10 / 13;
   return (
-    <svg viewBox="0 0 60 30" className={className} aria-hidden="true">
-      <rect width="60" height="30" fill="#012169" rx="1.5"/>
-      {/* White saltire */}
-      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
-      {/* Red saltire (St Patrick, simplified) */}
-      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="3.5"/>
-      {/* White cross */}
-      <rect x="0" y="12" width="60" height="6" fill="#fff"/>
-      <rect x="27" y="0" width="6" height="30" fill="#fff"/>
-      {/* Red cross */}
-      <rect x="0" y="13" width="60" height="4" fill="#C8102E"/>
-      <rect x="28" y="0" width="4" height="30" fill="#C8102E"/>
+    <svg viewBox="0 0 19 10" className={className} aria-hidden="true">
+      <rect width="19" height="10" fill="#B22234"/>
+      {/* 6 white stripes (stripes 1,3,5,7,9,11 from top) */}
+      {[1, 3, 5, 7, 9, 11].map(i => (
+        <rect key={i} x="0" y={i * sh} width="19" height={sh} fill="#fff"/>
+      ))}
+      {/* Blue canton */}
+      <rect x="0" y="0" width="7.6" height={7 * sh} fill="#3C3B6E"/>
+      {/* Simplified stars: 2 rows × 3 cols */}
+      {Array.from({ length: 2 }, (_, r) =>
+        Array.from({ length: 3 }, (_, c) => (
+          <circle key={`${r}-${c}`} cx={1.2 + c * 2.6} cy={0.85 + r * 1.85} r={0.28} fill="#fff"/>
+        ))
+      )}
     </svg>
   );
 }
@@ -214,8 +218,8 @@ export default function Navigation() {
                 aria-label={t('Select language', 'Sélectionner la langue')}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs font-semibold text-gray-300 hover:text-white"
               >
-                {locale === 'fr' ? <FlagFR className="w-5 h-auto rounded-[2px]" /> : <FlagGB className="w-5 h-auto rounded-[2px]" />}
-                <span className="uppercase">{locale}</span>
+                {locale === 'fr' ? <FlagFR className="w-5 h-auto rounded-[2px]" /> : <FlagUS className="w-5 h-auto rounded-[2px]" />}
+                <span>{locale === 'fr' ? 'FR' : 'US'}</span>
                 <ChevronDown size={11} className={`transition-transform duration-200 text-gray-500 ${langOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
               <AnimatePresence>
@@ -231,7 +235,7 @@ export default function Navigation() {
                     style={{ background: 'rgba(8,12,8,0.98)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
                   >
                     {([
-                      { code: 'en', Flag: FlagGB, label: 'EN' },
+                      { code: 'en', Flag: FlagUS, label: 'US' },
                       { code: 'fr', Flag: FlagFR, label: 'FR' },
                     ] as const).map(({ code, Flag, label }) => (
                       <li key={code} role="option" aria-selected={locale === code}>
@@ -381,7 +385,7 @@ export default function Navigation() {
                   {/* Mobile locale switcher */}
                   <div className="flex items-center gap-2">
                     {([
-                      { code: 'en', Flag: FlagGB, label: 'EN' },
+                      { code: 'en', Flag: FlagUS, label: 'US' },
                       { code: 'fr', Flag: FlagFR, label: 'FR' },
                     ] as const).map(({ code, Flag, label }) => (
                       <button
