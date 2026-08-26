@@ -55,8 +55,11 @@ export async function generateMetadata({
       template: '%s | Forged Poker',
     },
     description: isFr
-      ? "Apprenez le poker Texas Hold'em gratuitement, du niveau débutant au professionnel. Cours interactifs, défis quotidiens, calculateur d'équité et outils GTO. Sans argent réel."
-      : "Learn Texas Hold'em poker for free, from beginner to professional. Interactive courses, daily challenges, equity calculator and GTO tools. No real money.",
+      ? "Apprenez le poker Texas Hold'em gratuitement, du débutant au pro. Défis quotidiens, outils GTO et calculateur d'équité. Sans argent réel."
+      : "Learn Texas Hold'em poker for free, from beginner to pro. Daily challenges, GTO tools and equity calculator. No real money.",
+    keywords: isFr
+      ? ['apprendre poker', 'cours poker gratuit', 'formation poker texas holdem', 'poker gratuit sans inscription', 'site apprentissage poker', 'défis poker quotidiens', 'poker débutant au professionnel', 'stratégie poker GTO', 'entraînement poker en ligne']
+      : ['learn poker online', 'free poker course', 'texas holdem training', 'poker from beginner to pro', 'daily poker challenges', 'poker learning platform', 'GTO poker strategy', 'poker practice free', 'poker training site'],
     openGraph: {
       type: 'website',
       locale: isFr ? 'fr_FR' : 'en_US',

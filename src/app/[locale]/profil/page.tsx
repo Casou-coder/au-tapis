@@ -8,6 +8,62 @@ import { useProgress, getXpTitle, XP_TITLES, loadXpHistory, XpDayRecord } from '
 import { useDailyChallenge } from '@/hooks/useDailyChallenge';
 import { useChallengeStats, TypeStat } from '@/hooks/useChallengeStats';
 import { CHALLENGES } from '@/lib/challenges-data';
+import { computeBadges, BADGE_SERIES_META, BADGE_SERIES_ORDER, BadgeSeries, BadgeData, BadgeDef } from '@/lib/badges';
+import { BadgeChip } from '@/components/BadgeChip';
+
+// ── badge progress helpers ────────────────────────────────────────────────────
+
+function getBadgeProgress(badge: BadgeDef, data: BadgeData): number {
+  const idx = parseInt(badge.id.slice(1)) - 1;
+  switch (badge.series) {
+    case 'ritualiste': { const t = [7,30,100,200,365][idx]; return Math.min(data.maxStreak/t, 0.98); }
+    case 'grinder':    { const t = [5,10,25,50,100,150,200,250,300,400,500][idx]; return Math.min(data.totalChallenges/t, 0.98); }
+    case 'main': {
+      const thr = [50,150,400,800,1500,2500,4000,6000,9000,13000];
+      const prv = [0,50,150,400,800,1500,2500,4000,6000,9000];
+      return Math.min(Math.max((data.totalXp-prv[idx])/(thr[idx]-prv[idx]),0), 0.98);
+    }
+    case 'faucon':    { const t = [5,10,20,50][idx]; return Math.min(data.maxConsecutiveCorrect/t, 0.98); }
+    case 'justesse': {
+      const minC = [20,50,100,75,50][idx];
+      const rate = [0.60,0.70,0.80,0.90,0.95][idx];
+      const cp = Math.min(data.totalChallenges/minC, 1);
+      const rp = data.totalChallenges > 0 ? Math.min((data.totalCorrect/data.totalChallenges)/rate, 1) : 0;
+      return Math.min(cp*0.4+rp*0.6, 0.98);
+    }
+    case 'specialiste': {
+      const types = ['gto','icm','reads','calculation','all'];
+      if (idx < 4) return Math.min((data.typeStats[types[idx]]?.correct??0)/10, 0.98);
+      const avg = ['gto','icm','reads','calculation','decision'].reduce((s,t)=>s+Math.min((data.typeStats[t]?.correct??0)/10,1),0)/5;
+      return Math.min(avg, 0.98);
+    }
+    default: return 0;
+  }
+}
+
+function getBadgeHint(badge: BadgeDef, data: BadgeData, isEn: boolean): string {
+  const idx = parseInt(badge.id.slice(1)) - 1;
+  switch (badge.series) {
+    case 'ritualiste': { const t=[7,30,100,200,365][idx]; const l=t-data.maxStreak; return isEn?`${l} more day${l>1?'s':''}`:`${l} jour${l>1?'s':''} de plus`; }
+    case 'grinder':    { const t=[5,10,25,50,100,150,200,250,300,400,500][idx]; const l=t-data.totalChallenges; return isEn?`${l} more`:`${l} défis`; }
+    case 'main':       { const t=[50,150,400,800,1500,2500,4000,6000,9000,13000][idx]; return `${(t-data.totalXp).toLocaleString(isEn?'en-US':'fr-FR')} XP`; }
+    case 'faucon':     { const t=[5,10,20,50][idx]; return isEn?`${t-data.maxConsecutiveCorrect} more correct`:`${t-data.maxConsecutiveCorrect} de plus d'affilée`; }
+    default: return isEn?badge.condEn:badge.condFr;
+  }
+}
+
+// ── weekly helpers ────────────────────────────────────────────────────────────
+
+function getWeekDates(): string[] {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday
+  const monday = new Date(d); monday.setDate(d.getDate()+diff); monday.setHours(0,0,0,0);
+  return Array.from({length:7}, (_,i) => {
+    const x = new Date(monday); x.setDate(monday.getDate()+i);
+    return x.toISOString().split('T')[0];
+  });
+}
 
 const LEVELS_FR = [
   { id: 'debutant', label: 'Débutant', emoji: '🟢', color: 'text-green-400', total: 8 },
@@ -95,8 +151,8 @@ export default function ProfilPage() {
   const TYPE_META = isEn ? TYPE_META_EN : TYPE_META_FR;
 
   const { progress, getLevelProgress, resetProgress, isLevelUnlocked } = useProgress();
-  const { history, streak } = useDailyChallenge();
-  const { typeStats } = useChallengeStats();
+  const { history, streak, maxStreak, jokerAvailable, jokerApplied } = useDailyChallenge();
+  const { typeStats, maxConsecutiveCorrect } = useChallengeStats();
   const [xpHistory, setXpHistory] = useState<XpDayRecord[]>([]);
 
   useEffect(() => {
@@ -122,6 +178,51 @@ export default function ProfilPage() {
 
   const hasTypeStats = Object.keys(typeStats).length > 0;
   const totalAttempts = Object.values(typeStats).reduce((s, t) => s + t.total, 0);
+
+  const completedLevelIds = LEVELS_FR.filter(l => {
+    const prog = getLevelProgress(l.id, l.total);
+    return prog.completed >= l.total && isLevelUnlocked(l.id);
+  }).map(l => l.id);
+
+  const totalCorrect = Object.values(typeStats).reduce((s, t) => s + t.correct, 0);
+
+  const badgeData: BadgeData = {
+    maxStreak,
+    totalChallenges: totalAttempts,
+    totalCorrect,
+    totalXp,
+    typeStats: typeStats as Record<string, { correct: number; total: number }>,
+    completedLevels: completedLevelIds,
+    maxConsecutiveCorrect,
+    hasAnyChallenge: totalAttempts > 0,
+    hasAnyDaily: completedDefis > 0,
+    hasAnyLevel: completedLevelIds.length > 0,
+  };
+
+  const badgeResults = computeBadges(badgeData);
+  const earnedCount = badgeResults.filter(b => b.earned).length;
+
+  // Next badge targets
+  const nextTargets = badgeResults
+    .filter(b => !b.earned && ['ritualiste','grinder','main','faucon','justesse','specialiste'].includes(b.badge.series))
+    .map(b => ({ badge: b.badge, prog: getBadgeProgress(b.badge, badgeData) }))
+    .sort((a, b) => b.prog - a.prog)
+    .slice(0, 4);
+
+  // Weekly stats
+  const weekDates = getWeekDates();
+  const weekXp = xpHistory.filter(h => weekDates.includes(h.date)).reduce((s, h) => s + h.earned, 0);
+  const weekDailyByDay = weekDates.map(d => history.some(h => h.date === d && h.completed));
+  const weekDailyCount = weekDailyByDay.filter(Boolean).length;
+  const DAY_LABELS_FR = ['L','M','M','J','V','S','D'];
+  const DAY_LABELS_EN = ['M','T','W','T','F','S','S'];
+  const dayLabels = isEn ? DAY_LABELS_EN : DAY_LABELS_FR;
+
+  const groupedBadges = badgeResults.reduce((acc, b) => {
+    if (!acc[b.badge.series]) acc[b.badge.series] = [];
+    acc[b.badge.series].push(b);
+    return acc;
+  }, {} as Record<BadgeSeries, typeof badgeResults>);
 
   return (
     <div className="min-h-screen bg-[#0a0f0a]">
@@ -287,6 +388,16 @@ export default function ProfilPage() {
             <div className="text-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
               <div className="text-2xl font-bold text-orange-400">{streak}</div>
               <div className="text-gray-500 text-xs mt-0.5">🔥 Streak</div>
+              {jokerApplied && (
+                <div className="text-[10px] text-cyan-400 mt-1" title={isEn ? 'Monthly joker used — streak protected' : 'Joker mensuel utilisé — streak protégé'}>
+                  🛡 {isEn ? 'protected' : 'protégé'}
+                </div>
+              )}
+              {jokerAvailable && !jokerApplied && (
+                <div className="text-[10px] text-cyan-500/60 mt-1" title={isEn ? '1 joker available this month' : '1 joker disponible ce mois'}>
+                  🛡
+                </div>
+              )}
             </div>
             <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-white">{completedDefis}</div>
@@ -309,6 +420,45 @@ export default function ProfilPage() {
               animate={{ width: `${defiPct}%` }}
               transition={{ duration: 1, delay: 0.6 }}
             />
+          </div>
+        </motion.div>
+
+        {/* Cette semaine */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6"
+        >
+          <h2 className="font-bold text-white text-sm mb-4">{isEn ? 'This week' : 'Cette semaine'}</h2>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center">
+              <div className="text-xl font-bold text-yellow-400">+{weekXp.toLocaleString(isEn ? 'en-US' : 'fr-FR')}</div>
+              <div className="text-gray-500 text-xs">XP {isEn ? 'earned' : 'gagnée'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">{weekDailyCount}<span className="text-gray-600 text-sm">/7</span></div>
+              <div className="text-gray-500 text-xs">{isEn ? 'daily done' : 'défis du jour'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-orange-400">{streak} 🔥</div>
+              <div className="text-gray-500 text-xs">Streak</div>
+            </div>
+          </div>
+          <div className="flex gap-1.5">
+            {weekDailyByDay.map((done, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className="w-full rounded-full transition-all"
+                  style={{
+                    height: 6,
+                    background: done ? '#f97316' : 'rgba(255,255,255,0.08)',
+                    boxShadow: done ? '0 0 6px rgba(249,115,22,0.4)' : 'none',
+                  }}
+                />
+                <span className="text-[9px] text-gray-600">{dayLabels[i]}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
 
@@ -361,6 +511,85 @@ export default function ProfilPage() {
             </div>
           )}
         </motion.div>
+
+        {/* Badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-bold text-white">{isEn ? 'Badges' : 'Badges'}</h2>
+            <span className="text-gray-500 text-xs">{earnedCount} / {badgeResults.length}</span>
+          </div>
+
+          <div className="space-y-8">
+            {BADGE_SERIES_ORDER.map(seriesKey => {
+              const entries = groupedBadges[seriesKey];
+              if (!entries?.length) return null;
+              const meta = BADGE_SERIES_META[seriesKey];
+              const seriesEarned = entries.filter(e => e.earned).length;
+              return (
+                <div key={seriesKey}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-px flex-1" style={{ background: `linear-gradient(to right, ${meta.color}40, transparent)` }} />
+                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: meta.color }}>
+                      {isEn ? meta.label : meta.labelFr}
+                    </span>
+                    <span className="text-gray-600 text-[10px]">{seriesEarned}/{entries.length}</span>
+                    <div className="h-px flex-1" style={{ background: `linear-gradient(to left, ${meta.color}40, transparent)` }} />
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {entries.map(({ badge, earned }) => (
+                      <BadgeChip key={badge.id} badge={badge} earned={earned} isEn={isEn} size={76} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Dans le viseur */}
+        {nextTargets.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6"
+          >
+            <h2 className="font-bold text-white text-sm mb-4">
+              {isEn ? 'In the crosshairs' : 'Dans le viseur'}
+            </h2>
+            <div className="space-y-4">
+              {nextTargets.map(({ badge, prog }) => (
+                <div key={badge.id} className="flex items-center gap-3">
+                  <BadgeChip badge={badge} earned={false} isEn={isEn} size={48} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-gray-200 truncate">
+                        {isEn ? badge.nameEn : badge.nameFr}
+                      </span>
+                      <span className="text-[10px] text-gray-500 ml-2 shrink-0">
+                        {getBadgeHint(badge, badgeData, isEn)}
+                      </span>
+                    </div>
+                    <div className="h-1 bg-white/8 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: badge.color }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${prog * 100}%` }}
+                        transition={{ duration: 0.9, delay: 0.9 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Reset */}
         <button
