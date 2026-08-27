@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   metadataBase: new URL('https://forgedpoker.com'),
   title: {
-    default: "Forged Poker — Learn Texas Hold'em Poker",
+    default: "Forged Poker: Learn Texas Hold'em Poker",
     template: "%s | Forged Poker",
   },
   description: "Learn Texas Hold'em poker for free, from beginner to professional. Interactive courses, daily challenges, equity calculator and GTO tools. No real money.",

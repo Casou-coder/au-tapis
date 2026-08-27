@@ -434,7 +434,7 @@ function MindsetSection({ onBack }: { onBack: () => void }) {
       { principle: 'Indifference to results', detail: 'Champions evaluate only the quality of their decisions. A bad beat doesn\'t affect them: they know they played well. The result is variance.', pro: 'Phil Ivey', color: '#c9a84c' },
       { principle: 'Obsessive preparation', detail: 'Champions study hundreds of hours per month. They know their ranges by heart, have analyzed all important spots, and arrive at the table prepared.', pro: 'Viktor Blom', color: '#3498db' },
       { principle: 'Instant adaptability', detail: 'In a few hands, the best identify opponent tendencies and adapt their strategy. They don\'t play GTO on autopilot: they actively listen.', pro: 'Daniel Negreanu', color: '#27ae60' },
-      { principle: 'Managing adversity', detail: 'All pros have experienced devastating downswings. Resilience — the ability to keep playing well despite bad results — is a crucial skill.', pro: 'Tom Dwan', color: '#8e44ad' },
+      { principle: 'Managing adversity', detail: 'All pros have experienced devastating downswings. Resilience (the ability to keep playing well despite bad results) is a crucial skill.', pro: 'Tom Dwan', color: '#8e44ad' },
     ]
     : [
       { principle: "L'indifférence au résultat", detail: "Les champions évaluent uniquement la qualité de leurs décisions. Un bad beat ne les affecte pas : ils savent qu'ils ont bien joué. Le résultat est de la variance.", pro: 'Phil Ivey', color: '#c9a84c' },

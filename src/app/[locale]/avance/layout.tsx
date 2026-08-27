@@ -6,7 +6,7 @@ const FAQS = {
   fr: [
     {
       q: "Qu'est-ce que le GTO au poker ?",
-      a: "Game Theory Optimal — une stratégie mathématiquement équilibrée qui ne peut pas être exploitée. Elle mélange des mises de différentes tailles à des fréquences précises pour que l'adversaire soit indifférent entre ses options.",
+      a: "GTO (Game Theory Optimal) : une stratégie mathématiquement équilibrée qui ne peut pas être exploitée. Elle mélange des mises de différentes tailles à des fréquences précises pour que l'adversaire soit indifférent entre ses options.",
     },
     {
       q: "Quand utiliser un 4-bet au poker ?",
@@ -14,13 +14,13 @@ const FAQS = {
     },
     {
       q: "Qu'est-ce que l'ICM en tournoi de poker ?",
-      a: "Independent Chip Model — un modèle qui convertit les chips de tournoi en valeur monétaire réelle. Il explique pourquoi vous devez jouer plus serré quand des joueurs à faible stack sont proches de l'élimination.",
+      a: "ICM (Independent Chip Model) : un modèle qui convertit les chips de tournoi en valeur monétaire réelle. Il explique pourquoi vous devez jouer plus serré quand des joueurs à faible stack sont proches de l'élimination.",
     },
   ],
   en: [
     {
       q: "What is GTO poker strategy?",
-      a: "Game Theory Optimal — a mathematically balanced strategy that cannot be exploited. It mixes bet sizes at precise frequencies so opponents are indifferent between their options.",
+      a: "GTO (Game Theory Optimal): a mathematically balanced strategy that cannot be exploited. It mixes bet sizes at precise frequencies so opponents are indifferent between their options.",
     },
     {
       q: "When should you 4-bet in poker?",
@@ -28,7 +28,7 @@ const FAQS = {
     },
     {
       q: "What is ICM in tournament poker?",
-      a: "Independent Chip Model — a model that converts tournament chips into real monetary value. It explains why you should play tighter when short stacks are near elimination, even with a chip EV edge.",
+      a: "ICM (Independent Chip Model): a model that converts tournament chips into real monetary value. It explains why you should play tighter when short stacks are near elimination, even with a chip EV edge.",
     },
   ],
 };

@@ -279,7 +279,7 @@ export default function ProfilPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6"
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-white text-sm">{isEn ? 'XP earned — last 30 days' : 'XP gagnée — 30 derniers jours'}</h2>
+            <h2 className="font-bold text-white text-sm">{isEn ? 'XP earned (last 30 days)' : 'XP gagnée (30 derniers jours)'}</h2>
             {xpHistory.length > 0 && (
               <span className="text-yellow-400 text-xs font-medium">
                 +{xpHistory.slice(-30).reduce((s, d) => s + d.earned, 0).toLocaleString(isEn ? 'en-US' : 'fr-FR')} XP
@@ -389,7 +389,7 @@ export default function ProfilPage() {
               <div className="text-2xl font-bold text-orange-400">{streak}</div>
               <div className="text-gray-500 text-xs mt-0.5">🔥 Streak</div>
               {jokerApplied && (
-                <div className="text-[10px] text-cyan-400 mt-1" title={isEn ? 'Monthly joker used — streak protected' : 'Joker mensuel utilisé — streak protégé'}>
+                <div className="text-[10px] text-cyan-400 mt-1" title={isEn ? 'Monthly joker used, streak protected' : 'Joker mensuel utilisé, streak protégé'}>
                   🛡 {isEn ? 'protected' : 'protégé'}
                 </div>
               )}

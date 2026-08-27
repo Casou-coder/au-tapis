@@ -27,7 +27,7 @@ const mentalTips = [
   {
     icon: Brain,
     title: "Reconnaissez le tilt avant qu'il vous écrase",
-    body: "Le tilt — jouer sous l'emprise de l'émotion — est la première cause de perte. Si vous sentez la frustration monter : pause obligatoire. 10 minutes minimum. Revenez quand votre raisonnement est clair.",
+    body: "Le tilt (jouer sous l'emprise de l'émotion) est la première cause de perte. Si vous sentez la frustration monter : pause obligatoire. 10 minutes minimum. Revenez quand votre raisonnement est clair.",
   },
   {
     icon: BarChart3,

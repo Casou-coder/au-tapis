@@ -154,7 +154,7 @@ export function BadgeChip({
       onMouseEnter={e => { if (earned) (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
     >
-      <div style={chipStyle} title={`${name} — ${cond}`}>
+      <div style={chipStyle} title={`${name}: ${cond}`}>
         {earned && (
           <>
             {/* Conic edge segments */}

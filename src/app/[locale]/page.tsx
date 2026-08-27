@@ -82,12 +82,12 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   const whyItems = isEn ? [
-    { icon: '🎯', title: 'Progressive & Structured', desc: 'Each level builds on the previous. No unnecessary jargon — only what you need at each step.' },
+    { icon: '🎯', title: 'Progressive & Structured', desc: 'Each level builds on the previous. No unnecessary jargon, only what you need at each step.' },
     { icon: '🧮', title: 'Math-Based', desc: 'Learn to calculate pot odds, equity, EV. Poker is a game of mathematical decisions in the long run.' },
     { icon: '🎮', title: 'Interactive & Practical', desc: 'Play real hands, answer quizzes, analyze iconic situations from the greatest pros.' },
     { icon: '🏆', title: 'Legendary Hands', desc: "Study extraordinary plays by Phil Ivey, Moneymaker, Isildur1. Understand the why behind each decision." },
     { icon: '🔒', title: 'Free & No Money', desc: 'No real money bets. Learn peacefully, risk-free, purely to master the game.' },
-    { icon: '🧠', title: 'GTO & Psychology', desc: 'From game theory optimal to elite mental game — all aspects of a high-level player.' },
+    { icon: '🧠', title: 'GTO & Psychology', desc: 'From game theory optimal to elite mental game: all aspects of a high-level player.' },
   ] : [
     { icon: '🎯', title: 'Progressif & Structuré', desc: 'Chaque niveau s\'appuie sur le précédent. Pas de jargon inutile, uniquement ce dont vous avez besoin à chaque étape.' },
     { icon: '🧮', title: 'Basé sur les Maths', desc: 'Apprenez à calculer les pot odds, l\'équité, l\'EV. Le poker est un jeu de décisions mathématiques à long terme.' },

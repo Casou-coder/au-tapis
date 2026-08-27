@@ -586,7 +586,7 @@ function SelectionModule({ onComplete, onBack }: { onComplete: () => void; onBac
   const groups = isEn
     ? [
       { category: 'Premium Hands', color: '#c9a84c', bg: 'bg-yellow-900/20 border-yellow-600/30', hands: ['AA', 'KK', 'QQ', 'JJ', 'AKs'], action: 'Always raise, rarely limp', advice: 'These hands are so strong they deserve to build a big pot from the start.' },
-      { category: 'Strong Hands', color: '#27ae60', bg: 'bg-green-900/20 border-green-600/30', hands: ['TT', 'AQs', 'AKo', '99', 'AJs'], action: 'Generally raise', advice: 'Good hands — play them aggressively but be cautious facing re-raises.' },
+      { category: 'Strong Hands', color: '#27ae60', bg: 'bg-green-900/20 border-green-600/30', hands: ['TT', 'AQs', 'AKo', '99', 'AJs'], action: 'Generally raise', advice: 'Good hands: play them aggressively but be cautious facing re-raises.' },
       { category: 'Playable Hands', color: '#3498db', bg: 'bg-blue-900/20 border-blue-600/30', hands: ['88', 'KQs', 'AQo', 'JTs', 'KJs'], action: 'Raise in position, careful OOP', advice: 'These hands are good in position. Be more careful when acting first.' },
       { category: 'Avoid as a beginner', color: '#e74c3c', bg: 'bg-red-900/20 border-red-600/30', hands: ['72o', '93o', '84o', '52o'], action: 'Generally fold', advice: 'These hands rarely win and play poorly postflop. Except BB defense, avoid them.' },
     ]

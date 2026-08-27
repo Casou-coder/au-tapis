@@ -6,7 +6,7 @@ const FAQS = {
   fr: [
     {
       q: "Quelle est la différence entre cash game et tournoi au poker ?",
-      a: "Au cash game, les chips ont une valeur directe et vous pouvez quitter à tout moment. En tournoi, la valeur des chips dépend du contexte ICM et la structure — niveaux croissants, prize pool fixe — modifie profondément la stratégie optimale.",
+      a: "Au cash game, les chips ont une valeur directe et vous pouvez quitter à tout moment. En tournoi, la valeur des chips dépend du contexte ICM et la structure (niveaux croissants, prize pool fixe) modifie profondément la stratégie optimale.",
     },
     {
       q: "Comment Phil Ivey approche-t-il le poker ?",

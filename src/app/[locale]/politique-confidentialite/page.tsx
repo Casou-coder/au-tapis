@@ -37,9 +37,9 @@ export default function PolitiqueConfidentialitePage() {
           <Section title="2. Données collectées">
             <p>Nous collectons uniquement ce qui est strictement nécessaire au fonctionnement du service :</p>
             <ul>
-              <li><strong>Adresse email</strong> — lors de la création d&apos;un compte (authentification via Supabase). Facultatif : vous pouvez utiliser le site sans compte, votre progression est alors stockée localement dans votre navigateur.</li>
-              <li><strong>Données de progression</strong> — modules complétés, XP accumulés, scores de quiz, historique des défis quotidiens. Stockées dans votre navigateur (<code>localStorage</code>) et, si vous êtes connecté, dans notre base de données Supabase.</li>
-              <li><strong>Données techniques</strong> — adresse IP et user-agent, collectées automatiquement par notre hébergeur (Vercel) à des fins de sécurité et de performance. Aucun tracking publicitaire.</li>
+              <li><strong>Adresse email</strong> :lors de la création d&apos;un compte (authentification via Supabase). Facultatif : vous pouvez utiliser le site sans compte, votre progression est alors stockée localement dans votre navigateur.</li>
+              <li><strong>Données de progression</strong> :modules complétés, XP accumulés, scores de quiz, historique des défis quotidiens. Stockées dans votre navigateur (<code>localStorage</code>) et, si vous êtes connecté, dans notre base de données Supabase.</li>
+              <li><strong>Données techniques</strong> :adresse IP et user-agent, collectées automatiquement par notre hébergeur (Vercel) à des fins de sécurité et de performance. Aucun tracking publicitaire.</li>
             </ul>
             <p>Nous ne collectons pas de données de paiement, de numéro de téléphone, ni aucune information sensible.</p>
           </Section>
@@ -60,8 +60,8 @@ export default function PolitiqueConfidentialitePage() {
           <Section title="4. Sous-traitants">
             <p>Nous faisons appel aux prestataires suivants :</p>
             <ul>
-              <li><strong>Supabase</strong> (authentification + base de données) — serveurs localisés en Europe (UE). <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Politique de confidentialité Supabase</a>.</li>
-              <li><strong>Vercel</strong> (hébergement du site) — certifié SOC 2 Type 2. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Politique de confidentialité Vercel</a>.</li>
+              <li><strong>Supabase</strong> (authentification + base de données) :serveurs localisés en Europe (UE). <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Politique de confidentialité Supabase</a>.</li>
+              <li><strong>Vercel</strong> (hébergement du site) :certifié SOC 2 Type 2. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Politique de confidentialité Vercel</a>.</li>
             </ul>
           </Section>
 
@@ -91,8 +91,8 @@ export default function PolitiqueConfidentialitePage() {
               Forged Poker utilise deux mécanismes de stockage :
             </p>
             <ul>
-              <li><strong>Cookies de session</strong> (Supabase Auth) — strictement nécessaires au maintien de votre connexion. Aucun cookie publicitaire ou de tracking.</li>
-              <li><strong>localStorage</strong> — stockage local dans votre navigateur pour votre progression et vos préférences. Ces données ne quittent pas votre appareil sauf si vous êtes connecté.</li>
+              <li><strong>Cookies de session</strong> (Supabase Auth) :strictement nécessaires au maintien de votre connexion. Aucun cookie publicitaire ou de tracking.</li>
+              <li><strong>localStorage</strong> :stockage local dans votre navigateur pour votre progression et vos préférences. Ces données ne quittent pas votre appareil sauf si vous êtes connecté.</li>
             </ul>
             <p>Vous pouvez effacer ces données à tout moment depuis les paramètres de votre navigateur.</p>
           </Section>

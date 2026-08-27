@@ -51,7 +51,7 @@ export async function generateMetadata({
     title: {
       default: isFr
         ? "Forged Poker : Apprenez le Poker Texas Hold'em en Français"
-        : "Forged Poker — Learn Texas Hold'em Poker",
+        : "Forged Poker: Learn Texas Hold'em Poker",
       template: '%s | Forged Poker',
     },
     description: isFr
@@ -67,7 +67,7 @@ export async function generateMetadata({
       siteName: 'Forged Poker',
       title: isFr
         ? "Forged Poker : Apprenez le Poker Texas Hold'em en Français"
-        : "Forged Poker — Learn Texas Hold'em Poker",
+        : "Forged Poker: Learn Texas Hold'em Poker",
       description: isFr
         ? "Cours interactifs du débutant au pro. Défis quotidiens, outils GTO et calculateur d'équité. Gratuit."
         : 'Interactive courses from beginner to pro. Daily challenges, GTO tools and equity calculator. Free.',
@@ -77,7 +77,7 @@ export async function generateMetadata({
       site: '@ForgedPoker',
       title: isFr
         ? "Forged Poker : Apprenez le Poker Texas Hold'em en Français"
-        : "Forged Poker — Learn Texas Hold'em Poker",
+        : "Forged Poker: Learn Texas Hold'em Poker",
       description: isFr
         ? "Cours interactifs du débutant au pro. Défis quotidiens, outils GTO et calculateur d'équité. Gratuit."
         : 'Interactive courses from beginner to pro. Daily challenges, GTO tools and equity calculator. Free.',
