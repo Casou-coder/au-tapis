@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">FORGED POKER logo</title>
+  <desc id="desc">Minimalist gold spade combined with anvil and forge flame, with FORGED POKER wordmark.</desc>
+  <rect width="1200" height="420" fill="#060d08"/>
+  <g fill="#eab308">
+    <path d="M250 42 C205 108 105 165 105 252 C105 319 158 350 207 330 C222 324 237 313 250 296 C263 313 278 324 293 330 C342 350 395 319 395 252 C395 165 295 108 250 42Z"/>
+  </g>
+  <g fill="#060d08">
+    <path d="M154 251 H346 C338 266 320 273 300 276 L291 287 C286 294 286 302 291 310 L309 332 H191 L209 310 C214 302 214 294 209 287 L200 276 C180 273 162 266 154 251Z"/>
+    <path d="M188 240 H312 L324 251 H176Z"/>
+  </g>
+  <path fill="#eab308" d="M250 113 C224 139 210 164 214 187 C216 201 225 211 238 215 C231 204 233 191 242 181 C247 175 252 168 253 157 C268 172 279 185 278 199 C277 209 272 217 264 222 C286 216 297 199 294 181 C291 158 270 137 250 113Z"/>
+  <text x="455" y="215" fill="#eab308" font-family="Georgia, 'Times New Roman', serif" font-size="108" font-weight="700" letter-spacing="7">FORGED</text>
+  <g fill="#eab308">
+    <rect x="458" y="250" width="105" height="4"/>
+    <rect x="1035" y="250" width="105" height="4"/>
+  </g>
+  <text x="799" y="284" text-anchor="middle" fill="#eab308" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700" letter-spacing="22">POKER</text>
+</svg>

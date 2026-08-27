@@ -103,14 +103,17 @@ export default async function Image({
           zIndex: 1,
           padding: '0 80px',
         }}>
-          {/* Mini suits */}
-          <div style={{
-            display: 'flex', gap: 18, marginBottom: 28,
-            fontSize: 32, color: '#c9a84c', opacity: 0.55,
-          }}>
-            <span>♠</span><span style={{ color: '#e05555' }}>♥</span>
-            <span style={{ color: '#e05555' }}>♦</span><span>♣</span>
-          </div>
+          {/* Logo icon */}
+          <svg
+            viewBox="85 25 330 340"
+            style={{ width: 110, height: 110, marginBottom: 24 }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M250 42 C205 108 105 165 105 252 C105 319 158 350 207 330 C222 324 237 313 250 296 C263 313 278 324 293 330 C342 350 395 319 395 252 C395 165 295 108 250 42Z" fill="#eab308"/>
+            <path d="M154 251 H346 C338 266 320 273 300 276 L291 287 C286 294 286 302 291 310 L309 332 H191 L209 310 C214 302 214 294 209 287 L200 276 C180 273 162 266 154 251Z" fill="#060d08"/>
+            <path d="M188 240 H312 L324 251 H176Z" fill="#060d08"/>
+            <path d="M250 113 C224 139 210 164 214 187 C216 201 225 211 238 215 C231 204 233 191 242 181 C247 175 252 168 253 157 C268 172 279 185 278 199 C277 209 272 217 264 222 C286 216 297 199 294 181 C291 158 270 137 250 113Z" fill="#eab308"/>
+          </svg>
 
           {/* Title */}
           <div style={{
@@ -119,7 +122,7 @@ export default async function Image({
             fontWeight: 700,
             letterSpacing: '-3px',
             lineHeight: 1,
-            color: '#c9a84c',
+            color: '#eab308',
             marginBottom: 28,
           }}>
             Forged Poker.
